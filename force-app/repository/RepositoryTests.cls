@@ -12,7 +12,8 @@ private class RepositoryTests {
     @isTest
     static void it_should_handle_lists_and_sets_of_ids_or_strings() {
         Id accountId = TestingUtils.generateId(Account.SObjectType);
-        List<Id> ids = new List<Id>{ accountId, accountId };
+        Id secondAccountId = TestingUtils.generateId(Account.SObjectType);
+        List<Id> ids = new List<Id>{ accountId, secondAccountId };
         Set<Id> setIds = new Set<Id>(ids);
         Set<String> oppNames = new Set<String>{ 'Open', 'Closed' };
 
@@ -27,7 +28,7 @@ private class RepositoryTests {
         repo.get(setStringQuery);
         System.assertEquals(3, Limits.getQueries());
         //we need to write a special assert for sets with multiple values
-        System.assertEquals('Name in (\'Closed\',\' Open\')', setStringQuery.toString());
+        System.assertEquals('Name in (\'Open\',\'Closed\')', setStringQuery.toString());
     }
 
     @isTest

@@ -12,7 +12,7 @@ public class Query {
     private final Operator operator;
     private final List<Object> predicates;
 
-    private static Boolean isSet = false;
+    private static Boolean isIterable = false;
     private static final String EMPTY = '\'\'';
 
     public Query(SObjectField field, Operator operator, Object predicate) {
@@ -45,13 +45,13 @@ public class Query {
     }
 
     private String getOperator() {
-        Boolean isList = this.predicates.size() > 1;
+        isIterable = isIterable || this.predicates.size() > 1;
         switch on this.operator {
             when EQUALS {
-                return isList || isSet ? 'in' : '=';
+                return isIterable ? 'in' : '=';
             }
             when NOT_EQUALS {
-                return isList || isSet ? 'not in' : '!=';
+                return isIterable ? 'not in' : '!=';
             }
             when LESS_THAN {
                 return '<';
@@ -97,14 +97,23 @@ public class Query {
             return '\'' + String.escapeSingleQuotes(input) + '\'';
         }
 
-        String predValue = String.valueOf(predicate);
-        //fun fact - you can detect a list
-        //but you can't detect a set!
-        if(predValue.startsWith('{') && predValue.endsWith('}')) {
-            List<String> setInner = predValue.substring(1, predValue.length() -1).split(',');
-            isSet = setInner.size() > 1;
-            return this.getPredicate(setInner);
+        // it could still be a Set, which is notoriously hard to detect for due to instanceof Iterable<String> not working for Sets, despite
+        // them implementing the interface ...
+
+        try {
+            Iterable<Object> objectSet = (Iterable<Object>) predicate;
+            List<String> innerList = new List<String>();
+            Iterator<Object> objectSetIterator = objectSet.iterator();
+            while(objectSetIterator.hasNext()) {
+                innerList.add(objectSetIterator.next().toString());
+            }
+            isIterable = innerList.size() > 1;
+
+            return this.getPredicate(innerList);
         }
-        return predValue;
+        catch (Exception ex) {
+            // do nothing, it didn't work
+        }
+        return predicate.toString();
     }
 }
