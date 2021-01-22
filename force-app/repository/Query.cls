@@ -99,13 +99,12 @@ public class Query {
 
         // it could still be a Set, which is notoriously hard to detect for due to instanceof Iterable<String> not working for Sets, despite
         // them implementing the interface ...
-
         try {
             Iterable<Object> objectSet = (Iterable<Object>) predicate;
             List<String> innerList = new List<String>();
             Iterator<Object> objectSetIterator = objectSet.iterator();
             while(objectSetIterator.hasNext()) {
-                innerList.add(objectSetIterator.next().toString());
+                innerList.add(String.valueOf(objectSetIterator.next()));
             }
             isIterable = innerList.size() > 1;
 
@@ -114,6 +113,6 @@ public class Query {
         catch (Exception ex) {
             // do nothing, it didn't work
         }
-        return predicate.toString();
+        return String.valueOf(predicate);
     }
 }
