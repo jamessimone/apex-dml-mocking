@@ -8,7 +8,7 @@ private class DMLTests {
     }
 
     @isTest
-    static void it_should_do_dml_insert() {
+    static void shouldPerformInsert() {
         Contact contact = new Contact(LastName= 'Test2');
         new DML().doInsert(contact);
 
@@ -16,7 +16,7 @@ private class DMLTests {
     }
 
     @isTest
-    static void it_should_do_dml_update() {
+    static void shouldPerformUpdate() {
         Contact contact = [SELECT Id FROM Contact];
 
         contact.FirstName = 'Harry';
@@ -26,22 +26,26 @@ private class DMLTests {
     }
 
     @isTest
-    static void it_should_not_fail_on_update_call_from_empty_list() {
+    static void shouldNotFailWhileUpdatingEmptyList() {
         List<Contact> contacts = new List<Contact>();
         new DML().doUpdate(contacts);
+
+        System.assert(true, 'Should make it here');
     }
 
     @isTest
-    static void it_should_do_dml_upsert() {
+    static void shouldPerformUpsert() {
         Contact contact = [SELECT Id FROM Contact];
         contact.FirstName = 'Harry';
         new DML().doUpsert(contact);
+
+        contact = [SELECT Id, FirstName FROM Contact WHERE Id = :contact.Id];
 
         System.assert(contact.FirstName == 'Harry');
     }
 
     @isTest
-    static void it_should_do_dml_delete() {
+    static void shouldPerformDelete() {
         Contact contact = [SELECT Id FROM Contact];
 
         new DML().doDelete(contact);
@@ -51,7 +55,7 @@ private class DMLTests {
     }
 
     @isTest
-    static void it_should_do_dml_hard_delete() {
+    static void shouldPerformHardDelete() {
         Contact contact = [SELECT Id FROM Contact];
 
         new DML().doHardDelete(contact);
@@ -61,7 +65,7 @@ private class DMLTests {
     }
 
     @isTest
-    static void it_should_do_dml_undelete() {
+    static void shouldPerformUndelete() {
         Contact contact = [SELECT Id FROM Contact];
 
         IDML dml = new DML();
@@ -73,18 +77,21 @@ private class DMLTests {
     }
 
     @isTest
-    static void it_should_rollback_all_upserts_if_upsert_list_had_error() {
+    static void shouldRollbackUpsertOnError() {
         Account one = new Account(Name = 'Test1');
         Account two = new Account();
-        try {//should fail because name is a required field on Account
+        try { // this should fail because name is a required field on Account
             new DML().doUpsert(new List<Account>{ one, two });
-        } catch (Exception e) { }
+        } catch (Exception e) {
+            // do nothing, in this case
+        }
+
         System.assertEquals(null, one.Id);
         System.assertEquals(null, two.Id);
     }
 
     @isTest
-    static void it_should_not_fail_on_update_due_to_chunking_errors() {
+    static void shouldNotFailDueToChunkingError() {
         List<SObject> records = new List<SObject>();
         List<Account> accounts = new List<Account>();
         List<Contact> contacts = new List<Contact>();
