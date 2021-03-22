@@ -20,11 +20,7 @@ public virtual class DML implements IDML {
     }
 
     public virtual SObject doUpsert(SObject record) {
-        //Salesforce will only allow upsert calls for SObjects if a declared-type list is passed in.
-        //This is fine for the bulk method, where we can assume the caller is passing in an explicit list, but for a single record,
-        //the only way to successfully perform the upsert is to dynamically spin up a list of the SObject's type
-        List<SObject> castRecords = TypeUtils.createSObjectList(record);
-        return this.doUpsert(castRecords)[0];
+        return this.doUpsert(new List<SObject>{ record })[0];
     }
 
     public virtual List<SObject> doUpsert(List<SObject> records) {
