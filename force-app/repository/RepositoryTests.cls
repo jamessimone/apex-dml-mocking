@@ -41,4 +41,35 @@ private class RepositoryTests {
         System.assertEquals(0, opps.size());
         System.assertEquals(0, Limits.getQueries());
     }
+
+    @isTest
+    static void it_should_decorate_dml_methods() {
+        IRepository repo = Factory.getFactory().withMocks.RepoFactory.getOppRepo();
+        Account acc = new Account();
+        List<Account> accs = new List<Account>{ acc };
+
+        repo.doInsert(acc);
+        repo.doInsert(accs);
+        System.assertEquals(acc, DMLMock.Inserted.Accounts.firstOrDefault);
+
+        repo.doUpdate(acc);
+        repo.doUpdate(accs);
+        System.assertEquals(acc, DMLMock.Updated.Accounts.firstOrDefault);
+
+        repo.doUpsert(acc);
+        repo.doUpsert(accs);
+        System.assertEquals(acc, DMLMock.Upserted.Accounts.firstOrDefault);
+
+        repo.doDelete(acc);
+        repo.doDelete(accs);
+        System.assertEquals(acc, DMLMock.Deleted.Accounts.firstOrDefault);
+
+        repo.doUndelete(acc);
+        repo.doUndelete(accs);
+        System.assertEquals(acc, DMLMock.Undeleted.Accounts.firstOrDefault);
+
+        repo.doHardDelete(acc);
+        repo.doHardDelete(accs);
+        System.assertEquals(acc, DMLMock.Deleted.Accounts.firstOrDefault);
+    }
 }
