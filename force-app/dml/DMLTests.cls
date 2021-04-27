@@ -1,118 +1,152 @@
 @isTest
 private class DMLTests {
-    @TestSetup
-    static void setup() {
-        Contact con = new Contact(LastName='Test1');
-        con.Email = 'something@something.com';
-        insert new List<SObject>{ new Account(Name='TestAccount'), con };
+  @TestSetup
+  static void setup() {
+    Contact con = new Contact(LastName = 'Test1');
+    con.Email = 'something@something.com';
+    insert new List<SObject>{ new Account(Name = 'TestAccount'), con };
+  }
+
+  @isTest
+  static void shouldPerformInsert() {
+    Contact contact = new Contact(LastName = 'Test2');
+    new DML().doInsert(contact);
+
+    System.assertNotEquals(null, contact.Id);
+  }
+
+  @isTest
+  static void shouldPerformUpdate() {
+    Contact contact = [SELECT Id FROM Contact];
+
+    contact.FirstName = 'Harry';
+    new DML().doUpdate(contact);
+
+    System.assert(contact.FirstName == 'Harry');
+  }
+
+  @isTest
+  static void shouldNotFailWhileUpdatingEmptyList() {
+    List<Contact> contacts = new List<Contact>();
+    new DML().doUpdate(contacts);
+
+    System.assert(true, 'Should make it here');
+  }
+
+  @isTest
+  static void shouldPerformUpsert() {
+    Contact contact = [SELECT Id FROM Contact];
+    contact.FirstName = 'Harry';
+    new DML().doUpsert(contact);
+
+    contact = [SELECT Id, FirstName FROM Contact WHERE Id = :contact.Id];
+
+    System.assert(contact.FirstName == 'Harry');
+  }
+
+  @isTest
+  static void shouldPerformDelete() {
+    Contact contact = [SELECT Id FROM Contact];
+
+    new DML().doDelete(contact);
+    List<Contact> deletedContacts = [SELECT Id, IsDeleted FROM Contact ALL ROWS];
+
+    System.assert(deletedContacts[0].IsDeleted);
+  }
+
+  @isTest
+  static void shouldPerformHardDelete() {
+    Contact contact = [SELECT Id FROM Contact];
+
+    new DML().doHardDelete(contact);
+    List<Contact> deletedContacts = [SELECT Id, IsDeleted FROM Contact ALL ROWS];
+
+    System.assert(deletedContacts[0].IsDeleted);
+  }
+
+  @isTest
+  static void shouldPerformUndelete() {
+    Contact contact = [SELECT Id FROM Contact];
+
+    IDML dml = new DML();
+    dml.doDelete(contact);
+    dml.doUndelete(contact);
+
+    List<Contact> notDeletedContacts = [SELECT Id FROM Contact];
+    System.assert(!notDeletedContacts.isEmpty());
+  }
+
+  @isTest
+  static void shouldRollbackUpsertOnError() {
+    Account one = new Account(Name = 'Test1');
+    Account two = new Account();
+    try {
+      // this should fail because name is a required field on Account
+      new DML().doUpsert(new List<Account>{ one, two });
+    } catch (Exception e) {
+      // do nothing, in this case
     }
 
-    @isTest
-    static void shouldPerformInsert() {
-        Contact contact = new Contact(LastName= 'Test2');
-        new DML().doInsert(contact);
+    System.assertEquals(null, one.Id);
+    System.assertEquals(null, two.Id);
+  }
 
-        System.assertNotEquals(null, contact.Id);
+  @isTest
+  static void shouldNotFailDueToChunkingError() {
+    List<SObject> records = new List<SObject>();
+    List<Account> accounts = new List<Account>();
+    List<Contact> contacts = new List<Contact>();
+
+    for (Integer i = 0; i < dml.MAX_DML_CHUNKING; i++) {
+      Account a = new Account(Name = '' + i);
+      accounts.add(a);
+      records.add(a);
+
+      Contact c = new Contact(LastName = '' + i);
+      contacts.add(c);
+      records.add(c);
     }
 
-    @isTest
-    static void shouldPerformUpdate() {
-        Contact contact = [SELECT Id FROM Contact];
+    insert accounts;
+    insert contacts;
 
-        contact.FirstName = 'Harry';
-        new DML().doUpdate(contact);
-
-        System.assert(contact.FirstName == 'Harry');
+    try {
+      new DML().doUpdate(records);
+    } catch (Exception ex) {
+      System.assert(false, ex);
     }
+  }
 
-    @isTest
-    static void shouldNotFailWhileUpdatingEmptyList() {
-        List<Contact> contacts = new List<Contact>();
-        new DML().doUpdate(contacts);
+  @isTest
+  static void shouldFakeDMLOperations() {
+    // some of these operations aren't awesome
+    // but this ensures adequate code coverage prior to
+    // being used elsewhere in the codebase for mocking
+    IDML mock = new DMLMock();
 
-        System.assert(true, 'Should make it here');
-    }
+    List<Account> accs = new List<Account>{ new Account() };
 
-    @isTest
-    static void shouldPerformUpsert() {
-        Contact contact = [SELECT Id FROM Contact];
-        contact.FirstName = 'Harry';
-        new DML().doUpsert(contact);
+    mock.doInsert(accs);
 
-        contact = [SELECT Id, FirstName FROM Contact WHERE Id = :contact.Id];
+    mock.doUpdate(accs);
 
-        System.assert(contact.FirstName == 'Harry');
-    }
+    mock.doUpsert(accs);
+    mock.doUpsert(accs, Account.Name);
 
-    @isTest
-    static void shouldPerformDelete() {
-        Contact contact = [SELECT Id FROM Contact];
+    mock.doDelete(accs);
 
-        new DML().doDelete(contact);
-        List<Contact> deletedContacts = [SELECT Id, IsDeleted FROM Contact ALL ROWS];
+    mock.doUndelete(accs);
 
-        System.assert(deletedContacts[0].IsDeleted);
-    }
+    DMLMock.RecordsWrapper wrapper = DMLMock.Inserted.ofType(Account.SObjectType);
+    System.assertEquals(accs, wrapper.Records);
+    System.assertEquals(1, wrapper.size());
+    System.assertEquals(accs[0], wrapper.singleOrDefault);
+    System.assertEquals(accs[0], wrapper.firstOrDefault);
 
-    @isTest
-    static void shouldPerformHardDelete() {
-        Contact contact = [SELECT Id FROM Contact];
+    Id fakeAccountId = TestingUtils.generateId(Account.SObjectType);
+    System.assertEquals(true, wrapper.hasId(accs[0].Id));
+    System.assertEquals(true, wrapper.hasId(accs[0].Id, Account.Id));
 
-        new DML().doHardDelete(contact);
-        List<Contact> deletedContacts = [SELECT Id, IsDeleted FROM Contact ALL ROWS];
-
-        System.assert(deletedContacts[0].IsDeleted);
-    }
-
-    @isTest
-    static void shouldPerformUndelete() {
-        Contact contact = [SELECT Id FROM Contact];
-
-        IDML dml = new DML();
-        dml.doDelete(contact);
-        dml.doUndelete(contact);
-
-        List<Contact> notDeletedContacts = [SELECT Id FROM Contact];
-        System.assert(!notDeletedContacts.isEmpty());
-    }
-
-    @isTest
-    static void shouldRollbackUpsertOnError() {
-        Account one = new Account(Name = 'Test1');
-        Account two = new Account();
-        try { // this should fail because name is a required field on Account
-            new DML().doUpsert(new List<Account>{ one, two });
-        } catch (Exception e) {
-            // do nothing, in this case
-        }
-
-        System.assertEquals(null, one.Id);
-        System.assertEquals(null, two.Id);
-    }
-
-    @isTest
-    static void shouldNotFailDueToChunkingError() {
-        List<SObject> records = new List<SObject>();
-        List<Account> accounts = new List<Account>();
-        List<Contact> contacts = new List<Contact>();
-
-        for(Integer i = 0; i < dml.MAX_DML_CHUNKING; i ++) {
-            Account a = new Account(Name=''+i);
-            accounts.add(a);
-            records.add(a);
-
-            Contact c = new Contact(LastName=''+i);
-            contacts.add(c);
-            records.add(c);
-        }
-
-        insert accounts;
-        insert contacts;
-
-        try {
-            new DML().doUpdate(records);
-        } catch(Exception ex) {
-            System.assert(false, ex);
-        }
-    }
+    System.assert(true, 'Should make it here');
+  }
 }
