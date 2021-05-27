@@ -4,6 +4,7 @@ public virtual class Repository implements IRepository {
   private final Schema.SObjectType repoType;
 
   private Boolean shortCircuit = false;
+  private Object bindVar;
 
   public Repository(Schema.SObjectType repoType, List<Schema.SObjectField> queryFields, RepoFactory repoFactory) {
     this.dml = repoFactory.getDml();
@@ -46,6 +47,13 @@ public virtual class Repository implements IRepository {
     for (Query query : queries) {
       if (query.isEmpty()) {
         this.shortCircuit = true;
+      } else if(this.bindVar == null) {
+        // at some point, it would be nice to support multiple bind variables
+        // for collection-based arguments; for now, we only support them for NOT LIKE
+        // arguments - and even then, only once per full query
+        // multiple NOT LIKEs (for different fields) are supported
+        // by chaining queries together, if necessary
+        this.bindVar = query.getBindVars();
       }
       wheres.add(query.toString());
     }
@@ -54,6 +62,9 @@ public virtual class Repository implements IRepository {
 
   private List<SObject> performQuery(String finalQuery) {
     System.debug('Query: \n' + finalQuery);
+    if (this.bindVar != null) {
+      System.debug('Bind var: ' + this.bindVar);
+    }
     List<SObject> results = shortCircuit ? new List<SObject>() : Database.query(finalQuery);
     System.debug('Results: \n' + results);
     return results;

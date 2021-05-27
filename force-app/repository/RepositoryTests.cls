@@ -2,8 +2,8 @@
 private class RepositoryTests {
   @isTest
   static void it_should_take_in_a_query() {
-    Query basicQuery = Query.equals(Opportunity.IsWon, true);
-    IRepository repo = Factory.getFactory().RepoFactory.getOppRepo();
+    Query basicQuery = Query.equals(ContactPointAddress.PreferenceRank, 1);
+    IRepository repo = new ContactPointAddressRepo();
 
     repo.get(basicQuery);
     System.assertEquals(1, Limits.getQueries());
@@ -15,13 +15,13 @@ private class RepositoryTests {
     Id secondAccountId = TestingUtils.generateId(Account.SObjectType);
     List<Id> ids = new List<Id>{ accountId, secondAccountId };
     Set<Id> setIds = new Set<Id>(ids);
-    Set<String> oppNames = new Set<String>{ 'Open', 'Closed' };
+    Set<String> cpaNames = new Set<String>{ 'Open', 'Closed' };
 
-    Query listQuery = Query.equals(Opportunity.Id, ids);
-    Query setQuery = Query.equals(Opportunity.Id, setIds);
-    Query setStringQuery = Query.equals(Opportunity.Name, oppNames);
+    Query listQuery = Query.equals(ContactPointAddress.ParentId, ids);
+    Query setQuery = Query.equals(ContactPointAddress.ParentId, setIds);
+    Query setStringQuery = Query.equals(ContactPointAddress.Name, cpaNames);
 
-    IRepository repo = Factory.getFactory().RepoFactory.getOppRepo();
+    IRepository repo = new ContactPointAddressRepo();
 
     repo.get(listQuery);
     repo.get(setQuery);
@@ -33,13 +33,48 @@ private class RepositoryTests {
 
   @isTest
   static void it_should_properly_short_circuit_when_empty_collections_passed_in() {
-    Query listQuery = Query.equals(Opportunity.Id, new List<Id>());
+    Query listQuery = Query.equals(ContactPointAddress.Id, new List<Id>());
 
-    IRepository repo = Factory.getFactory().RepoFactory.getOppRepo();
+    IRepository repo = new ContactPointAddressRepo();
 
     List<SObject> opps = repo.get(listQuery);
     System.assertEquals(0, opps.size());
     System.assertEquals(0, Limits.getQueries());
+  }
+
+  @isTest
+  static void it_should_respect_or_statements_in_queries() {
+    ContactPointAddress cpa = new ContactPointAddress(Name = 'Test Or', PreferenceRank = 1);
+    ContactPointAddress secondCpa = new ContactPointAddress(Name = 'Test Or Two', PreferenceRank = 2);
+    insert new List<ContactPointAddress>{ cpa, secondCpa };
+
+    IRepository repo = new ContactPointAddressRepo();
+
+    Id nullId = null;
+    Query andQuery = Query.equals(ContactPointAddress.ParentId, nullId);
+    Query orQuery = Query.orQuery(
+      Query.equals(ContactPointAddress.PreferenceRank, cpa.PreferenceRank),
+      Query.equals(ContactPointAddress.PreferenceRank, secondCpa.PreferenceRank)
+    );
+
+    List<ContactPointAddress> cpas = repo.get(new List<Query>{ andQuery, orQuery });
+    System.assertEquals(2, cpas.size());
+  }
+
+  @isTest
+  static void it_should_respect_not_like_syntax_for_multiple_values() {
+    ContactPointAddress cpa = new ContactPointAddress(Name = 'Test Or', PreferenceRank = 1);
+    ContactPointAddress secondCpa = new ContactPointAddress(Name = 'Something different', PreferenceRank = 2);
+    insert new List<ContactPointAddress>{ cpa, secondCpa };
+
+    IRepository repo = new ContactPointAddressRepo();
+
+    Query notLike = Query.notLike(ContactPointAddress.Name, new List<String>{ cpa.Name, 'someOtherString' });
+
+    List<ContactPointAddress> cpas = repo.get(notLike);
+
+    System.assertEquals(1, cpas.size());
+    System.assertEquals(secondCpa.Id, cpas[0].Id);
   }
 
   @isTest
@@ -71,5 +106,20 @@ private class RepositoryTests {
     repo.doHardDelete(acc);
     repo.doHardDelete(accs);
     System.assertEquals(acc, DMLMock.Deleted.Accounts.firstOrDefault);
+  }
+
+  private class ContactPointAddressRepo extends Repository {
+    public ContactPointAddressRepo() {
+      super(
+        ContactPointAddress.SObjectType,
+        new List<SObjectField>{
+          ContactPointAddress.Id,
+          ContactPointAddress.PreferenceRank,
+          ContactPointAddress.ParentId,
+          ContactPointAddress.Name
+        },
+        new RepoFactoryMock()
+      );
+    }
   }
 }

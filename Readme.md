@@ -23,7 +23,7 @@ Take a look at the following classes to understand how you can replace raw SOQL 
 - [Repository](/force-app/repository/Repository.cls)
 - [Query](/force-app/repository/Query.cls)
 
-I use many different iterations of these two classes when working with customers. These are simple implementations meant to show you what's possible; at different times, I have implemented parent/child queries, using FieldSets to populate fields for queries, "OR" statements, etc ... these classes are not meant to be inclusive of everything that is possible in SOQL!
+I use many different iterations of these two classes when working with customers. These are simple implementations meant to show you what's possible; at different times, I have implemented parent/child queries, using FieldSets to populate fields for queries, etc ... these classes are not meant to be inclusive of everything that is possible in dynamic SOQL!
 
 ## Dependency Injection Basics
 

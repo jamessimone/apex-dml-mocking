@@ -71,4 +71,44 @@ private class QueryTests {
 
     System.assertEquals('Id = null', idQuery.toString());
   }
+
+  @isTest
+  static void it_should_allow_or_statements() {
+    Id nullId = null;
+    String expectedQuery = '(Id = null OR Id != null)';
+
+    Query orQuery = Query.orQuery(Query.equals(Account.Id, nullId), Query.notEquals(Account.Id, nullId));
+
+    System.assertEquals(expectedQuery, orQuery.toString());
+  }
+
+  @isTest
+  static void it_should_allow_like_statements() {
+    String expectedName = '%someName%';
+
+    Query likeQuery = Query.likeQuery(Account.Name, expectedName);
+
+    System.assertEquals('Name like \'' + expectedName + '\'', likeQuery.toString());
+  }
+
+  @isTest
+  static void it_should_allow_not_like_statements() {
+    String expectedName = '%someName%';
+
+    Query notLike = Query.notLike(Account.Name, expectedName);
+
+    System.assertEquals('not Name like \'' + expectedName + '\'', notLike.toString());
+  }
+
+  @isTest
+  static void it_should_allow_not_like_with_lists() {
+    String firstVal = '%one';
+    String secondVal = 'two%';
+    List<String> expectedBindVars = new List<String>{ firstVal, secondVal };
+
+    Query notLike = Query.notLike(Account.Name, expectedBindVars);
+
+    System.assertEquals('not Name like :bindVar', notLike.toString());
+    System.assertEquals(expectedBindVars, notLike.getBindVars());
+  }
 }

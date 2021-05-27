@@ -1,18 +1,21 @@
-public class Query {
+public virtual class Query {
   private enum Operator {
     EQUALS,
     NOT_EQUALS,
     LESS_THAN,
     LESS_THAN_OR_EQUAL,
     GREATER_THAN,
-    GREATER_THAN_OR_EQUAL
+    GREATER_THAN_OR_EQUAL,
+    ALIKE, // like is a reserved word
+    NOT_LIKE
   }
 
   private final SObjectField field;
   private final Operator operator;
   private final List<Object> predicates;
 
-  private static Boolean isIterable = false;
+  private Boolean isIterable = false;
+
   private static final String EMPTY = '\'\'';
 
   public static Query equals(SObjectField field, Object predicate) {
@@ -63,16 +66,73 @@ public class Query {
     return new Query(field, Operator.GREATER_THAN_OR_EQUAL, predicates);
   }
 
+  // like is a reserved keyword
+  public static Query likeQuery(SObjectField field, Object predicate) {
+    return likeQuery(field, new List<Object>{ predicate });
+  }
+
+  public static Query likeQuery(SObjectField field, List<Object> predicates) {
+    return new Query(field, Operator.ALIKE, predicates);
+  }
+
+  public static Query notLike(SObjectField field, Object predicate) {
+    return notLike(field, new List<Object>{ predicate });
+  }
+
+  public static Query notLike(SObjectField field, List<Object> predicates) {
+    return new Query(field, Operator.NOT_LIKE, predicates);
+  }
+
+  // or is a reserved keyword
+  public static Query orQuery(Query innerQuery, Query secondInnerQuery) {
+    return orQuery(new List<Query>{ innerQuery, secondInnerQuery });
+  }
+
+  public static Query orQuery(List<Query> innerQueries) {
+    return new OrQuery(innerQueries);
+  }
+
+  private class OrQuery extends Query {
+    private final List<Query> queries;
+    private final String orDelimiter = ' OR ';
+
+    public OrQuery(List<Query> queries) {
+      super();
+      this.queries = queries;
+    }
+
+    public override String toString() {
+      String baseString = '(';
+      for (Query innerQuery : this.queries) {
+        baseString += innerQuery.toString() + this.orDelimiter;
+      }
+      return baseString.removeEnd(this.orDelimiter) + ')';
+    }
+  }
+
+  protected Query() {
+  }
+
   private Query(SObjectField field, Operator operator, List<Object> predicates) {
     this.field = field;
     this.operator = operator;
     this.predicates = predicates;
   }
 
-  public override String toString() {
+  public List<Object> getBindVars() {
+    return this.predicates;
+  }
+
+  public virtual override String toString() {
     String fieldName = this.field.getDescribe().getName();
-    String predName = this.getPredicate(this.predicates);
-    return fieldName + ' ' + this.getOperator() + ' ' + predName;
+    String predicateValue = this.getPredicate(this.predicates);
+    this.isIterable = this.isIterable || this.predicates.size() > 1;
+    if (this.operator == Query.Operator.NOT_LIKE) {
+      String endingString = ' ' + (this.isIterable ? ':bindVar' : predicateValue);
+      // who knows why this is the format they wanted
+      return String.format(this.getOperator(), new List<String>{ fieldName }) + endingString;
+    }
+    return fieldName + ' ' + this.getOperator() + ' ' + predicateValue;
   }
 
   public Boolean isEmpty() {
@@ -89,7 +149,6 @@ public class Query {
   }
 
   private String getOperator() {
-    isIterable = isIterable || this.predicates.size() > 1;
     String returnVal = '';
     switch on this.operator {
       when EQUALS {
@@ -110,6 +169,12 @@ public class Query {
       when GREATER_THAN_OR_EQUAL {
         returnVal = '>=';
       }
+      when ALIKE {
+        returnVal = 'like';
+      }
+      when NOT_LIKE {
+        returnVal = 'not {0} like';
+      }
     }
     return returnVal;
   }
@@ -118,17 +183,17 @@ public class Query {
     if (predicate == null) {
       return 'null';
     } else if (predicate instanceof Datetime) {
-      //the most annoying one
+      // the most annoying one
       Datetime dt = (Datetime) predicate;
       return dt.format('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'', 'Greenwich Mean Time');
     } else if (predicate instanceof List<Object>) {
-      List<Object> predicates = (List<Object>) predicate;
-      if (predicates.isEmpty()) {
+      List<Object> localPredicates = (List<Object>) predicate;
+      if (localPredicates.isEmpty()) {
         return EMPTY;
       }
       List<String> innerStrings = new List<String>();
-      for (Object innerPred : predicates) {
-        //recurse for string value
+      for (Object innerPred : localPredicates) {
+        // recurse for string value
         String innerString = this.getPredicate(innerPred);
         innerStrings.add(innerString);
       }
@@ -140,8 +205,9 @@ public class Query {
       return '\'' + String.escapeSingleQuotes(input) + '\'';
     }
 
-    // it could still be a Set, which is notoriously hard to detect for due to instanceof Iterable<String> not working for Sets, despite
-    // them implementing the interface ...
+    // it could still be a Set, which is notoriously hard to detect for
+    // due to instanceof Iterable<String> returning false for Sets, despite
+    // Set.class implementing the interface ...
     try {
       Iterable<Object> objectSet = (Iterable<Object>) predicate;
       List<String> innerList = new List<String>();
@@ -149,7 +215,7 @@ public class Query {
       while (objectSetIterator.hasNext()) {
         innerList.add(String.valueOf(objectSetIterator.next()));
       }
-      isIterable = innerList.size() > 1;
+      this.isIterable = innerList.size() > 1;
 
       return this.getPredicate(innerList);
     } catch (Exception ex) {
