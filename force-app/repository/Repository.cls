@@ -1,4 +1,4 @@
-public virtual class Repository implements IRepository {
+public virtual without sharing class Repository implements IRepository {
   private final IDML dml;
   private final List<Schema.SObjectField> queryFields;
   private final Schema.SObjectType repoType;
@@ -22,24 +22,28 @@ public virtual class Repository implements IRepository {
   }
 
   public virtual List<SObject> get(List<Query> queries) {
-    String finalQuery = this.getSelectAndFrom() + this.addWheres(queries);
+    String finalQuery = this.getFinalQuery(queries);
     return this.performQuery(finalQuery);
   }
 
   public virtual List<SObject> getAll() {
-    return this.performQuery(this.getSelectAndFrom());
+    return this.get(new List<Query>());
   }
 
-  private String getSelectAndFrom() {
-    return 'SELECT ' + this.addSelectFields() + '\nFROM ' + this.repoType;
-  }
-
-  private String addSelectFields() {
+  protected virtual Set<String> addSelectFields() {
     Set<String> fieldStrings = new Set<String>{ 'Id' };
     for (SObjectField field : this.queryFields) {
       fieldStrings.add(field.getDescribe().getName());
     }
-    return String.join(new List<String>(fieldStrings), ', ');
+    return fieldStrings;
+  }
+
+  protected virtual String getFinalQuery(List<Query> queries) {
+    return this.getSelectAndFrom() + this.addWheres(queries);
+  }
+
+  private String getSelectAndFrom() {
+    return 'SELECT ' + String.join(new List<String>(this.addSelectFields()), ', ') + '\nFROM ' + this.repoType;
   }
 
   private String addWheres(List<Query> queries) {
@@ -47,7 +51,7 @@ public virtual class Repository implements IRepository {
     for (Query query : queries) {
       if (query.isEmpty()) {
         this.shortCircuit = true;
-      } else if(this.bindVar == null) {
+      } else if (this.bindVar == null) {
         // at some point, it would be nice to support multiple bind variables
         // for collection-based arguments; for now, we only support them for NOT LIKE
         // arguments - and even then, only once per full query
@@ -57,7 +61,7 @@ public virtual class Repository implements IRepository {
       }
       wheres.add(query.toString());
     }
-    return '\nWHERE ' + String.join(wheres, '\nAND');
+    return wheres.isEmpty() ? '' : '\nWHERE ' + String.join(wheres, '\nAND');
   }
 
   private List<SObject> performQuery(String finalQuery) {
