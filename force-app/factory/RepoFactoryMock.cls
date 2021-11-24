@@ -1,3 +1,4 @@
+@IsTest
 public class RepoFactoryMock extends RepoFactory {
   @TestVisible
   private static Map<SObjectType, List<AggregateRecord>> AggregateResults = new Map<SObjectType, List<AggregateRecord>>();
@@ -7,6 +8,10 @@ public class RepoFactoryMock extends RepoFactory {
   private static List<SObject> QueryResults = new List<SObject>();
   @TestVisible
   private static List<Query> QueriesMade = new List<Query>();
+
+  public override IDML getDML() {
+    return new DMLMock();
+  }
 
   public override IAggregateRepository getOppLineItemRepo() {
     return this.getRepoFromSObjectType(OpportunityLineItem.SObjectType, super.getOppLineItemRepo());

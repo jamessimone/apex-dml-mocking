@@ -1,20 +1,20 @@
-@isTest
+@IsTest
 private class QueryTests {
-  @isTest
+  @IsTest
   static void it_should_encapsulate_sobject_fields_and_values() {
     Query basicQuery = Query.equals(Opportunity.IsWon, true);
 
     System.assertEquals('IsWon = true', basicQuery.toString());
   }
 
-  @isTest
+  @IsTest
   static void it_should_equal_another_query_with_the_same_values() {
     Query basicQuery = Query.equals(Opportunity.IsWon, true);
     Query sameQuery = Query.equals(Opportunity.IsWon, true);
     System.assertEquals(basicQuery, sameQuery);
   }
 
-  @isTest
+  @IsTest
   static void it_should_properly_render_datetimes_as_strings() {
     Datetime sevenDaysAgo = System.now().addDays(-7);
     Query greaterThan = Query.greaterThan(Opportunity.CreatedDate, sevenDaysAgo);
@@ -25,7 +25,7 @@ private class QueryTests {
     System.assertEquals('CreatedDate >= ' + expectedTimeString, basicQuery.toString());
   }
 
-  @isTest
+  @IsTest
   static void it_should_properly_format_comparison_queries() {
     String expectedLessThan = 'Amount < 0';
     String expectedLessThanOrEqual = 'Amount <= 0';
@@ -45,7 +45,7 @@ private class QueryTests {
     );
   }
 
-  @isTest
+  @IsTest
   static void it_should_properly_handle_numbers() {
     Double number1 = 1261992;
     Integer number2 = 1;
@@ -63,7 +63,7 @@ private class QueryTests {
     System.assertEquals('Amount = 1234567890', longQuery.toString(), 'long');
   }
 
-  @isTest
+  @IsTest
   static void it_should_properly_handle_nulls() {
     Id nullId = null;
 
@@ -72,7 +72,7 @@ private class QueryTests {
     System.assertEquals('Id = null', idQuery.toString());
   }
 
-  @isTest
+  @IsTest
   static void it_should_allow_or_statements() {
     Id nullId = null;
     String expectedQuery = '(Id = null OR Id != null)';
@@ -82,7 +82,7 @@ private class QueryTests {
     System.assertEquals(expectedQuery, orQuery.toString());
   }
 
-  @isTest
+  @IsTest
   static void it_should_allow_like_statements() {
     String expectedName = '%someName%';
 
@@ -91,7 +91,7 @@ private class QueryTests {
     System.assertEquals('Name like \'' + expectedName + '\'', likeQuery.toString());
   }
 
-  @isTest
+  @IsTest
   static void it_should_allow_not_like_statements() {
     String expectedName = '%someName%';
 
@@ -100,7 +100,7 @@ private class QueryTests {
     System.assertEquals('not Name like \'' + expectedName + '\'', notLike.toString());
   }
 
-  @isTest
+  @IsTest
   static void it_should_allow_not_like_with_lists() {
     String firstVal = '%one';
     String secondVal = 'two%';

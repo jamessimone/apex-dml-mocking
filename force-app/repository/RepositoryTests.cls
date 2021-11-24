@@ -1,6 +1,6 @@
-@isTest
+@IsTest
 private class RepositoryTests {
-  @isTest
+  @IsTest
   static void it_should_take_in_a_query() {
     Query basicQuery = Query.equals(ContactPointAddress.PreferenceRank, 1);
     IRepository repo = new ContactPointAddressRepo();
@@ -9,7 +9,7 @@ private class RepositoryTests {
     System.assertEquals(1, Limits.getQueries());
   }
 
-  @isTest
+  @IsTest
   static void it_should_handle_lists_and_sets_of_ids_or_strings() {
     Id accountId = TestingUtils.generateId(Account.SObjectType);
     Id secondAccountId = TestingUtils.generateId(Account.SObjectType);
@@ -31,7 +31,7 @@ private class RepositoryTests {
     System.assertEquals('Name in (\'Open\',\'Closed\')', setStringQuery.toString());
   }
 
-  @isTest
+  @IsTest
   static void it_should_properly_short_circuit_when_empty_collections_passed_in() {
     Query listQuery = Query.equals(ContactPointAddress.Id, new List<Id>());
 
@@ -42,7 +42,7 @@ private class RepositoryTests {
     System.assertEquals(0, Limits.getQueries());
   }
 
-  @isTest
+  @IsTest
   static void it_should_respect_or_statements_in_queries() {
     ContactPointAddress cpa = new ContactPointAddress(Name = 'Test Or', PreferenceRank = 1);
     ContactPointAddress secondCpa = new ContactPointAddress(Name = 'Test Or Two', PreferenceRank = 2);
@@ -61,7 +61,7 @@ private class RepositoryTests {
     System.assertEquals(2, cpas.size());
   }
 
-  @isTest
+  @IsTest
   static void it_should_respect_not_like_syntax_for_multiple_values() {
     ContactPointAddress cpa = new ContactPointAddress(Name = 'Test Or', PreferenceRank = 1);
     ContactPointAddress secondCpa = new ContactPointAddress(Name = 'Something different', PreferenceRank = 2);
@@ -77,7 +77,7 @@ private class RepositoryTests {
     System.assertEquals(secondCpa.Id, cpas[0].Id);
   }
 
-  @isTest
+  @IsTest
   static void it_should_decorate_dml_methods() {
     IRepository repo = Factory.getFactory().withMocks.RepoFactory.getOppRepo();
     Account acc = new Account();

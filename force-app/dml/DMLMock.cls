@@ -5,7 +5,7 @@ public virtual class DMLMock extends DML {
   public static List<SObject> DeletedRecords = new List<SObject>();
   public static List<SObject> UndeletedRecords = new List<SObject>();
 
-  @testVisible
+  @TestVisible
   private DMLMock() {
     // @IsTest classes cannot be virtual, so enforce visibility
   }

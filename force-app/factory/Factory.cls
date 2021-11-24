@@ -4,7 +4,7 @@ public virtual class Factory {
   // in your own code!
   public RepoFactory RepoFactory { get; protected set; }
 
-  @testVisible
+  @TestVisible
   private static Factory factory;
 
   protected Factory() {
@@ -23,7 +23,7 @@ public virtual class Factory {
   // create methods to initialize your objects here
   // (an example is included in the example app)
 
-  @testVisible
+  @TestVisible
   private Factory withMocks {
     get {
       this.RepoFactory = new RepoFactoryMock();

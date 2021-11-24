@@ -5,7 +5,7 @@ public virtual class DML implements IDML {
    * then in your tests, the Factory.withMocks method
    * becomes your one-stop-shop signal for switching to the DMLMock in tests
    */
-  @testVisible
+  @TestVisible
   private static Integer MAX_DML_CHUNKING = 10;
 
   public virtual SObject doInsert(SObject record) {

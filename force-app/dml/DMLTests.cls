@@ -1,4 +1,4 @@
-@isTest
+@IsTest
 private class DMLTests {
   @TestSetup
   static void setup() {
@@ -7,7 +7,7 @@ private class DMLTests {
     insert new List<SObject>{ new Account(Name = 'TestAccount'), con };
   }
 
-  @isTest
+  @IsTest
   static void shouldPerformInsert() {
     Contact contact = new Contact(LastName = 'Test2');
     new DML().doInsert(contact);
@@ -15,7 +15,7 @@ private class DMLTests {
     System.assertNotEquals(null, contact.Id);
   }
 
-  @isTest
+  @IsTest
   static void shouldPerformUpdate() {
     Contact contact = [SELECT Id FROM Contact];
 
@@ -25,7 +25,7 @@ private class DMLTests {
     System.assert(contact.FirstName == 'Harry');
   }
 
-  @isTest
+  @IsTest
   static void shouldNotFailWhileUpdatingEmptyList() {
     List<Contact> contacts = new List<Contact>();
     new DML().doUpdate(contacts);
@@ -33,7 +33,7 @@ private class DMLTests {
     System.assert(true, 'Should make it here');
   }
 
-  @isTest
+  @IsTest
   static void shouldPerformUpsert() {
     Contact contact = [SELECT Id FROM Contact];
     contact.FirstName = 'Harry';
@@ -44,7 +44,7 @@ private class DMLTests {
     System.assert(contact.FirstName == 'Harry');
   }
 
-  @isTest
+  @IsTest
   static void shouldPerformDelete() {
     Contact contact = [SELECT Id FROM Contact];
 
@@ -54,7 +54,7 @@ private class DMLTests {
     System.assert(deletedContacts[0].IsDeleted);
   }
 
-  @isTest
+  @IsTest
   static void shouldPerformHardDelete() {
     Contact contact = [SELECT Id FROM Contact];
 
@@ -64,7 +64,7 @@ private class DMLTests {
     System.assert(deletedContacts[0].IsDeleted);
   }
 
-  @isTest
+  @IsTest
   static void shouldPerformUndelete() {
     Contact contact = [SELECT Id FROM Contact];
 
@@ -76,7 +76,7 @@ private class DMLTests {
     System.assert(!notDeletedContacts.isEmpty());
   }
 
-  @isTest
+  @IsTest
   static void shouldRollbackUpsertOnError() {
     Account one = new Account(Name = 'Test1');
     Account two = new Account();
@@ -91,7 +91,7 @@ private class DMLTests {
     System.assertEquals(null, two.Id);
   }
 
-  @isTest
+  @IsTest
   static void shouldNotFailDueToChunkingError() {
     List<SObject> records = new List<SObject>();
     List<Account> accounts = new List<Account>();
@@ -117,7 +117,7 @@ private class DMLTests {
     }
   }
 
-  @isTest
+  @IsTest
   static void shouldFakeDMLOperations() {
     // some of these operations aren't awesome
     // but this ensures adequate code coverage prior to
