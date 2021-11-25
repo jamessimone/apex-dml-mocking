@@ -5,7 +5,7 @@ public class AccountHandler extends TriggerHandler {
     this.oppRepo = factory.RepoFactory.getOppRepo();
   }
 
-  public override void afterInsert(List<SObject> insertedRecords, Map<Id, SObject> mapInsertedRecords) {
+  public override void afterInsert(List<SObject> insertedRecords, Map<Id, SObject> unused) {
     List<Account> insertedAccounts = (List<Account>) insertedRecords;
     this.createOppAutomatically(insertedAccounts);
   }
@@ -14,7 +14,12 @@ public class AccountHandler extends TriggerHandler {
     List<Opportunity> oppsToInsert = new List<Opportunity>();
     for (Account insertedAccount : insertedAccounts) {
       oppsToInsert.add(
-        new Opportunity(Name = 'Prospecting Opp for: ' + insertedAccount.Name, AccountId = insertedAccount.Id, StageName = 'Open', CloseDate = Date.today())
+        new Opportunity(
+          Name = 'Prospecting Opp for: ' + insertedAccount.Name,
+          AccountId = insertedAccount.Id,
+          StageName = 'Open',
+          CloseDate = Date.today()
+        )
       );
     }
     this.oppRepo.doInsert(oppsToInsert);
