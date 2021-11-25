@@ -4,7 +4,6 @@ private class AccountHandlerTests {
   static void it_should_insert_new_opps_when_accounts_are_inserted() {
     Account acc = new Account(Name = 'Test Corp.', Id = TestingUtils.generateId(Account.SObjectType));
 
-    ExampleFactory.getFactory().withMocks.getAccountHandler().beforeInsert(new List<SObject>{ acc });
     ExampleFactory.getFactory().withMocks.getAccountHandler().afterInsert(new List<SObject>{ acc },new Map<Id,SObject>(new List<SObject>{ acc }));
 
     Opportunity insertedOpp = (Opportunity) DMLMock.Inserted.Opportunities.singleOrDefault;

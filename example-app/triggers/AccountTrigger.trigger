@@ -1,3 +1,3 @@
-trigger AccountTrigger on Account (before insert, after insert) {
+trigger AccountTrigger on Account (after insert) {
     ExampleFactory.getFactory().getAccountHandler().execute();
 }
