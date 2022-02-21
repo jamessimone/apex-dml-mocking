@@ -2,14 +2,18 @@ public virtual without sharing class Repository implements IRepository {
   private final IDML dml;
   private final List<Schema.SObjectField> queryFields;
   private final Schema.SObjectType repoType;
+  private final Set<String> selectFields;
+  private final Map<SObjectType, String> childToRelationshipNames;
 
   private Boolean shortCircuit = false;
   private Object bindVar;
 
   public Repository(Schema.SObjectType repoType, List<Schema.SObjectField> queryFields, RepoFactory repoFactory) {
-    this.dml = repoFactory.getDml();
+    this(repoFactory);
     this.queryFields = queryFields;
     this.repoType = repoType;
+    this.selectFields = this.addSelectFields();
+    this.childToRelationshipNames = this.getChildRelationshipNames(repoType);
   }
 
   protected Repository(RepoFactory repoFactory) {
@@ -27,7 +31,33 @@ public virtual without sharing class Repository implements IRepository {
   }
 
   public virtual List<SObject> getAll() {
-    return this.get(new List<Query>());
+    return this.performQuery(this.getSelectAndFrom());
+  }
+
+  public void addParentFields(List<SObjectType> parentTypes, List<SObjectField> parentFields) {
+    String parentBase = '';
+    for (SObjectType parentType : parentTypes) {
+      parentBase += parentType.getDescribe().getName() + '.';
+    }
+    for (SObjectField parentField : parentFields) {
+      this.selectFields.add(parentBase + parentField.getDescribe().getName());
+    }
+  }
+
+  public void addChildFields(SObjectType childType, List<SObjectField> childFields) {
+    if (this.childToRelationshipNames.containsKey(childType)) {
+      String baseSubselect = '(SELECT {0} FROM {1})';
+      Set<String> childFieldNames = new Set<String>{ 'Id' };
+      for (SObjectField childField : childFields) {
+        childFieldNames.add(childField.getDescribe().getName());
+      }
+      this.selectFields.add(
+        String.format(
+          baseSubselect,
+          new List<String>{ String.join(new List<String>(childFieldNames), ','), this.childToRelationshipNames.get(childType) }
+        )
+      );
+    }
   }
 
   protected virtual Set<String> addSelectFields() {
@@ -42,8 +72,16 @@ public virtual without sharing class Repository implements IRepository {
     return this.getSelectAndFrom() + this.addWheres(queries);
   }
 
+  private Map<SObjectType, String> getChildRelationshipNames(Schema.SObjectType repoType) {
+    Map<SObjectType, String> localChildToRelationshipNames = new Map<SObjectType, String>();
+    for (Schema.ChildRelationship childRelationship : repoType.getDescribe().getChildRelationships()) {
+      localChildToRelationshipNames.put(childRelationship.getChildSObject(), childRelationship.getRelationshipName());
+    }
+    return localChildToRelationshipNames;
+  }
+
   private String getSelectAndFrom() {
-    return 'SELECT ' + String.join(new List<String>(this.addSelectFields()), ', ') + '\nFROM ' + this.repoType;
+    return 'SELECT ' + String.join(new List<String>(this.selectFields), ', ') + '\nFROM ' + this.repoType;
   }
 
   private String addWheres(List<Query> queries) {
