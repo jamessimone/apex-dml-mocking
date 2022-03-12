@@ -56,7 +56,6 @@ public virtual class TriggerHandler {
   // simple mocking in a handler. In reality, your handlers themselves would probably be invoking objects
   // doing something CONSIDERABLY more complicated than inserting an opportunity for new accounts, and your mocking
   // would instead be part of the unit tests for those objects
-  @TestVisible
   protected virtual void beforeInsert(List<SObject> newRecords) {
   }
   protected virtual void beforeUpdate(
@@ -68,6 +67,7 @@ public virtual class TriggerHandler {
   }
   protected virtual void beforeDelete(List<SObject> deletedRecords, Map<Id, SObject> deletedRecordsMap) {
   }
+  @TestVisible
   protected virtual void afterInsert(List<SObject> newRecords, Map<Id, SObject> newRecordsMap) {
   }
   protected virtual void afterUpdate(

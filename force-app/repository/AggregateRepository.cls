@@ -59,13 +59,16 @@ public inherited sharing virtual class AggregateRepository extends Repository im
   }
 
   protected override Set<String> addSelectFields() {
+    if (this.aggregations == null) {
+      return super.addSelectFields();
+    }
+
     Set<String> baseFields = new Set<String>();
     if (this.isNumberCountQuery) {
       baseFields.add('COUNT()');
       return baseFields;
     }
 
-    Boolean aggregatesIdField = false;
     for (Aggregation agg : aggregations) {
       baseFields.add(agg.toString());
     }
