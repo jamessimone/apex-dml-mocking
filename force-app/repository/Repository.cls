@@ -12,7 +12,7 @@ public virtual without sharing class Repository implements IRepository {
     this(repoFactory);
     this.queryFields = queryFields;
     this.repoType = repoType;
-    this.selectFields = this.addSelectFields();
+    this.selectFields = new Set<String>();
     this.childToRelationshipNames = this.getChildRelationshipNames(repoType);
   }
 
@@ -54,7 +54,10 @@ public virtual without sharing class Repository implements IRepository {
       this.selectFields.add(
         String.format(
           baseSubselect,
-          new List<String>{ String.join(new List<String>(childFieldNames), ','), this.childToRelationshipNames.get(childType) }
+          new List<String>{
+            String.join(new List<String>(childFieldNames), ','),
+            this.childToRelationshipNames.get(childType)
+          }
         )
       );
     }
@@ -81,6 +84,7 @@ public virtual without sharing class Repository implements IRepository {
   }
 
   private String getSelectAndFrom() {
+    this.selectFields.addAll(this.addSelectFields());
     return 'SELECT ' + String.join(new List<String>(this.selectFields), ', ') + '\nFROM ' + this.repoType;
   }
 
