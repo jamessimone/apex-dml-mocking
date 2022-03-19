@@ -2,19 +2,13 @@
   "packageDirectories": [
     {
       "path": "force-app",
-      "default": true,
-      "package": "DML Mocks",
-      "versionName": "0.1.0",
-      "versionNumber": "0.1.0.NEXT"
+      "default": true
     },
     {
-      "path": "example-app",
-      "package": "example",
-      "versionName": "0.1.0",
-      "versionNumber": "0.1.0.NEXT"
+      "path": "example-app"
     }
   ],
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "50.0"
+  "sourceApiVersion": "54.0"
 }

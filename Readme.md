@@ -13,27 +13,39 @@ This repo shows you how you can mock your SOQL queries and DML statements in Ape
 
 Try checking out the source code for the DML wrapping classes:
 
-- [DML](/force-app/dml/DML.cls)
-- [DMLMock](/force-app/dml/DMLMock.cls)
+- [DML](force-app/dml/DML.cls)
+- [DMLMock](force-app/dml/DMLMock.cls)
 
 ## SOQL Mocking Basics
 
 Take a look at the following classes to understand how you can replace raw SOQL in your code with testable (and extendable) strongly typed queries:
 
-- [Repository](/force-app/repository/Repository.cls)
-- [Query](/force-app/repository/Query.cls)
+- [Repository](force-app/repository/Repository.cls)
+- [Query](force-app/repository/Query.cls)
 
-I use many different iterations of these two classes when working with customers. These are simple implementations meant to show you what's possible; at different times, I have implemented parent/child queries, using FieldSets to populate fields for queries, etc ... these classes are not meant to be inclusive of everything that is possible in dynamic SOQL!
+Then, move on to the more complicated examples:
+
+- [AggregateRepository](force-app\repository\AggregateRepository.cls)
+- [Aggregation](force-app\repository\Aggregation.cls)
+- [AggregateRepositoryTests](force-app\repository\AggregateRepositoryTests.cls) - a good example of how to use the above two classes
+- [FieldLevelHistoryRepo](force-app\repository\FieldLevelHistoryRepo.cls)
+- [FieldLevelHistory](force-app\repository\FieldLevelHistory.cls)
+
+While opinionated in implementation, these classes are also just scratching the surface of what's possible when taking advantage of the Factory pattern in combination with the Repository pattern, including full support for:
+
+- strongly typed subqueries (queries returning children records)
+- strongly typed parent-level fields
+- the ability to easily extend classes like `Repository` to include things like limits, order bys, etc ...
 
 ## Dependency Injection Basics
 
-The "Factory" pattern is of particular importance for DML-mocking, because it allows you to have only _one_ stub in your code for deciding whether or not to use mocks when running tests; crucially, the stub is only available when tests are being run: you cannot mock things in production-grade code.
+The "Factory" pattern is of particular importance for DML mocking, because it allows you to have only _one_ stub in your code for deciding whether or not to use mocks when running tests; crucially, the stub is only available when tests are being run: you cannot mock things in production-grade code.
 
 You can have as many Factories as you'd like. I like to break my Factories out by responsibility:
 
-- A factory for TriggerHandlers
-- A [factory](/force-app/factory/Factory.cls) for basic classes
-- The [RepoFactory](/force-app/factory/RepoFactory.cls) for CRUD related objects
+- A factory for Trigger handlers
+- A [factory](force-app/factory/Factory.cls) for basic classes
+- The [RepoFactory](force-app/factory/RepoFactory.cls) for CRUD related objects
 
 It's a pretty standard approach. You might choose to break things down by (business) domain. There's no right way.
 
