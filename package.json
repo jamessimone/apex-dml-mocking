@@ -4,12 +4,16 @@
   "description": "Easy DML / SOQL mocking through the Factory pattern in Apex",
   "dependencies": {},
   "devDependencies": {
-    "prettier": "2.4.1",
-    "prettier-plugin-apex": "1.10.0"
+    "prettier-plugin-apex": "1.10.0",
+    "prettier": "2.5.1",
+    "sfdx-cli": "latest"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jamessimone/apex-dml-mocking.git"
+  },
+  "scripts": {
+    "prettier": "prettier --write \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,yaml,yml}\""
   },
   "keywords": [
     "apex",

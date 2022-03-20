@@ -1,6 +1,6 @@
-public inherited sharing virtual class AggregateRepository extends Repository implements IAggregateRepository {
+public without sharing virtual class AggregateRepository extends Repository implements IAggregateRepository {
   private final Set<String> groupedByFieldNames;
-  private List<Aggregation> aggregations;
+  protected List<Aggregation> aggregations;
   private Boolean isNumberCountQuery = false;
   public AggregateRepository(
     Schema.SObjectType repoType,
@@ -62,7 +62,7 @@ public inherited sharing virtual class AggregateRepository extends Repository im
     return aggregateRecords;
   }
 
-  protected override Set<String> addSelectFields() {
+  protected virtual override Set<String> addSelectFields() {
     Set<String> baseFields = new Set<String>();
     if (this.isNumberCountQuery) {
       baseFields.add('COUNT()');
@@ -76,7 +76,7 @@ public inherited sharing virtual class AggregateRepository extends Repository im
     }
 
     baseFields.addAll(this.groupedByFieldNames);
-    return baseFields;
+    return baseFields.isEmpty() ? super.addSelectFields() : baseFields;
   }
 
   protected override String getFinalQuery(List<Query> queries) {

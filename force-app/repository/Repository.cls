@@ -31,7 +31,7 @@ public virtual without sharing class Repository implements IRepository {
   }
 
   public virtual List<SObject> getAll() {
-    return this.performQuery(this.getSelectAndFrom());
+    return this.get(new List<Query>());
   }
 
   public void addParentFields(List<SObjectType> parentTypes, List<SObjectField> parentFields) {
@@ -112,7 +112,7 @@ public virtual without sharing class Repository implements IRepository {
       System.debug('Bind var: ' + this.bindVar);
     }
     List<SObject> results = shortCircuit ? new List<SObject>() : Database.query(finalQuery);
-    System.debug('Results: \n' + results);
+    System.debug('Number of results: ' + results.size() + '\nResults: \n' + results);
     return results;
   }
 

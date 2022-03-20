@@ -8,24 +8,30 @@ public class RepoFactoryMock extends RepoFactory {
   private static List<SObject> QueryResults = new List<SObject>();
   @TestVisible
   private static List<Query> QueriesMade = new List<Query>();
+  @TestVisible
+  private static Map<SObjectType, List<FieldLevelHistory>> HistoryResults = new Map<SObjectType, List<FieldLevelHistory>>();
 
   public override IDML getDML() {
     return new DMLMock();
   }
 
-  public override IAggregateRepository getOppLineItemRepo() {
+  public override IHistoryRepository getOppLineItemRepo() {
     return this.getRepoFromSObjectType(OpportunityLineItem.SObjectType, super.getOppLineItemRepo());
   }
 
-  private IAggregateRepository getRepoFromSObjectType(SObjectType sObjectType, IAggregateRepository fallback) {
-    IAggregateRepository repo;
+  @TestVisible
+  private IHistoryRepository getRepoFromSObjectType(SObjectType sObjectType, IHistoryRepository fallback) {
+    IHistoryRepository repo;
     List<SObject> queriedResults = this.getResults(sObjectType);
-    List<AggregateRecord> aggRecords = this.getAggregateResults(sObjectType);
+    List<AggregateRecord> aggRecords = AggregateResults.get(sObjectType);
+    List<FieldLevelHistory> historyRecords = HistoryResults.get(SObjectType);
 
     if (queriedResults.size() > 0) {
       repo = new RepoMock(queriedResults, this);
     } else if (aggRecords?.size() > 0) {
       repo = new RepoMock(aggRecords, this);
+    } else if (historyRecords?.size() > 0) {
+      repo = new RepoMock(historyRecords, this);
     } else {
       repo = fallback;
     }
@@ -47,23 +53,34 @@ public class RepoFactoryMock extends RepoFactory {
   }
 
   @TestVisible
-  private class RepoMock extends AggregateRepository {
+  private class RepoMock extends FieldLevelHistoryRepo {
     private final List<SObject> results;
     private final List<AggregateRecord> aggRecords;
+    private final List<FieldLevelHistory> historyRecords;
 
     @TestVisible
     private RepoMock() {
       this(new List<SObject>(), new RepoFactoryMock());
     }
 
-    public RepoMock(List<SObject> results, RepoFactory factory) {
-      super(factory);
+    public RepoMock(List<SObject> results, RepoFactory repoFactory) {
+      super(repoFactory);
       this.results = results;
     }
 
-    public RepoMock(List<AggregateRecord> records, RepoFactory factory) {
-      super(factory);
+    public RepoMock(List<AggregateRecord> records, RepoFactory repoFactory) {
+      super(repoFactory);
       this.aggRecords = records;
+    }
+
+    public RepoMock(List<FieldLevelHistory> historyRecords, RepoFactory repoFactory) {
+      super(repoFactory);
+      this.historyRecords = historyRecords;
+    }
+
+    public override List<FieldLevelHistory> getHistory(List<Query> queries) {
+      QueriesMade.addAll(queries);
+      return this.historyRecords;
     }
 
     public override List<SObject> getAll() {
