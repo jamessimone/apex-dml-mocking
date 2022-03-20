@@ -39,6 +39,20 @@ jobs:
         with:
           node-version: "14"
 
+      - name: "Restore node_modules cache"
+        id: cache-npm
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-${{ env.cache-name }}-
+            npm-
+
+      - name: "Install NPM"
+        if: steps.cache-npm.outputs.cache-hit != 'true'
+        run: npm ci
+
       # Store secret for dev hub
       - name: "Populate auth file with DEVHUB_SFDX_URL secret"
         shell: bash
