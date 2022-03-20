@@ -2,7 +2,7 @@ $DebugPreference = 'Continue'
 $ErrorActionPreference = 'Stop'
 # This is also the same script that runs on Github via the Github Action configured in .github/workflows - there, the
 # DEVHUB_SFDX_URL.txt file is populated in a build step
-$testInvocation = 'npx sfdx force:apex:test:run -s ApexDmlMockingSuite -r human -w 20'
+$testInvocation = 'npx sfdx force:apex:test:run -s ApexDmlMockingSuite -r human -w 20 -d ./tests/apex'
 $scratchOrgName = 'apex-dml-mocking-scratch'
 
 function Start-Tests() {
