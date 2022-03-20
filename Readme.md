@@ -25,11 +25,11 @@ Take a look at the following classes to understand how you can replace raw SOQL 
 
 Then, move on to the more complicated examples:
 
-- [AggregateRepository](force-app\repository\AggregateRepository.cls)
-- [Aggregation](force-app\repository\Aggregation.cls)
-- [AggregateRepositoryTests](force-app\repository\AggregateRepositoryTests.cls) - a good example of how to use the above two classes
-- [FieldLevelHistoryRepo](force-app\repository\FieldLevelHistoryRepo.cls)
-- [FieldLevelHistory](force-app\repository\FieldLevelHistory.cls)
+- [AggregateRepository](force-app/repository/AggregateRepository.cls)
+- [Aggregation](force-app/repository/Aggregation.cls)
+- [AggregateRepositoryTests](force-app/repository/AggregateRepositoryTests.cls) - a good example of how to use the above two classes
+- [FieldLevelHistoryRepo](force-app/repository/FieldLevelHistoryRepo.cls)
+- [FieldLevelHistory](force-app/repository/FieldLevelHistory.cls)
 
 While opinionated in implementation, these classes are also just scratching the surface of what's possible when taking advantage of the Factory pattern in combination with the Repository pattern, including full support for:
 
