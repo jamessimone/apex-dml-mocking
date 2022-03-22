@@ -13,11 +13,7 @@ public virtual without sharing class FieldLevelHistoryRepo extends AggregateRepo
     this.parentFieldName = parentField.getDescribe().getName();
   }
 
-  public FieldLevelHistoryRepo(
-    Schema.SObjectField parentField,
-    Schema.SObjectType repoType,
-    RepoFactory repoFactory
-  ) {
+  public FieldLevelHistoryRepo(Schema.SObjectField parentField, Schema.SObjectType repoType, RepoFactory repoFactory) {
     this(parentField, repoType, FieldLevelHistory.class, repoFactory);
   }
 
@@ -33,19 +29,12 @@ public virtual without sharing class FieldLevelHistoryRepo extends AggregateRepo
     super(repoFactory);
   }
 
-  protected override Set<String> addSelectFields() {
-    if (this.aggregations?.isEmpty() != false) {
-      return new Set<String>{
-        'CreatedById',
-        'CreatedDate',
-        'Field',
-        'Id',
-        'NewValue',
-        'OldValue',
-        this.parentFieldName
-      };
-    }
-    return super.addSelectFields();
+  protected virtual override Set<String> addSelectFields() {
+    Set<String> baseFields = super.addSelectFields();
+    return (baseFields.isEmpty() || baseFields.size() == 1 && baseFields.contains('Id')) &&
+      this.repoType.getDescribe().getName().contains('History')
+      ? new Set<String>{ 'CreatedById', 'CreatedDate', 'Field', 'Id', 'NewValue', 'OldValue', this.parentFieldName }
+      : baseFields;
   }
 
   public List<FieldLevelHistory> getHistory(Query query) {

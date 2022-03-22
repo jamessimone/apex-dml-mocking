@@ -1,6 +1,6 @@
 public without sharing virtual class AggregateRepository extends Repository implements IAggregateRepository {
   private final Set<String> groupedByFieldNames;
-  protected List<Aggregation> aggregations;
+  private List<Aggregation> aggregations;
   private Boolean isNumberCountQuery = false;
   public AggregateRepository(
     Schema.SObjectType repoType,

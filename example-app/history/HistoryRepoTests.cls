@@ -1,6 +1,22 @@
 @IsTest
 private class HistoryRepoTests {
   @IsTest
+  static void it_should_continue_to_act_as_base_repo() {
+    List<Profile> profiles = new RepoFactory().getProfileRepo().get(Query.equals(Profile.Name, 'System Administrator'));
+    System.assertNotEquals(null, profiles);
+
+    IHistoryRepository historyRepo = new FieldLevelHistoryRepo(
+      OpportunityFieldHistory.OpportunityId,
+      OpportunityFieldHistory.SObjectType,
+      OpportunityFieldHistoryExample.class,
+      new RepoFactory()
+    );
+    // validate history repo can still return SObjects ...
+    List<OpportunityFieldHistory> histories = historyRepo.get(Query.equals(OpportunityFieldHistory.OpportunityId, ''));
+    System.assertNotEquals(null, histories);
+  }
+
+  @IsTest
   static void it_should_continue_to_act_as_aggregate_repo() {
     Aggregation count = Aggregation.count(OpportunityFieldHistory.Id, 'countId');
     IAggregateRepository repo = new FieldLevelHistoryRepo(
@@ -34,7 +50,7 @@ private class HistoryRepoTests {
   static void it_should_allow_mocking_of_history_records() {
     FieldLevelHistory mockRecord = new FieldLevelHistory();
     mockRecord.setValues(
-      new Map<String, Object> {
+      new Map<String, Object>{
         'CreatedDate' => System.now(),
         'Id' => TestingUtils.generateId(OpportunityFieldHistory.SObjectType),
         'Field' => 'Amount',
@@ -43,9 +59,7 @@ private class HistoryRepoTests {
         'OpportunityId' => TestingUtils.generateId(Opportunity.SObjectType)
       }
     );
-    RepoFactoryMock.HistoryResults.put(OpportunityFieldHistory.SObjectType, new List<FieldLevelHistory> {
-      mockRecord
-    });
+    RepoFactoryMock.HistoryResults.put(OpportunityFieldHistory.SObjectType, new List<FieldLevelHistory>{ mockRecord });
     /**
      * normally, you would be adding an IHistoryRepo implementation to the RepoFactory, and then overriding
      * within RepoFactoryMock the concrete implementation with the call to getRepoFromSObjectType. Since I don't
@@ -55,7 +69,8 @@ private class HistoryRepoTests {
      * All of that is to say: the whole point behind this pattern is to have dependencies be registered in the Factory, and Repository
      * implementations stubbed out in RepoFactoryMocks
      */
-    IHistoryRepository historyRepo = new RepoFactoryMock().getRepoFromSObjectType(OpportunityFieldHistory.SObjectType, null);
+    IHistoryRepository historyRepo = new RepoFactoryMock()
+      .getRepoFromSObjectType(OpportunityFieldHistory.SObjectType, null);
 
     List<FieldLevelHistory> histories = historyRepo.getAllHistory();
     System.assertNotEquals(true, histories.isEmpty());
@@ -64,7 +79,7 @@ private class HistoryRepoTests {
 
   private class OpportunityFieldHistoryExample extends FieldLevelHistory {
     protected override String getParentFieldName() {
-        return OpportunityFieldHistory.OpportunityId.getDescribe().getName();
+      return OpportunityFieldHistory.OpportunityId.getDescribe().getName();
     }
   }
 }

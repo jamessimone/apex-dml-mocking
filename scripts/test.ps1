@@ -14,6 +14,12 @@ function Remove-Scratch-Org() {
   }
 }
 
+function Start-Deploy() {
+  Write-Debug "Deploying source ..."
+  npx sfdx force:source:deploy -p force-app
+  npx sfdx force:source:deploy -p example-app
+}
+
 function Start-Tests() {
   Write-Debug "Starting test run ..."
   Invoke-Expression $testInvocation
@@ -60,8 +66,7 @@ if($scratchOrgAllotment -gt 0) {
     throw $1
   }
   # Deploy
-  Write-Debug 'Pushing source to scratch org ...'
-  npx sfdx force:source:push
+  Start-Deploy
   # Run tests
   Start-Tests
 } else {
@@ -72,10 +77,7 @@ if($shouldDeployToSandbox) {
   Write-Debug "No scratch orgs remaining, running tests on sandbox"
 
   try {
-    # Deploy
-    Write-Debug "Deploying source to sandbox ..."
-    npx sfdx force:source:deploy -p force-app
-    npx sfdx force:source:deploy -p example-app
+    Start-Deploy
     Start-Tests
   } catch {
     throw 'Error deploying to sandbox!'

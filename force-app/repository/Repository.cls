@@ -1,7 +1,7 @@
 public virtual without sharing class Repository implements IRepository {
   private final IDML dml;
   private final List<Schema.SObjectField> queryFields;
-  private final Schema.SObjectType repoType;
+  protected final Schema.SObjectType repoType;
   private final Set<String> selectFields;
   private final Map<SObjectType, String> childToRelationshipNames;
 
