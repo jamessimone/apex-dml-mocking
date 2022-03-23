@@ -3,11 +3,9 @@
     <testClassName>AccountHandlerTests</testClassName>
     <testClassName>AggregateRepositoryTests</testClassName>
     <testClassName>AggregationTests</testClassName>
-    <testClassName>DMLMock</testClassName>
     <testClassName>DMLTests</testClassName>
     <testClassName>HistoryRepoTests</testClassName>
     <testClassName>QueryTests</testClassName>
-    <testClassName>RepoFactoryMock</testClassName>
     <testClassName>RepositoryTests</testClassName>
     <testClassName>TriggerHandler_Tests</testClassName>
 </ApexTestSuite>
