@@ -41,12 +41,6 @@ function Start-Tests() {
 
 Write-Debug "Starting build script"
 
-# Authorize Dev Hub using prior creds. There's some issue with the flags --setdefaultdevhubusername and --setdefaultusername both being passed when run remotely
-# So we do that step in a config:set call separately
-
-npx sfdx auth:sfdxurl:store -f ./DEVHUB_SFDX_URL.txt -a $userAlias
-npx sfdx config:set defaultusername=$userAlias defaultdevhubusername=$userAlias
-
 # For local dev, store currently auth'd org to return to
 # Also store test command shared between script branches, below
 $scratchOrgAllotment = ((npx sfdx force:limits:api:display --json | ConvertFrom-Json).result | Where-Object -Property name -eq "DailyScratchOrgs").remaining
@@ -54,35 +48,18 @@ $scratchOrgAllotment = ((npx sfdx force:limits:api:display --json | ConvertFrom-
 Write-Debug "Total remaining scratch orgs for the day: $scratchOrgAllotment"
 Write-Debug "Test command to use: $testInvocation"
 
-$shouldDeployToSandbox = $false
-
 if($scratchOrgAllotment -gt 0) {
-  Write-Debug "Beginning scratch org creation"
-  # Create Scratch Org
-  $scratchOrgCreateMessage = npx sfdx force:org:create -f config/project-scratch-def.json -a $userAlias -s -d 1
-  # Sometimes SFDX lies (UTC date problem?) about the number of scratch orgs remaining in a given day
-  # The other issue is that this doesn't throw, so we have to test the response message ourselves
-  if($scratchOrgCreateMessage -eq 'The signup request failed because this organization has reached its active scratch org limit') {
-    throw $1
-  }
-  # Deploy
-  Start-Deploy
-  # Run tests
-  Start-Tests
-} else {
-  $shouldDeployToSandbox = $true
-}
-
-if($shouldDeployToSandbox) {
-  Write-Debug "No scratch orgs remaining, running tests on sandbox"
-
   try {
-    Start-Deploy
-    Start-Tests
+    Write-Debug "Beginning scratch org creation"
+    # Create Scratch Org
+    npx sfdx force:org:create -f config/project-scratch-def.json -a $scratchOrgName -s -d 1
   } catch {
-    throw 'Error deploying to sandbox!'
+    # Do nothing, we'll just try to deploy to the Dev Hub instead
   }
 }
+
+Start-Deploy
+Start-Tests
 
 Write-Debug "Build + testing finished successfully"
 
