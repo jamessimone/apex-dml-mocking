@@ -52,7 +52,8 @@ if($scratchOrgAllotment -gt 0) {
   try {
     Write-Debug "Beginning scratch org creation"
     # Create Scratch Org
-    npx sfdx force:org:create -f config/project-scratch-def.json -a $scratchOrgName -s -d 1
+    npx sfdx force:org:create -f config/project-scratch-def.json -a $userAlias -s -d 1
+    npx sfdx config:set defaultusername=$userAlias
   } catch {
     # Do nothing, we'll just try to deploy to the Dev Hub instead
   }
