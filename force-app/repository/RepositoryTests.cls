@@ -78,6 +78,22 @@ private class RepositoryTests {
   }
 
   @IsTest
+  static void it_should_add_parent_fields() {
+    GroupMemberRepo repo = new GroupMemberRepo();
+    repo.addParentFields(new List<SObjectType>{ Group.SObjectType }, new List<SObjectField>{ Group.Id });
+
+    Group grp = new Group(Name = 'Group');
+    insert grp;
+
+    GroupMember member = new GroupMember(GroupId = grp.Id, UserOrGroupId = UserInfo.getUserId());
+    insert member;
+
+    List<GroupMember> members = repo.getAll();
+    System.assertEquals(1, members.size());
+    System.assertEquals(grp.Id, members[0].Group.Id);
+  }
+
+  @IsTest
   static void it_should_decorate_dml_methods() {
     IRepository repo = Factory.getFactory().withMocks.RepoFactory.getOppRepo();
     Account acc = new Account();
@@ -106,6 +122,12 @@ private class RepositoryTests {
     repo.doHardDelete(acc);
     repo.doHardDelete(accs);
     System.assertEquals(acc, DMLMock.Deleted.Accounts.firstOrDefault);
+  }
+
+  private class GroupMemberRepo extends Repository {
+    public GroupMemberRepo() {
+      super(GroupMember.SObjectType, new List<SObjectField>{ GroupMember.GroupId }, new RepoFactoryMock());
+    }
   }
 
   private class ContactPointAddressRepo extends Repository {

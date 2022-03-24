@@ -111,4 +111,21 @@ private class QueryTests {
     System.assertEquals('not Name like :bindVar', notLike.toString());
     System.assertEquals(expectedBindVars, notLike.getBindVars());
   }
+
+  @IsTest
+  static void it_should_allow_parent_fields_for_filtering() {
+    Query parentQuery = Query.equals(Group.DeveloperName, 'SOME_CONSTANT.DeveloperName')
+      .usingParent(GroupMember.GroupId);
+    System.assertEquals('Group.DeveloperName = \'SOME_CONSTANT.DeveloperName\'', parentQuery.toString());
+    Query oliParentQuery = Query.equals(Profile.Name, 'System Administrator')
+      .usingParent(
+        new List<Schema.SObjectField>{
+          OpportunityLineItem.OpportunityId,
+          Opportunity.AccountId,
+          Account.OwnerId,
+          User.ProfileId
+        }
+      );
+    System.assertEquals('Opportunity.Account.Owner.Profile.Name = \'System Administrator\'', oliParentQuery.toString());
+  }
 }

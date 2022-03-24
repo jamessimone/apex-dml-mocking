@@ -10,13 +10,23 @@ public virtual class Query {
     NOT_LIKE
   }
 
-  private final SObjectField field;
+  private final String field;
+  private final Schema.SObjectField fieldToken;
   private final Operator operator;
   private final List<Object> predicates;
 
   private Boolean isIterable = false;
 
   private static final String EMPTY = '\'\'';
+
+  public Query usingParent(Schema.SObjectField parentField) {
+    return this.usingParent(new List<Schema.SObjectField>{ parentField });
+  }
+
+  public Query usingParent(List<SObjectField> parentFields) {
+    parentFields.add(this.fieldToken);
+    return new ParentQuery(parentFields, this.operator, this.predicates);
+  }
 
   public static Query equals(SObjectField field, Object predicate) {
     return equals(field, new List<Object>{ predicate });
@@ -110,13 +120,24 @@ public virtual class Query {
     }
   }
 
+  private class ParentQuery extends Query {
+    private ParentQuery(List<SObjectField> parentFields, Operator operator, List<Object> predicates) {
+      super(getBuiltUpParentFieldName(parentFields), operator, predicates);
+    }
+  }
+
   protected Query() {
   }
 
-  private Query(SObjectField field, Operator operator, List<Object> predicates) {
-    this.field = field;
+  private Query(String fieldName, Operator operator, List<Object> predicates) {
+    this.field = fieldName;
     this.operator = operator;
     this.predicates = predicates;
+  }
+
+  private Query(SObjectField fieldToken, Operator operator, List<Object> predicates) {
+    this(fieldToken.getDescribe().getName(), operator, predicates);
+    this.fieldToken = fieldToken;
   }
 
   public List<Object> getBindVars() {
@@ -124,15 +145,14 @@ public virtual class Query {
   }
 
   public virtual override String toString() {
-    String fieldName = this.field.getDescribe().getName();
     String predicateValue = this.getPredicate(this.predicates);
     this.isIterable = this.isIterable || this.predicates.size() > 1;
     if (this.operator == Query.Operator.NOT_LIKE) {
       String endingString = ' ' + (this.isIterable ? ':bindVar' : predicateValue);
       // who knows why this is the format they wanted
-      return String.format(this.getOperator(), new List<String>{ fieldName }) + endingString;
+      return String.format(this.getOperator(), new List<String>{ this.field }) + endingString;
     }
-    return fieldName + ' ' + this.getOperator() + ' ' + predicateValue;
+    return this.field + ' ' + this.getOperator() + ' ' + predicateValue;
   }
 
   public Boolean isEmpty() {
@@ -222,5 +242,16 @@ public virtual class Query {
       // do nothing, it didn't work
     }
     return String.valueOf(predicate);
+  }
+
+  private static String getBuiltUpParentFieldName(List<SObjectField> parentFields) {
+    String builtUpFieldName = '';
+    for (Integer index = 0; index < parentFields.size(); index++) {
+      Schema.DescribeFieldResult parentFieldDescribe = parentFields[index].getDescribe();
+      builtUpFieldName += index == parentFields.size() - 1
+        ? parentFieldDescribe.getName()
+        : parentFieldDescribe.getRelationshipName() + '.';
+    }
+    return builtUpFieldName;
   }
 }
