@@ -1,11 +1,11 @@
 public virtual class RepoFactory {
-  public virtual IHistoryRepository getOppRepo() {
+  public virtual IAggregateRepository getOppRepo() {
     List<SObjectField> queryFields = new List<SObjectField>{
       Opportunity.IsWon,
       Opportunity.StageName
       // etc ...
     };
-    IHistoryRepository oppRepo = new FieldLevelHistoryRepo(Opportunity.SObjectType, queryFields, this);
+    IAggregateRepository oppRepo = new FieldLevelHistoryRepo(Opportunity.SObjectType, queryFields, this);
     oppRepo.addParentFields(
       new List<SObjectType>{ Account.SObjectType },
       new List<SObjectField>{ Opportunity.Account.Id }
@@ -13,8 +13,8 @@ public virtual class RepoFactory {
     return oppRepo;
   }
 
-  public virtual IHistoryRepository getAccountRepo() {
-    IHistoryRepository accountRepo = new FieldLevelHistoryRepo(
+  public virtual IAggregateRepository getAccountRepo() {
+    IAggregateRepository accountRepo = new FieldLevelHistoryRepo(
       Account.SObjectType,
       new List<SObjectField>{ Account.Name },
       this
