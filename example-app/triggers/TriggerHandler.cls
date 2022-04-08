@@ -43,6 +43,7 @@ public virtual class TriggerHandler {
       for (SObjectField field : fields) {
         if (record.get(field) != oldRecord.get(field)) {
           updatedRecords.add(record);
+          break;
         }
       }
     }
