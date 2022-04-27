@@ -84,13 +84,30 @@ private class RepositoryTests {
 
     Group grp = new Group(Name = 'Group');
     insert grp;
-
     GroupMember member = new GroupMember(GroupId = grp.Id, UserOrGroupId = UserInfo.getUserId());
     insert member;
-
     List<GroupMember> members = repo.getAll();
+
     System.assertEquals(1, members.size());
     System.assertEquals(grp.Id, members[0].Group.Id);
+  }
+
+  @IsTest
+  static void it_should_add_child_fields() {
+    IRepository repo = new AccountRepo();
+    repo.addChildFields(Contact.SObjectType, new List<SObjectField>{ Contact.AccountId, Contact.LastName });
+
+    Account acc = new Account(Name = 'Parent');
+    insert acc;
+    Contact con = new Contact(AccountId = acc.Id, LastName = 'Child');
+    insert con;
+
+    List<Account> accounts = repo.getAll();
+
+    System.assertEquals(1, accounts.size());
+    System.assertEquals(1, accounts.get(0).Contacts.size());
+    Contact returnedCon = accounts.get(0).Contacts.get(0);
+    System.assertEquals(con, returnedCon);
   }
 
   @IsTest
@@ -142,6 +159,12 @@ private class RepositoryTests {
         },
         new RepoFactoryMock()
       );
+    }
+  }
+
+  private class AccountRepo extends Repository {
+    public AccountRepo() {
+      super(Account.SObjectType, new List<SObjectField>(), new RepoFactoryMock());
     }
   }
 }

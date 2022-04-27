@@ -19,8 +19,12 @@ public class RepoFactoryMock extends RepoFactory {
     return this.getRepoFromSObjectType(OpportunityLineItem.SObjectType, super.getOppLineItemRepo());
   }
 
+  public override IAggregateRepository getOppRepo() {
+    return this.getRepoFromSObjectType(Opportunity.SObjectType, super.getOppRepo());
+  }
+
   @TestVisible
-  private IHistoryRepository getRepoFromSObjectType(SObjectType sObjectType, IHistoryRepository fallback) {
+  private IHistoryRepository getRepoFromSObjectType(SObjectType sObjectType, IAggregateRepository fallback) {
     IHistoryRepository repo;
     List<SObject> queriedResults = this.getResults(sObjectType);
     List<AggregateRecord> aggRecords = AggregateResults.get(sObjectType);
@@ -33,7 +37,7 @@ public class RepoFactoryMock extends RepoFactory {
     } else if (historyRecords?.size() > 0) {
       repo = new RepoMock(historyRecords, this);
     } else {
-      repo = fallback;
+      repo = (IHistoryRepository) fallback;
     }
     return repo;
   }

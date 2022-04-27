@@ -5,6 +5,7 @@ public virtual without sharing class Repository implements IRepository {
   private final Set<String> selectFields;
   private final Map<SObjectType, String> childToRelationshipNames;
 
+  private Boolean baseSelectUsed = false;
   private Boolean shortCircuit = false;
   private Object bindVar;
 
@@ -64,6 +65,7 @@ public virtual without sharing class Repository implements IRepository {
   }
 
   protected virtual Set<String> addSelectFields() {
+    this.baseSelectUsed = true;
     Set<String> fieldStrings = new Set<String>{ 'Id' };
     for (SObjectField field : this.queryFields) {
       fieldStrings.add(field.getDescribe().getName());
@@ -84,8 +86,12 @@ public virtual without sharing class Repository implements IRepository {
   }
 
   private String getSelectAndFrom() {
-    this.selectFields.addAll(this.addSelectFields());
-    return 'SELECT ' + String.join(new List<String>(this.selectFields), ', ') + '\nFROM ' + this.repoType;
+    Set<String> localSelectFields = this.addSelectFields();
+    if (this.baseSelectUsed) {
+      localSelectFields.addAll(this.selectFields);
+      this.baseSelectUsed = false;
+    }
+    return 'SELECT ' + String.join(new List<String>(localSelectFields), ', ') + '\nFROM ' + this.repoType;
   }
 
   private String addWheres(List<Query> queries) {

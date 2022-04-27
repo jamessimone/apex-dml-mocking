@@ -1,6 +1,6 @@
 public interface IAggregateRepository extends IRepository {
-  void groupBy(Schema.SObjectField fieldToken);
-  void groupBy(String fieldName);
+  IAggregateRepository groupBy(Schema.SObjectField fieldToken);
+  IAggregateRepository groupBy(String fieldName);
 
   // always a fun one
   Integer count();

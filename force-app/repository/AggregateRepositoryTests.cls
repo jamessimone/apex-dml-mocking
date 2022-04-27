@@ -50,18 +50,9 @@ private class AggregateRepositoryTests {
 
   @IsTest
   static void shouldReturnCountOnFieldNameCorrectly() {
-    insert new List<Opportunity> {
-      new Opportunity(
-        Name = 'opp',
-        StageName = 'sum',
-        CloseDate = System.today()
-      ),
-      new Opportunity(
-        Name = 'opp2',
-        Amount = 1,
-        StageName = 'sum',
-        CloseDate = System.today()
-      )
+    insert new List<Opportunity>{
+      new Opportunity(Name = 'opp', StageName = 'sum', CloseDate = System.today()),
+      new Opportunity(Name = 'opp2', Amount = 1, StageName = 'sum', CloseDate = System.today())
     };
 
     IAggregateRepository repo = new AggregateRepository(
@@ -78,18 +69,9 @@ private class AggregateRepositoryTests {
 
   @IsTest
   static void shouldReturnCountAsInteger() {
-    insert new List<Opportunity> {
-      new Opportunity(
-        Name = 'opp',
-        StageName = 'sum',
-        CloseDate = System.today()
-      ),
-      new Opportunity(
-        Name = 'opp2',
-        Amount = 1,
-        StageName = 'sum',
-        CloseDate = System.today()
-      )
+    insert new List<Opportunity>{
+      new Opportunity(Name = 'opp', StageName = 'sum', CloseDate = System.today()),
+      new Opportunity(Name = 'opp2', Amount = 1, StageName = 'sum', CloseDate = System.today())
     };
     IAggregateRepository repo = new AggregateRepository(
       Opportunity.SObjectType,
@@ -98,5 +80,33 @@ private class AggregateRepositoryTests {
     );
 
     System.assertEquals(2, repo.count());
+  }
+
+  @IsTest
+  static void mocksAggregateResultsSuccessfully() {
+    Aggregation countOfAmount = Aggregation.count(Opportunity.Amount, 'wowza');
+    Aggregation sum = Aggregation.sum(Opportunity.Amount, 'oppSum');
+    String accountKey = 'AccountId';
+    Map<String, Object> mockAggregateResult = new Map<String, Object>{
+      countOfAmount.getAlias() => 5,
+      sum.getAlias() => 10,
+      accountKey => TestingUtils.generateId(Account.SObjectType)
+    };
+    AggregateRecord res = new AggregateRecord().putAll(mockAggregateResult);
+    RepoFactoryMock.AggregateResults.put(Opportunity.SObjectType, new List<AggregateRecord>{ res });
+
+    List<AggregateRecord> results = new RepoFactoryMock()
+      .getOppRepo()
+      .groupBy(Opportunity.AccountId)
+      .aggregate(new List<Aggregation>{ countOfAmount, sum });
+
+    System.assertEquals(1, results.size());
+    AggregateRecord returnedResult = results.get(0);
+    System.assertEquals(mockAggregateResult.get(accountKey), returnedResult.get(accountKey));
+    System.assertEquals(
+      mockAggregateResult.get(countOfAmount.getAlias()),
+      returnedResult.get(countOfAmount.getAlias())
+    );
+    System.assertEquals(mockAggregateResult.get(sum.getAlias()), returnedResult.get(sum.getAlias()));
   }
 }

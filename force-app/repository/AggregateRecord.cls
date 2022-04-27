@@ -1,8 +1,9 @@
 public class AggregateRecord {
   private final Map<String, Object> keyToAggregateResult = new Map<String, Object>();
 
-  public void putAll(Map<String, Object> values) {
+  public AggregateRecord putAll(Map<String, Object> values) {
     this.keyToAggregateResult.putAll(values);
+    return this;
   }
 
   public Object get(String key) {

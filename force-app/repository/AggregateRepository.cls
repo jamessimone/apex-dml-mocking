@@ -1,5 +1,5 @@
 public without sharing virtual class AggregateRepository extends Repository implements IAggregateRepository {
-  private final Set<String> groupedByFieldNames;
+  private final Set<String> groupedByFieldNames = new Set<String>();
   private List<Aggregation> aggregations;
   private Boolean isNumberCountQuery = false;
   public AggregateRepository(
@@ -8,18 +8,18 @@ public without sharing virtual class AggregateRepository extends Repository impl
     RepoFactory repoFactory
   ) {
     super(repoType, queryFields, repoFactory);
-    this.groupedByFieldNames = new Set<String>();
   }
 
   protected AggregateRepository(RepoFactory repoFactory) {
     super(repoFactory);
   }
 
-  public void groupBy(Schema.SObjectField fieldToken) {
-    this.groupBy(fieldToken.getDescribe().getName());
+  public IAggregateRepository groupBy(Schema.SObjectField fieldToken) {
+    return this.groupBy(fieldToken.getDescribe().getName());
   }
-  public void groupBy(String fieldName) {
+  public IAggregateRepository groupBy(String fieldName) {
     this.groupedByFieldNames.add(fieldName);
+    return this;
   }
 
   public Integer count() {
