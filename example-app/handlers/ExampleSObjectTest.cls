@@ -10,7 +10,7 @@ class ExampleSObjectTest {
         );
 
         repo.addParentFields(
-            new SObjectType[] { Account.SObjectType },
+            new SObjectField[] { ExampleSObject__c.Account__c },
             new SObjectField[] { Account.Name }
         );
 

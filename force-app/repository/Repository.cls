@@ -45,6 +45,17 @@ public virtual without sharing class Repository implements IRepository {
     }
   }
 
+  public void addParentFields(List<SObjectField> parentIds, List<SObjectField> parentFields) {
+    String parentBase = '';
+    for (SObjectField parentId : parentIds) {
+      System.assertEquals(SoapType.ID, parentId.getDescribe().getSOAPType()); // Switch to Exception
+      parentBase += parentId.getDescribe().getRelationshipName() + '.';
+    }
+    for (SObjectField parentField : parentFields) {
+      this.selectFields.add(parentBase + parentField.getDescribe().getName());
+    }
+  }
+
   public void addChildFields(SObjectType childType, List<SObjectField> childFields) {
     if (this.childToRelationshipNames.containsKey(childType)) {
       String baseSubselect = '(SELECT {0} FROM {1})';
