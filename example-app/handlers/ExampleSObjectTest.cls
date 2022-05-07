@@ -3,8 +3,6 @@ class ExampleSObjectTest {
 
     @IsTest
     static void runTest () {
-        Factory factory = Factory.getFactory();
-
         Repository repo = new Repository(
             ExampleSObject__c.SObjectType,
             new SObjectField[] { ExampleSObject__c.Id, ExampleSObject__c.Name },
