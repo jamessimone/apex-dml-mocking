@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>SecondAccountLookup__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <externalId>false</externalId>
+    <label>Second Account Lookup</label>
+    <referenceTo>Account</referenceTo>
+    <relationshipLabel>Example SObjects (Second Account Lookup)</relationshipLabel>
+    <relationshipName>Example_SObjects1</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

@@ -5,8 +5,7 @@
   "dependencies": {},
   "devDependencies": {
     "prettier-plugin-apex": "1.10.0",
-    "prettier": "2.5.1",
-    "sfdx-cli": "latest"
+    "prettier": "2.6.2"
   },
   "repository": {
     "type": "git",

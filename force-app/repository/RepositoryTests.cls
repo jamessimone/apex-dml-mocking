@@ -80,7 +80,7 @@ private class RepositoryTests {
   @IsTest
   static void it_should_add_parent_fields() {
     GroupMemberRepo repo = new GroupMemberRepo();
-    repo.addParentFields(new List<SObjectType>{ Group.SObjectType }, new List<SObjectField>{ Group.Id });
+    repo.addParentFields(new List<Schema.SObjectField>{ GroupMember.GroupId }, new List<Schema.SObjectField>{ Group.Id });
 
     Group grp = new Group(Name = 'Group');
     insert grp;
@@ -95,7 +95,7 @@ private class RepositoryTests {
   @IsTest
   static void it_should_add_child_fields() {
     IRepository repo = new AccountRepo();
-    repo.addChildFields(Contact.SObjectType, new List<SObjectField>{ Contact.AccountId, Contact.LastName });
+    repo.addChildFields(Contact.AccountId, new List<Schema.SObjectField>{ Contact.AccountId, Contact.LastName });
 
     Account acc = new Account(Name = 'Parent');
     insert acc;
@@ -143,7 +143,7 @@ private class RepositoryTests {
 
   private class GroupMemberRepo extends Repository {
     public GroupMemberRepo() {
-      super(GroupMember.SObjectType, new List<SObjectField>{ GroupMember.GroupId }, new RepoFactoryMock());
+      super(GroupMember.SObjectType, new List<Schema.SObjectField>{ GroupMember.GroupId }, new RepoFactoryMock());
     }
   }
 
@@ -151,7 +151,7 @@ private class RepositoryTests {
     public ContactPointAddressRepo() {
       super(
         ContactPointAddress.SObjectType,
-        new List<SObjectField>{
+        new List<Schema.SObjectField>{
           ContactPointAddress.Id,
           ContactPointAddress.PreferenceRank,
           ContactPointAddress.ParentId,
@@ -164,7 +164,7 @@ private class RepositoryTests {
 
   private class AccountRepo extends Repository {
     public AccountRepo() {
-      super(Account.SObjectType, new List<SObjectField>(), new RepoFactoryMock());
+      super(Account.SObjectType, new List<Schema.SObjectField>(), new RepoFactoryMock());
     }
   }
 }
