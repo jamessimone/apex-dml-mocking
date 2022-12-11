@@ -96,8 +96,8 @@ public virtual without sharing class Repository implements IRepository {
 
   private String addWheres(List<Query> queries) {
     List<String> wheres = new List<String>();
-    for (Query query : queries) {
-      if (query.isEmpty()) {
+    for (Query qry : queries) {
+      if (qry.isEmpty() && qry.operator != Query.Operator.NOT_EQUALS) {
         this.shortCircuit = true;
       } else if (this.bindVar == null) {
         // at some point, it would be nice to support multiple bind variables
@@ -105,9 +105,9 @@ public virtual without sharing class Repository implements IRepository {
         // arguments - and even then, only once per full query
         // multiple NOT LIKEs (for different fields) are supported
         // by chaining queries together, if necessary
-        this.bindVar = query.getBindVars();
+        this.bindVar = qry.getBindVars();
       }
-      wheres.add(query.toString());
+      wheres.add(qry.toString());
     }
     return wheres.isEmpty() ? '' : '\nWHERE ' + String.join(wheres, '\nAND');
   }

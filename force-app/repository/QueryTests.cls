@@ -128,4 +128,11 @@ private class QueryTests {
       );
     System.assertEquals('Opportunity.Account.Owner.Profile.Name = \'System Administrator\'', oliParentQuery.toString());
   }
+
+  @IsTest
+  static void it_allows_empty_collections_for_not_equals() {
+    Query notEquals = Query.notEquals(Opportunity.AccountId, new Set<Id>());
+
+    System.assertEquals('AccountId != \'\'', notEquals.toString());
+  }
 }

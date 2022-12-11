@@ -1,15 +1,15 @@
 @IsTest
 public class RepoFactoryMock extends RepoFactory {
   @TestVisible
-  private static Map<SObjectType, List<AggregateRecord>> AggregateResults = new Map<SObjectType, List<AggregateRecord>>();
+  private static final Map<SObjectType, List<AggregateRecord>> AggregateResults = new Map<SObjectType, List<AggregateRecord>>();
   @TestVisible
-  private static List<Aggregation> AggregatesMade = new List<Aggregation>();
+  private static final List<Aggregation> AggregatesMade = new List<Aggregation>();
   @TestVisible
-  private static List<SObject> QueryResults = new List<SObject>();
+  private static final List<SObject> QueryResults = new List<SObject>();
   @TestVisible
-  private static List<Query> QueriesMade = new List<Query>();
+  private static final List<Query> QueriesMade = new List<Query>();
   @TestVisible
-  private static Map<SObjectType, List<FieldLevelHistory>> HistoryResults = new Map<SObjectType, List<FieldLevelHistory>>();
+  private static final Map<SObjectType, List<FieldLevelHistory>> HistoryResults = new Map<SObjectType, List<FieldLevelHistory>>();
 
   public override IDML getDML() {
     return new DMLMock();

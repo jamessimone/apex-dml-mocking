@@ -1,5 +1,5 @@
 public virtual class Query {
-  private enum Operator {
+  public enum Operator {
     EQUALS,
     NOT_EQUALS,
     LESS_THAN,
@@ -10,9 +10,9 @@ public virtual class Query {
     NOT_LIKE
   }
 
+  public final Operator operator;
   private final String field;
   private final Schema.SObjectField fieldToken;
-  private final Operator operator;
   private final List<Object> predicates;
 
   private Boolean isIterable = false;
