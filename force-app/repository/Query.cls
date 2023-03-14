@@ -13,11 +13,12 @@ public virtual class Query {
   public final Operator operator;
   private final String field;
   private final Schema.SObjectField fieldToken;
-  private final List<Object> predicates;
+  private final Object predicate;
 
-  private Boolean isIterable = false;
+  private final Map<String, Object> bindVars = new Map<String, Object>();
 
-  private static final String EMPTY = '\'\'';
+  private static final String BIND_VAR_MERGE = 'bindVar{0}';
+  private static Integer BIND_VAR_NUMBER = 0;
 
   public Query usingParent(Schema.SObjectField parentField) {
     return this.usingParent(new List<Schema.SObjectField>{ parentField });
@@ -25,72 +26,40 @@ public virtual class Query {
 
   public Query usingParent(List<SObjectField> parentFields) {
     parentFields.add(this.fieldToken);
-    return new ParentQuery(parentFields, this.operator, this.predicates);
+    return new ParentQuery(parentFields, this.operator, this.predicate);
   }
 
   public static Query equals(SObjectField field, Object predicate) {
-    return equals(field, new List<Object>{ predicate });
-  }
-
-  public static Query equals(SObjectField field, List<Object> predicates) {
-    return new Query(field, Operator.EQUALS, predicates);
+    return new Query(field, Operator.EQUALS, predicate);
   }
 
   public static Query notEquals(SObjectField field, Object predicate) {
-    return notEquals(field, new List<Object>{ predicate });
-  }
-
-  public static Query notEquals(SObjectField field, List<Object> predicates) {
-    return new Query(field, Operator.NOT_EQUALS, predicates);
+    return new Query(field, Operator.NOT_EQUALS, predicate);
   }
 
   public static Query lessThan(SObjectField field, Object predicate) {
-    return lessThan(field, new List<Object>{ predicate });
-  }
-
-  public static Query lessThan(SObjectField field, List<Object> predicates) {
-    return new Query(field, Operator.LESS_THAN, predicates);
+    return new Query(field, Operator.LESS_THAN, predicate);
   }
 
   public static Query lessThanOrEqual(SObjectField field, Object predicate) {
-    return lessThanOrEqual(field, new List<Object>{ predicate });
-  }
-
-  public static Query lessThanOrEqual(SObjectField field, List<Object> predicates) {
-    return new Query(field, Operator.LESS_THAN_OR_EQUAL, predicates);
+    return new Query(field, Operator.LESS_THAN_OR_EQUAL, predicate);
   }
 
   public static Query greaterThan(SObjectField field, Object predicate) {
-    return greaterThan(field, new List<Object>{ predicate });
-  }
-
-  public static Query greaterThan(SObjectField field, List<Object> predicates) {
-    return new Query(field, Operator.GREATER_THAN, predicates);
+    return new Query(field, Operator.GREATER_THAN, predicate);
   }
 
   public static Query greaterThanOrEqual(SObjectField field, Object predicate) {
-    return greaterThanOrEqual(field, new List<Object>{ predicate });
-  }
-
-  public static Query greaterThanOrEqual(SObjectField field, List<Object> predicates) {
-    return new Query(field, Operator.GREATER_THAN_OR_EQUAL, predicates);
+    return new Query(field, Operator.GREATER_THAN_OR_EQUAL, predicate);
   }
 
   // like is a reserved keyword
   public static Query likeQuery(SObjectField field, Object predicate) {
-    return likeQuery(field, new List<Object>{ predicate });
-  }
-
-  public static Query likeQuery(SObjectField field, List<Object> predicates) {
-    return new Query(field, Operator.ALIKE, predicates);
+    return new Query(field, Operator.ALIKE, predicate);
   }
 
   public static Query notLike(SObjectField field, Object predicate) {
-    return notLike(field, new List<Object>{ predicate });
-  }
-
-  public static Query notLike(SObjectField field, List<Object> predicates) {
-    return new Query(field, Operator.NOT_LIKE, predicates);
+    return new Query(field, Operator.NOT_LIKE, predicate);
   }
 
   // or is a reserved keyword
@@ -115,48 +84,43 @@ public virtual class Query {
       String baseString = '(';
       for (Query innerQuery : this.queries) {
         baseString += innerQuery.toString() + this.orDelimiter;
+        this.bindVars.putAll(innerQuery.getBindVars());
       }
       return baseString.removeEnd(this.orDelimiter) + ')';
     }
   }
 
   private class ParentQuery extends Query {
-    private ParentQuery(List<SObjectField> parentFields, Operator operator, List<Object> predicates) {
-      super(getBuiltUpParentFieldName(parentFields), operator, predicates);
+    private ParentQuery(List<SObjectField> parentFields, Operator operator, Object predicate) {
+      super(getBuiltUpParentFieldName(parentFields), operator, predicate);
     }
   }
 
   protected Query() {
   }
 
-  private Query(String fieldName, Operator operator, List<Object> predicates) {
+  private Query(String fieldName, Operator operator, Object predicate) {
     this.field = fieldName;
     this.operator = operator;
-    this.predicates = predicates;
+    this.predicate = predicate;
   }
 
-  private Query(SObjectField fieldToken, Operator operator, List<Object> predicates) {
-    this(fieldToken.getDescribe().getName(), operator, predicates);
+  private Query(SObjectField fieldToken, Operator operator, Object predicate) {
+    this(fieldToken.getDescribe().getName(), operator, predicate);
     this.fieldToken = fieldToken;
   }
 
-  public List<Object> getBindVars() {
-    return this.predicates;
+  public Map<String, Object> getBindVars() {
+    return this.bindVars;
   }
 
   public virtual override String toString() {
-    String predicateValue = this.getPredicate(this.predicates);
-    this.isIterable = this.isIterable || this.predicates.size() > 1;
+    String predicateValue = this.getPredicate(this.predicate);
     if (this.operator == Query.Operator.NOT_LIKE) {
-      String endingString = ' ' + (this.isIterable ? ':bindVar' : predicateValue);
       // who knows why this is the format they wanted
-      return String.format(this.getOperator(), new List<String>{ this.field }) + endingString;
+      return String.format(this.getOperator(), new List<String>{ this.field }) + ' ' + predicateValue;
     }
     return this.field + ' ' + this.getOperator() + ' ' + predicateValue;
-  }
-
-  public Boolean isEmpty() {
-    return this.getPredicate(this.predicates) == EMPTY;
   }
 
   public Boolean equals(Object thatObject) {
@@ -172,10 +136,10 @@ public virtual class Query {
     String returnVal = '';
     switch on this.operator {
       when EQUALS {
-        returnVal = isIterable ? 'in' : '=';
+        returnVal = '=';
       }
       when NOT_EQUALS {
-        returnVal = isIterable ? 'not in' : '!=';
+        returnVal = '!=';
       }
       when LESS_THAN {
         returnVal = '<';
@@ -200,48 +164,13 @@ public virtual class Query {
   }
 
   private String getPredicate(Object predicate) {
-    if (predicate == null) {
-      return 'null';
-    } else if (predicate instanceof Datetime) {
-      // the most annoying one
-      Datetime dt = (Datetime) predicate;
-      return dt.format('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'', 'Greenwich Mean Time');
-    } else if (predicate instanceof List<Object>) {
-      List<Object> localPredicates = (List<Object>) predicate;
-      if (localPredicates.isEmpty()) {
-        return EMPTY;
-      }
-      List<String> innerStrings = new List<String>();
-      for (Object innerPred : localPredicates) {
-        // recurse for string value
-        String innerString = this.getPredicate(innerPred);
-        innerStrings.add(innerString);
-      }
-      String start = innerStrings.size() > 1 ? '(' : '';
-      String ending = innerStrings.size() > 1 ? ')' : '';
-      return start + String.join(innerStrings, ',') + ending;
-    } else if (predicate instanceof String) {
-      String input = (String) predicate;
-      return '\'' + String.escapeSingleQuotes(input) + '\'';
+    if (predicate == null || predicate instanceof Boolean) {
+      return '' + predicate;
     }
-
-    // it could still be a Set, which is notoriously hard to detect for
-    // due to instanceof Iterable<String> returning false for Sets, despite
-    // Set.class implementing the interface ...
-    try {
-      Iterable<Object> objectSet = (Iterable<Object>) predicate;
-      List<String> innerList = new List<String>();
-      Iterator<Object> objectSetIterator = objectSet.iterator();
-      while (objectSetIterator.hasNext()) {
-        innerList.add(String.valueOf(objectSetIterator.next()));
-      }
-      this.isIterable = innerList.size() > 1;
-
-      return this.getPredicate(innerList);
-    } catch (Exception ex) {
-      // do nothing, it didn't work
-    }
-    return String.valueOf(predicate);
+    String predicateKey = String.format(BIND_VAR_MERGE, new List<String>{ BIND_VAR_NUMBER.format() });
+    BIND_VAR_NUMBER++;
+    this.bindVars.put(predicateKey, predicate);
+    return ':' + predicateKey;
   }
 
   private static String getBuiltUpParentFieldName(List<SObjectField> parentFields) {

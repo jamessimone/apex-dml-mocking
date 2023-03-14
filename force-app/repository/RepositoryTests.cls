@@ -27,19 +27,19 @@ private class RepositoryTests {
     repo.get(setQuery);
     repo.get(setStringQuery);
     System.assertEquals(3, Limits.getQueries());
-    // we need to write a special assert for sets with multiple values
-    System.assertEquals('Name in (\'Open\',\'Closed\')', setStringQuery.toString());
+    System.assertEquals('Name = :bindVar3', setStringQuery.toString());
+    System.assertEquals(cpaNames, setStringQuery.getBindVars().get('bindVar3'));
   }
 
   @IsTest
-  static void it_should_properly_short_circuit_when_empty_collections_passed_in() {
+  static void it_should_query_with_empty_collections() {
     Query listQuery = Query.equals(ContactPointAddress.Id, new List<Id>());
 
     IRepository repo = new ContactPointAddressRepo();
 
     List<SObject> opps = repo.get(listQuery);
     System.assertEquals(0, opps.size());
-    System.assertEquals(0, Limits.getQueries());
+    System.assertEquals(1, Limits.getQueries());
   }
 
   @IsTest
@@ -80,7 +80,10 @@ private class RepositoryTests {
   @IsTest
   static void it_should_add_parent_fields() {
     GroupMemberRepo repo = new GroupMemberRepo();
-    repo.addParentFields(new List<Schema.SObjectField>{ GroupMember.GroupId }, new List<Schema.SObjectField>{ Group.Id });
+    repo.addParentFields(
+      new List<Schema.SObjectField>{ GroupMember.GroupId },
+      new List<Schema.SObjectField>{ Group.Id }
+    );
 
     Group grp = new Group(Name = 'Group');
     insert grp;

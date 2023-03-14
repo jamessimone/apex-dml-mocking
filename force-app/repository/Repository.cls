@@ -4,10 +4,10 @@ public virtual without sharing class Repository implements IRepository {
   protected final Schema.SObjectType repoType;
   private final Set<String> selectFields;
   private final Map<Schema.SObjectField, String> childToRelationshipNames;
+  private final Map<String, Object> bindVars = new Map<String, Object>();
 
+  private System.AccessLevel accessLevel = System.AccessLevel.SYSTEM_MODE;
   private Boolean baseSelectUsed = false;
-  private Boolean shortCircuit = false;
-  private Object bindVar;
 
   public Repository(Schema.SObjectType repoType, List<Schema.SObjectField> queryFields, RepoFactory repoFactory) {
     this(repoFactory);
@@ -64,6 +64,11 @@ public virtual without sharing class Repository implements IRepository {
     }
   }
 
+  public Repository setAccessLevel(System.AccessLevel accessLevel) {
+    this.accessLevel = accessLevel;
+    return this;
+  }
+
   protected virtual Set<String> addSelectFields() {
     this.baseSelectUsed = true;
     Set<String> fieldStrings = new Set<String>{ 'Id' };
@@ -97,27 +102,15 @@ public virtual without sharing class Repository implements IRepository {
   private String addWheres(List<Query> queries) {
     List<String> wheres = new List<String>();
     for (Query qry : queries) {
-      if (qry.isEmpty() && qry.operator != Query.Operator.NOT_EQUALS) {
-        this.shortCircuit = true;
-      } else if (this.bindVar == null) {
-        // at some point, it would be nice to support multiple bind variables
-        // for collection-based arguments; for now, we only support them for NOT LIKE
-        // arguments - and even then, only once per full query
-        // multiple NOT LIKEs (for different fields) are supported
-        // by chaining queries together, if necessary
-        this.bindVar = qry.getBindVars();
-      }
       wheres.add(qry.toString());
+      this.bindVars.putAll(qry.getBindVars());
     }
     return wheres.isEmpty() ? '' : '\nWHERE ' + String.join(wheres, '\nAND');
   }
 
   private List<SObject> performQuery(String finalQuery) {
     System.debug('Query: \n' + finalQuery);
-    if (this.bindVar != null) {
-      System.debug('Bind var: ' + this.bindVar);
-    }
-    List<SObject> results = shortCircuit ? new List<SObject>() : Database.query(finalQuery);
+    List<SObject> results = Database.queryWithBinds(finalQuery, this.bindVars, this.accessLevel);
     System.debug('Number of results: ' + results.size() + '\nResults: \n' + results);
     return results;
   }

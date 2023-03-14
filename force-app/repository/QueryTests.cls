@@ -15,34 +15,33 @@ private class QueryTests {
   }
 
   @IsTest
-  static void it_should_properly_render_datetimes_as_strings() {
+  static void it_works_with_datetimes() {
     Datetime sevenDaysAgo = System.now().addDays(-7);
     Query greaterThan = Query.greaterThan(Opportunity.CreatedDate, sevenDaysAgo);
     Query basicQuery = Query.greaterThanOrEqual(Opportunity.CreatedDate, sevenDaysAgo);
 
-    String expectedTimeString = sevenDaysAgo.format('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'', 'Greenwich Mean Time');
-    System.assertEquals('CreatedDate > ' + expectedTimeString, greaterThan.toString());
-    System.assertEquals('CreatedDate >= ' + expectedTimeString, basicQuery.toString());
+    System.assertEquals('CreatedDate > :bindVar0', greaterThan.toString());
+    System.assertEquals('CreatedDate >= :bindVar1', basicQuery.toString());
+    System.assertEquals(sevenDaysAgo, greaterThan.getBindVars().get('bindVar0'));
+    System.assertEquals(sevenDaysAgo, basicQuery.getBindVars().get('bindVar1'));
   }
 
   @IsTest
   static void it_should_properly_format_comparison_queries() {
-    String expectedLessThan = 'Amount < 0';
-    String expectedLessThanOrEqual = 'Amount <= 0';
-
     Query lessThan = Query.lessThan(Opportunity.Amount, 0);
     Query lessThanOrEqual = Query.lessThanOrEqual(Opportunity.Amount, 0);
 
-    System.assertEquals(expectedLessThan, lessThan.toString());
-    System.assertEquals(expectedLessThanOrEqual, lessThanOrEqual.toString());
+    System.assertEquals('Amount < :bindVar0', lessThan.toString());
+    System.assertEquals(0, lessThan.getBindVars().get('bindVar0'));
+    System.assertEquals('Amount <= :bindVar1', lessThanOrEqual.toString());
+    System.assertEquals(0, lessThanOrEqual.getBindVars().get('bindVar1'));
 
-    String expectedNotEquals = 'Amount != 0';
-    System.assertEquals(expectedNotEquals, Query.notEquals(Opportunity.Amount, 0).toString());
-    String notEqualsIterable = 'Amount not in (0,1,2)';
-    System.assertEquals(
-      notEqualsIterable,
-      Query.notEquals(Opportunity.Amount, new List<Integer>{ 0, 1, 2 }).toString()
-    );
+    Query notEquals = Query.notEquals(Opportunity.Amount, 0);
+    System.assertEquals('Amount != :bindVar2', notEquals.toString());
+    System.assertEquals(0, notEquals.getBindVars().get('bindVar2'));
+    Query notEqualsIterable = Query.notEquals(Opportunity.Amount, new List<Integer>{ 0, 1, 2 });
+    System.assertEquals('Amount != :bindVar3', notEqualsIterable.toString());
+    System.assertEquals(new List<Integer>{ 0, 1, 2 }, notEqualsIterable.getBindVars().get('bindVar3'));
   }
 
   @IsTest
@@ -57,10 +56,14 @@ private class QueryTests {
     Query decimalQuery = Query.equals(Opportunity.Amount, number3);
     Query longQuery = Query.equals(Opportunity.Amount, number4);
 
-    System.assertEquals('Amount = 1261992.0', doubleQuery.toString(), 'double');
-    System.assertEquals('Amount = 1', intQuery.toString(), 'int');
-    System.assertEquals('Amount = 1.00', decimalQuery.toString(), 'decimal');
-    System.assertEquals('Amount = 1234567890', longQuery.toString(), 'long');
+    System.assertEquals('Amount = :bindVar0', doubleQuery.toString(), 'double');
+    System.assertEquals(number1, doubleQuery.getBindVars().get('bindVar0'));
+    System.assertEquals('Amount = :bindVar1', intQuery.toString(), 'int');
+    System.assertEquals(number2, intQuery.getBindVars().get('bindVar1'));
+    System.assertEquals('Amount = :bindVar2', decimalQuery.toString(), 'decimal');
+    System.assertEquals(number3, decimalQuery.getBindVars().get('bindVar2'));
+    System.assertEquals('Amount = :bindVar3', longQuery.toString(), 'long');
+    System.assertEquals(number4, longQuery.getBindVars().get('bindVar3'));
   }
 
   @IsTest
@@ -88,7 +91,8 @@ private class QueryTests {
 
     Query likeQuery = Query.likeQuery(Account.Name, expectedName);
 
-    System.assertEquals('Name like \'' + expectedName + '\'', likeQuery.toString());
+    System.assertEquals('Name like :bindVar0', likeQuery.toString());
+    System.assertEquals(expectedName, likeQuery.getBindVars().get('bindVar0'));
   }
 
   @IsTest
@@ -97,26 +101,28 @@ private class QueryTests {
 
     Query notLike = Query.notLike(Account.Name, expectedName);
 
-    System.assertEquals('not Name like \'' + expectedName + '\'', notLike.toString());
+    System.assertEquals('not Name like :bindVar0', notLike.toString());
+    System.assertEquals(expectedName, notLike.getBindVars().get('bindVar0'));
   }
 
   @IsTest
   static void it_should_allow_not_like_with_lists() {
     String firstVal = '%one';
     String secondVal = 'two%';
-    List<String> expectedBindVars = new List<String>{ firstVal, secondVal };
+    List<String> values = new List<String>{ firstVal, secondVal };
 
-    Query notLike = Query.notLike(Account.Name, expectedBindVars);
+    Query notLike = Query.notLike(Account.Name, values);
 
-    System.assertEquals('not Name like :bindVar', notLike.toString());
-    System.assertEquals(expectedBindVars, notLike.getBindVars());
+    System.assertEquals('not Name like :bindVar0', notLike.toString());
+    System.assertEquals(values, notLike.getBindVars().get('bindVar0'));
   }
 
   @IsTest
   static void it_should_allow_parent_fields_for_filtering() {
     Query parentQuery = Query.equals(Group.DeveloperName, 'SOME_CONSTANT.DeveloperName')
       .usingParent(GroupMember.GroupId);
-    System.assertEquals('Group.DeveloperName = \'SOME_CONSTANT.DeveloperName\'', parentQuery.toString());
+    System.assertEquals('Group.DeveloperName = :bindVar0', parentQuery.toString());
+    System.assertEquals('SOME_CONSTANT.DeveloperName', parentQuery.getBindVars().get('bindVar0'));
     Query oliParentQuery = Query.equals(Profile.Name, 'System Administrator')
       .usingParent(
         new List<Schema.SObjectField>{
@@ -126,13 +132,15 @@ private class QueryTests {
           User.ProfileId
         }
       );
-    System.assertEquals('Opportunity.Account.Owner.Profile.Name = \'System Administrator\'', oliParentQuery.toString());
+    System.assertEquals('Opportunity.Account.Owner.Profile.Name = :bindVar1', oliParentQuery.toString());
+    System.assertEquals('System Administrator', oliParentQuery.getBindVars().get('bindVar1'));
   }
 
   @IsTest
   static void it_allows_empty_collections_for_not_equals() {
     Query notEquals = Query.notEquals(Opportunity.AccountId, new Set<Id>());
 
-    System.assertEquals('AccountId != \'\'', notEquals.toString());
+    System.assertEquals('AccountId != :bindVar0', notEquals.toString());
+    System.assertEquals(new Set<Id>(), notEquals.getBindVars().get('bindVar0'));
   }
 }
