@@ -105,7 +105,7 @@ public virtual without sharing class Repository implements IRepository {
       wheres.add(qry.toString());
       this.bindVars.putAll(qry.getBindVars());
     }
-    return wheres.isEmpty() ? '' : '\nWHERE ' + String.join(wheres, '\nAND ');
+    return wheres.isEmpty() ? '' : '\nWHERE ' + String.join(wheres, '\nAND ').trim();
   }
 
   private List<SObject> performQuery(String finalQuery) {

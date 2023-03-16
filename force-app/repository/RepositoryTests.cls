@@ -52,12 +52,13 @@ private class RepositoryTests {
 
     Id nullId = null;
     Query andQuery = Query.equals(ContactPointAddress.ParentId, nullId);
+    Query secondAnd = Query.notEquals(ContactPointAddress.Id, nullId);
     Query orQuery = Query.orQuery(
       Query.equals(ContactPointAddress.PreferenceRank, cpa.PreferenceRank),
       Query.equals(ContactPointAddress.PreferenceRank, secondCpa.PreferenceRank)
     );
 
-    List<ContactPointAddress> cpas = repo.get(new List<Query>{ andQuery, orQuery });
+    List<ContactPointAddress> cpas = repo.get(new List<Query>{ andQuery, secondAnd, orQuery });
     System.assertEquals(2, cpas.size());
   }
 
