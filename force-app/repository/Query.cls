@@ -126,7 +126,9 @@ public virtual class Query {
   public Boolean equals(Object thatObject) {
     if (thatObject instanceof Query) {
       Query that = (Query) thatObject;
-      return this.toString() == that.toString();
+      return this.field == that.field &&
+        this.operator == that.operator &&
+        this.bindVars.values() == that.bindVars.values();
     }
 
     return false;
