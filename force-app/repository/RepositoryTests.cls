@@ -98,8 +98,8 @@ private class RepositoryTests {
 
   @IsTest
   static void it_should_add_child_fields() {
-    IRepository repo = new AccountRepo();
-    repo.addChildFields(Contact.AccountId, new List<Schema.SObjectField>{ Contact.AccountId, Contact.LastName });
+    IRepository repo = new AccountRepo()
+      .addChildFields(Contact.AccountId, new List<Schema.SObjectField>{ Contact.AccountId, Contact.LastName });
 
     Account acc = new Account(Name = 'Parent');
     insert acc;
@@ -112,6 +112,49 @@ private class RepositoryTests {
     System.assertEquals(1, accounts.get(0).Contacts.size());
     Contact returnedCon = accounts.get(0).Contacts.get(0);
     System.assertEquals(con, returnedCon);
+  }
+
+  @IsTest
+  static void it_adds_child_fields_with_filters() {
+    String nameFilter = 'Child';
+    IRepository repo = new AccountRepo()
+      .addChildFields(
+        Contact.AccountId,
+        new List<Schema.SObjectField>{ Contact.AccountId, Contact.LastName },
+        new List<Query>{ Query.notEquals(Contact.LastName, nameFilter) },
+        new Map<Schema.SObjectField, RepositorySortOrder>(),
+        1
+      );
+
+    Account acc = new Account(Name = 'Parent');
+    insert acc;
+    Contact con = new Contact(AccountId = acc.Id, LastName = nameFilter);
+    insert con;
+
+    List<Account> accounts = repo.getAll();
+    System.assertEquals(1, accounts.size());
+    System.assertEquals(0, accounts.get(0).Contacts.size());
+  }
+
+  @IsTest
+  static void it_should_sort_and_limit_correctly() {
+    insert new List<Account>{
+      new Account(Name = 'Two', AnnualRevenue = 1),
+      new Account(Name = 'One'),
+      new Account(Name = 'Three')
+    };
+
+    List<Account> accounts = new AccountRepo()
+      .addSortOrder(Account.Name, RepositorySortOrder.ASCENDING)
+      .addSortOrder(
+        Account.AnnualRevenue,
+        new RepositorySortOrder(RepositorySortOrder.SortOrder.DESCENDING, RepositorySortOrder.NullSortOrder.LAST)
+      )
+      .setLimit(1)
+      .getAll();
+
+    System.assertEquals(1, accounts.size());
+    System.assertEquals('One', accounts.get(0).get(Account.Name));
   }
 
   @IsTest
@@ -171,7 +214,7 @@ private class RepositoryTests {
 
   private class AccountRepo extends Repository {
     public AccountRepo() {
-      super(Account.SObjectType, new List<Schema.SObjectField>(), new RepoFactoryMock());
+      super(Account.SObjectType, new List<Schema.SObjectField>{ Account.Name }, new RepoFactoryMock());
     }
   }
 }

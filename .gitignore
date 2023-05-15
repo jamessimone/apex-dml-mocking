@@ -1,4 +1,5 @@
 .sfdx/
+.sf/
 .vscode/
 yarn.lock
 node_modules/

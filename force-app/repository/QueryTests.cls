@@ -86,6 +86,26 @@ private class QueryTests {
   }
 
   @IsTest
+  static void it_should_allow_nested_and_statements() {
+    String expected = '(LastName = :bindVar0 OR LastName = :bindVar1 OR (FirstName = :bindVar2 AND (LastName != :bindVar3 OR LastName != :bindVar4)))';
+
+    System.assertEquals(
+      expected,
+      Query.orQuery(
+          new List<Query>{
+            Query.equals(Contact.LastName, 'asd'),
+            Query.equals(Contact.LastName, 'asb'),
+            Query.andQuery(
+              Query.equals(Contact.FirstName, 'John'),
+              Query.orQuery(Query.notEquals(Contact.LastName, 'a'), Query.notEquals(Contact.LastName, 'b'))
+            )
+          }
+        )
+        .toString()
+    );
+  }
+
+  @IsTest
   static void it_should_allow_like_statements() {
     String expectedName = '%someName%';
 

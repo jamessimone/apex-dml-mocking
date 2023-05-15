@@ -71,22 +71,56 @@ public virtual class Query {
     return new OrQuery(innerQueries);
   }
 
-  private class OrQuery extends Query {
-    private final List<Query> queries;
-    private final String orDelimiter = ' OR ';
+  // and is a reserved keyword
+  public static Query andQuery(Query innerQuery, Query secondInnerQuery) {
+    return andQuery(new List<Query>{ innerQuery, secondInnerQuery });
+  }
 
-    public OrQuery(List<Query> queries) {
+  public static Query andQuery(List<Query> innerQueries) {
+    return new AndQuery(innerQueries);
+  }
+
+  private abstract class DelimitedQuery extends Query {
+    private final List<Query> queries;
+
+    public DelimitedQuery(List<Query> queries) {
       super();
       this.queries = queries;
     }
 
+    public abstract String getDelimiter();
+
     public override String toString() {
       String baseString = '(';
       for (Query innerQuery : this.queries) {
-        baseString += innerQuery.toString() + this.orDelimiter;
+        baseString += innerQuery.toString() + this.getDelimiter();
         this.bindVars.putAll(innerQuery.getBindVars());
       }
-      return baseString.removeEnd(this.orDelimiter) + ')';
+      return baseString.removeEnd(this.getDelimiter()) + ')';
+    }
+  }
+
+  private class AndQuery extends DelimitedQuery {
+    private final String delimiter = ' AND ';
+
+    public AndQuery(List<Query> queries) {
+      super(queries);
+    }
+
+    public override String getDelimiter() {
+      return this.delimiter;
+    }
+  }
+
+  private class OrQuery extends DelimitedQuery {
+    private final String delimiter = ' OR ';
+
+    public OrQuery(List<Query> queries) {
+      super(queries);
+    }
+
+    public override String getDelimiter() {
+      return this.delimiter;
     }
   }
 

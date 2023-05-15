@@ -5,7 +5,9 @@ public virtual without sharing class Repository implements IRepository {
   private final Set<String> selectFields;
   private final Map<Schema.SObjectField, String> childToRelationshipNames;
   private final Map<String, Object> bindVars = new Map<String, Object>();
+  private final Map<Schema.SObjectField, RepositorySortOrder> fieldToSortOrder = new Map<Schema.SObjectField, RepositorySortOrder>();
 
+  private Integer limitAmount;
   private System.AccessLevel accessLevel = System.AccessLevel.SYSTEM_MODE;
   private Boolean baseSelectUsed = false;
 
@@ -35,7 +37,17 @@ public virtual without sharing class Repository implements IRepository {
     return this.get(new List<Query>());
   }
 
-  public void addParentFields(List<Schema.SObjectField> parentTypes, List<Schema.SObjectField> parentFields) {
+  public Repository setLimit(Integer limitAmount) {
+    this.limitAmount = limitAmount;
+    return this;
+  }
+
+  public Repository addSortOrder(Schema.SObjectField fieldToken, RepositorySortOrder sortOrder) {
+    this.fieldToSortOrder.put(fieldToken, sortOrder);
+    return this;
+  }
+
+  public Repository addParentFields(List<Schema.SObjectField> parentTypes, List<Schema.SObjectField> parentFields) {
     String parentBase = '';
     for (SObjectField parentId : parentTypes) {
       parentBase += parentId.getDescribe().getRelationshipName() + '.';
@@ -43,25 +55,52 @@ public virtual without sharing class Repository implements IRepository {
     for (SObjectField parentField : parentFields) {
       this.selectFields.add(parentBase + parentField.getDescribe().getName());
     }
+    return this;
   }
 
-  public void addChildFields(Schema.SObjectField childFieldToken, List<Schema.SObjectField> childFields) {
-    if (this.childToRelationshipNames.containsKey(childFieldToken)) {
-      String baseSubselect = '(SELECT {0} FROM {1})';
-      Set<String> childFieldNames = new Set<String>{ 'Id' };
-      for (SObjectField childField : childFields) {
-        childFieldNames.add(childField.getDescribe().getName());
-      }
-      this.selectFields.add(
-        String.format(
-          baseSubselect,
-          new List<String>{
-            String.join(new List<String>(childFieldNames), ','),
-            this.childToRelationshipNames.get(childFieldToken)
-          }
-        )
-      );
+  public Repository addChildFields(Schema.SObjectField childFieldToken, List<Schema.SObjectField> childFields) {
+    return this.addChildFields(
+      childFieldToken,
+      childFields,
+      new List<Query>(),
+      new Map<Schema.SObjectField, RepositorySortOrder>(),
+      null
+    );
+  }
+
+  public Repository addChildFields(
+    Schema.SObjectField childFieldToken,
+    List<Schema.SObjectField> childFields,
+    List<Query> optionalWhereFilters,
+    Map<Schema.SObjectField, RepositorySortOrder> fieldToSortOrder,
+    Integer limitAmount
+  ) {
+    if (this.childToRelationshipNames.containsKey(childFieldToken) == false) {
+      return this;
     }
+
+    String baseSubselect =
+      '(SELECT {0} FROM {1}' +
+      this.addWheres(optionalWhereFilters) +
+      this.getOrderBys(fieldToSortOrder) +
+      this.getLimitAmount(limitAmount) +
+      ')';
+
+    Set<String> childFieldNames = new Set<String>{ 'Id' };
+    for (SObjectField childField : childFields) {
+      childFieldNames.add(childField.getDescribe().getName());
+    }
+
+    this.selectFields.add(
+      String.format(
+        baseSubselect,
+        new List<String>{
+          String.join(new List<String>(childFieldNames), ','),
+          this.childToRelationshipNames.get(childFieldToken)
+        }
+      )
+    );
+    return this;
   }
 
   public Repository setAccessLevel(System.AccessLevel accessLevel) {
@@ -79,7 +118,10 @@ public virtual without sharing class Repository implements IRepository {
   }
 
   protected virtual String getFinalQuery(List<Query> queries) {
-    return this.getSelectAndFrom() + this.addWheres(queries);
+    return this.getSelectAndFrom() +
+      this.addWheres(queries) +
+      this.getOrderBys(this.fieldToSortOrder) +
+      this.getLimitAmount(this.limitAmount);
   }
 
   private Map<Schema.SObjectField, String> getChildRelationshipNames(Schema.SObjectType repoType) {
@@ -113,6 +155,23 @@ public virtual without sharing class Repository implements IRepository {
     List<SObject> results = Database.queryWithBinds(finalQuery, this.bindVars, this.accessLevel);
     System.debug('Number of results: ' + results.size() + '\nResults: \n' + results);
     return results;
+  }
+
+  private String getOrderBys(Map<Schema.SObjectField, RepositorySortOrder> sortOrders) {
+    String orderByString = '';
+    if (sortOrders.isEmpty() == false) {
+      orderByString += ' \nORDER BY ';
+      String separator = ', ';
+      for (Schema.SObjectField field : sortOrders.keySet()) {
+        orderByString += field.getDescribe().getName() + ' ' + sortOrders.get(field).toString() + separator;
+      }
+      orderByString = orderByString.removeEnd(separator);
+    }
+    return orderByString;
+  }
+
+  private String getLimitAmount(Integer limitAmount) {
+    return (limitAmount != null ? '\nLIMIT ' + limitAmount : '');
   }
 
   // DML
