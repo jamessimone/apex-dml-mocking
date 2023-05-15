@@ -65,7 +65,7 @@ public virtual without sharing class Repository implements IRepository {
   }
 
   public Repository setAccessLevel(System.AccessLevel accessLevel) {
-    this.accessLevel = accessLevel;
+    this.setOptions(null, accessLevel);
     return this;
   }
 
@@ -159,5 +159,10 @@ public virtual without sharing class Repository implements IRepository {
   }
   public void doHardDelete(List<SObject> records) {
     this.dml.doHardDelete(records);
+  }
+
+  public IDML setOptions(Database.DMLOptions options, System.AccessLevel accessLevel) {
+    this.accessLevel = accessLevel;
+    return this.dml.setOptions(options, accessLevel);
   }
 }

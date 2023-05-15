@@ -9,6 +9,12 @@ Writing tests that scale as the size of your organization grows is an increasing
 
 This repo shows you how you can mock your SOQL queries and DML statements in Apex by using lightweight wrappers that are dependency injected into your business logic objects. This allows you to replace expensive test setup and test teardown with a fake database. I've used this method to cut testing time down by 90%+ -- in a small org, with only a few hundred tests, running tests and deploying can be done in under five minutes (easily). In large orgs, with many hundreds or thousands of tests, overall testing time tends to scale more linearly with organizational complexity; there are additional optimizations that can be done in these orgs to keep deploys in the 10-15 minutes range.
 
+## Access Level & DML Option Setting
+
+Both `IDML` and `IRepository` instances returned by the framework support the method `IDML setOptions(Database.DMLOptions options, System.AccessLevel accessLevel);`. Note that if DML options are not set by default, this framework uses true for the `allOrNone` value when performing DML, as that is consistent with the standard for calling DML operations without specifying that property. Please also note that DML options are not "expired" after having been set -- if you are using an instance of `IRepository` or `IDML` and are performing multiple DML operations using that same instance, the DML options that have been set will continue to apply to subsequent operations until `setOptions` is re-called, or a new instance is initialized. DML options are _not_ shared between instances; they are not statically set. Passing `null` for the DML options value will only update the access level.
+
+By default, all operations are run using `System.AccessMode.SYSTEM_MODE`. You can either override this (for `IDML` and `IRepository` instances) by calling `setOptions`, as shown above, or by calling `IRepository setAccessLevel(System.AccessLevel accessLevel);` on `IRepository` instances. Like DML options, the access level that is set for an instance is then the one used for subsequent operations involving that repository instance.
+
 ## DML Mocking Basics
 
 Try checking out the source code for the DML wrapping classes:

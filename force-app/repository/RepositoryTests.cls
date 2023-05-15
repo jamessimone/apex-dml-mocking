@@ -120,6 +120,9 @@ private class RepositoryTests {
     Account acc = new Account();
     List<Account> accs = new List<Account>{ acc };
 
+    repo.setAccessLevel(System.AccessLevel.USER_MODE)
+      .setOptions(new Database.DMLOptions(), System.AccessLevel.USER_MODE);
+
     repo.doInsert(acc);
     repo.doInsert(accs);
     System.assertEquals(acc, DMLMock.Inserted.Accounts.firstOrDefault);

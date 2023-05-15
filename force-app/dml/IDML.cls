@@ -13,4 +13,6 @@ public interface IDML {
   void doDelete(List<SObject> recordList);
   void doHardDelete(SObject record);
   void doHardDelete(List<SObject> recordList);
+
+  IDML setOptions(Database.DMLOptions options, System.AccessLevel accessLevel);
 }

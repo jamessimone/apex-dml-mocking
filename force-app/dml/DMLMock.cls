@@ -77,7 +77,7 @@ public virtual class DMLMock extends DML {
 
   public class RecordsWrapper {
     List<SObject> recordList;
-    RecordsWrapper(List<SObject> recordList) {
+    private RecordsWrapper(List<SObject> recordList) {
       this.recordList = recordList;
     }
 
