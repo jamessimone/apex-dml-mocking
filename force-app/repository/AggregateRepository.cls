@@ -1,4 +1,5 @@
 public without sharing virtual class AggregateRepository extends Repository implements IAggregateRepository {
+  private final Set<String> havingFields = new Set<String>();
   private final Set<String> groupedByFieldNames = new Set<String>();
   private List<Aggregation> aggregations;
   private Boolean isNumberCountQuery = false;
@@ -15,10 +16,22 @@ public without sharing virtual class AggregateRepository extends Repository impl
   }
 
   public IAggregateRepository groupBy(Schema.SObjectField fieldToken) {
-    return this.groupBy(fieldToken.getDescribe().getName());
+    this.groupedByFieldNames.add(fieldToken.getDescribe().getName());
+    return this;
   }
-  public IAggregateRepository groupBy(String fieldName) {
-    this.groupedByFieldNames.add(fieldName);
+  public IAggregateRepository groupBy(List<Schema.SObjectField> parentFieldChain) {
+    String parentFieldGroupBy = '';
+    while (parentFieldChain.size() > 1) {
+      parentFieldGroupBy += parentFieldChain.remove(0).getDescribe().getRelationshipName() + '.';
+    }
+    this.groupedByFieldNames.add(parentFieldGroupBy + parentFieldChain.remove(0).getDescribe().getName());
+    return this;
+  }
+
+  public IAggregateRepository addHaving(Aggregation aggregation, Query.Operator operator, Object value) {
+    Query aggQuery = new AggregateQuery(operator, value);
+    this.havingFields.add(aggregation.getBaseAggregation() + ' ' + aggQuery);
+    this.bindVars.putAll(aggQuery.getBindVars());
     return this;
   }
 
@@ -59,6 +72,8 @@ public without sharing virtual class AggregateRepository extends Repository impl
       aggRecord.putAll(result.getPopulatedFieldsAsMap());
       aggregateRecords.add(aggRecord);
     }
+    this.havingFields.clear();
+    this.groupedByFieldNames.clear();
     return aggregateRecords;
   }
 
@@ -81,8 +96,19 @@ public without sharing virtual class AggregateRepository extends Repository impl
 
   protected override String getFinalQuery(List<Query> queries) {
     String baseString = super.getFinalQuery(queries);
-    return this.groupedByFieldNames.isEmpty()
-      ? baseString
-      : baseString + '\nGROUP BY ' + String.join(new List<String>(this.groupedByFieldNames), ',');
+    if (this.groupedByFieldNames.isEmpty() == false) {
+      baseString += '\nGROUP BY ' + String.join(new List<String>(this.groupedByFieldNames), ',');
+      // having is only valid with a grouping
+      if (this.havingFields.isEmpty() == false) {
+        baseString += '\nHAVING ' + String.join(new List<String>(this.havingFields), ',');
+      }
+    }
+    return baseString;
+  }
+
+  private class AggregateQuery extends Query {
+    public AggregateQuery(Query.Operator op, Object value) {
+      super('', op, value);
+    }
   }
 }

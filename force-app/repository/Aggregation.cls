@@ -50,7 +50,11 @@ public class Aggregation {
     return this.fieldName;
   }
 
+  public String getBaseAggregation() {
+    return this.op.name() + '(' + fieldName + ')';
+  }
+
   public override String toString() {
-    return this.op.name() + '(' + fieldName + ') ' + this.alias;
+    return this.getBaseAggregation() + ' ' + this.alias;
   }
 }

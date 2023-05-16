@@ -2,8 +2,8 @@
 private class AggregateRepositoryTests {
   @IsTest
   static void shouldAggregateSum() {
-    Account parent = new Account(Name = AggregateRepositoryTests.class.getName());
-    Account secondParent = new Account(Name = 'Second parent');
+    Account parent = new Account(Name = AggregateRepositoryTests.class.getName(), NumberOfEmployees = 1);
+    Account secondParent = new Account(Name = 'Second parent', NumberOfEmployees = 1);
     insert new List<Account>{ parent, secondParent };
 
     Opportunity opp = new Opportunity(
@@ -46,6 +46,12 @@ private class AggregateRepositoryTests {
         System.assertEquals(1, res.get(sum.getAlias()));
       }
     }
+    System.assertEquals(
+      1,
+      repo.groupBy(new List<Schema.SObjectField>{ Opportunity.AccountId, Account.NumberOfEmployees })
+        .aggregate(sum)
+        .size()
+    );
   }
 
   @IsTest
@@ -65,6 +71,16 @@ private class AggregateRepositoryTests {
 
     System.assertEquals(1, results.size());
     System.assertEquals(1, results[0].get(countOfAmount.getAlias()));
+    System.assertEquals(
+      1,
+      repo.addHaving(countOfAmount, Query.Operator.GREATER_THAN, 0)
+          .groupBy(Opportunity.CloseDate)
+          .aggregate(countOfAmount)[0]
+        .get(countOfAmount.getAlias())
+    );
+    // prove equality works
+    System.assert(results.get(0).equals([SELECT COUNT(Amount) wowza FROM Opportunity].get(0)));
+    System.assertEquals(results.get(0), results.get(0));
   }
 
   @IsTest

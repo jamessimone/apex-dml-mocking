@@ -9,4 +9,14 @@ public class AggregateRecord {
   public Object get(String key) {
     return this.keyToAggregateResult.get(key);
   }
+
+  public Boolean equals(Object that) {
+    if (that instanceof AggregateResult) {
+      Map<String, Object> thatKeyToAggregateResult = ((AggregateResult) that).getPopulatedFieldsAsMap();
+      return this.keyToAggregateResult.equals(thatKeyToAggregateResult);
+    } else if (that instanceof AggregateRecord) {
+      return this.keyToAggregateResult.equals(((AggregateRecord) that).keyToAggregateResult);
+    }
+    return false;
+  }
 }

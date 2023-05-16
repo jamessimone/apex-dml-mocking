@@ -2,9 +2,9 @@ public virtual without sharing class Repository implements IRepository {
   private final IDML dml;
   private final List<Schema.SObjectField> queryFields;
   protected final Schema.SObjectType repoType;
+  protected final Map<String, Object> bindVars = new Map<String, Object>();
   private final Set<String> selectFields;
   private final Map<Schema.SObjectField, String> childToRelationshipNames;
-  private final Map<String, Object> bindVars = new Map<String, Object>();
   private final Map<Schema.SObjectField, RepositorySortOrder> fieldToSortOrder = new Map<Schema.SObjectField, RepositorySortOrder>();
 
   private Integer limitAmount;

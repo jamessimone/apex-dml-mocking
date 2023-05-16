@@ -133,7 +133,7 @@ public virtual class Query {
   protected Query() {
   }
 
-  private Query(String fieldName, Operator operator, Object predicate) {
+  protected Query(String fieldName, Operator operator, Object predicate) {
     this.field = fieldName;
     this.operator = operator;
     this.predicate = predicate;
