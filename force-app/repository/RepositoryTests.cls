@@ -159,7 +159,7 @@ private class RepositoryTests {
 
   @IsTest
   static void it_should_decorate_dml_methods() {
-    IRepository repo = Factory.getFactory().withMocks.RepoFactory.getOppRepo();
+    IRepository repo = Factory.getFactory().withMocks.repoFactory.getOppRepo();
     Account acc = new Account();
     List<Account> accs = new List<Account>{ acc };
 
@@ -193,7 +193,7 @@ private class RepositoryTests {
 
   private class GroupMemberRepo extends Repository {
     public GroupMemberRepo() {
-      super(GroupMember.SObjectType, new List<Schema.SObjectField>{ GroupMember.GroupId }, new RepoFactoryMock());
+      super(GroupMember.SObjectType, new List<Schema.SObjectField>{ GroupMember.GroupId }, new RepoFactory());
     }
   }
 
@@ -207,14 +207,14 @@ private class RepositoryTests {
           ContactPointAddress.ParentId,
           ContactPointAddress.Name
         },
-        new RepoFactoryMock()
+        new RepoFactory()
       );
     }
   }
 
   private class AccountRepo extends Repository {
     public AccountRepo() {
-      super(Account.SObjectType, new List<Schema.SObjectField>{ Account.Name }, new RepoFactoryMock());
+      super(Account.SObjectType, new List<Schema.SObjectField>{ Account.Name }, new RepoFactory());
     }
   }
 }

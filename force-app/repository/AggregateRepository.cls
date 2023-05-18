@@ -11,10 +11,6 @@ public without sharing virtual class AggregateRepository extends Repository impl
     super(repoType, queryFields, repoFactory);
   }
 
-  protected AggregateRepository(RepoFactory repoFactory) {
-    super(repoFactory);
-  }
-
   public IAggregateRepository groupBy(Schema.SObjectField fieldToken) {
     this.groupedByFieldNames.add(fieldToken.getDescribe().getName());
     return this;
@@ -43,7 +39,8 @@ public without sharing virtual class AggregateRepository extends Repository impl
   }
   public Integer count(List<Query> queries) {
     this.isNumberCountQuery = true;
-    Integer recordCount = Database.countQuery(this.getFinalQuery(queries));
+    Integer recordCount = Database.countQueryWithBinds(this.getFinalQuery(queries), this.bindVars, this.accessLevel);
+    this.bindVars.clear();
     this.isNumberCountQuery = false;
     return recordCount;
   }
@@ -65,6 +62,7 @@ public without sharing virtual class AggregateRepository extends Repository impl
   }
   public virtual List<AggregateRecord> aggregate(List<Aggregation> aggregations, List<Query> queries) {
     this.aggregations = aggregations;
+
     List<AggregateResult> results = (List<AggregateResult>) this.get(queries);
     List<AggregateRecord> aggregateRecords = new List<AggregateRecord>();
     for (AggregateResult result : results) {
@@ -72,8 +70,10 @@ public without sharing virtual class AggregateRepository extends Repository impl
       aggRecord.putAll(result.getPopulatedFieldsAsMap());
       aggregateRecords.add(aggRecord);
     }
+
     this.havingFields.clear();
     this.groupedByFieldNames.clear();
+    this.aggregations = null;
     return aggregateRecords;
   }
 

@@ -111,7 +111,8 @@ private class AggregateRepositoryTests {
     AggregateRecord res = new AggregateRecord().putAll(mockAggregateResult);
     RepoFactoryMock.AggregateResults.put(Opportunity.SObjectType, new List<AggregateRecord>{ res });
 
-    List<AggregateRecord> results = new RepoFactoryMock()
+    List<AggregateRecord> results = new RepoFactory()
+      .setFacade(new RepoFactoryMock.FacadeMock())
       .getOppRepo()
       .groupBy(Opportunity.AccountId)
       .aggregate(new List<Aggregation>{ countOfAmount, sum });

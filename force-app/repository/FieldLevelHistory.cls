@@ -1,4 +1,4 @@
-public virtual class FieldLevelHistory {
+public class FieldLevelHistory {
   public Datetime CreatedDate { get; set; }
   public Id CreatedById { get; set; }
   public Object NewValue { get; set; }
@@ -7,11 +7,13 @@ public virtual class FieldLevelHistory {
 
   public Id ParentId { get; private set; }
 
+  private String parentLookupName = 'ParentId';
+
   public override String toString() {
     return JSON.serialize(this);
   }
 
-  public void setValues(Map<String, Object> values) {
+  public FieldLevelHistory setValues(Map<String, Object> values) {
     this.CreatedById = (Id) values.get('CreatedById');
     Object possibleCreatedDate = values.get('CreatedDate');
     this.CreatedDate = Datetime.valueOfGmt(String.valueOf(possibleCreatedDate).replace('T', ' ').remove('"'));
@@ -19,13 +21,17 @@ public virtual class FieldLevelHistory {
     this.NewValue = values.get('NewValue');
     this.OldValue = values.get('OldValue');
     this.setParentId(values);
+    return this;
   }
 
-  protected virtual String getParentFieldName() {
-    return 'ParentId';
+  public FieldLevelHistory setParentLookup(Schema.SObjectField fieldToken) {
+    if (fieldToken != null) {
+      this.parentLookupName = fieldToken.getDescribe().getName();
+    }
+    return this;
   }
 
   private void setParentId(Map<String, Object> values) {
-    this.ParentId = (Id) values.get(this.getParentFieldName());
+    this.ParentId = (Id) values.get(this.parentLookupName);
   }
 }

@@ -7,7 +7,7 @@ Welcome to the SFDX project home for blazing fast Apex unit tests! For your cons
 
 Writing tests that scale as the size of your organization grows is an increasingly challenging problem in the Salesforce world. It's not uncommon in large companies for deploys to last several hours; the vast majority of that time is spent running tests to verify that your code coverage is good enough for the deploy to succeed. Tests don't _need_ to take that long.
 
-This repo shows you how you can mock your SOQL queries and DML statements in Apex by using lightweight wrappers that are dependency injected into your business logic objects. This allows you to replace expensive test setup and test teardown with a fake database. I've used this method to cut testing time down by 90%+ -- in a small org, with only a few hundred tests, running tests and deploying can be done in under five minutes (easily). In large orgs, with many hundreds or thousands of tests, overall testing time tends to scale more linearly with organizational complexity; there are additional optimizations that can be done in these orgs to keep deploys in the 10-15 minutes range.
+This repo shows you how you can mock your SOQL queries and DML statements in Apex by using lightweight wrappers that are dependency injected into your business logic objects. This allows you to replace expensive test setup and test teardown with a fake database. I've used this method to cut testing time down by 90%+ -- in a small org, with only a few hundred tests, running tests and deploying can be done in under five minutes (easily). In large orgs, with many hundreds or thousands of tests, overall testing time tends to scale more linearly with organizational complexity; there are additional optimizations that can be done in these orgs to keep deploys in the 10 minute(s) range.
 
 ## Access Level & DML Option Setting
 
@@ -54,6 +54,14 @@ You can have as many Factories as you'd like. I like to break my Factories out b
 - The [RepoFactory](force-app/factory/RepoFactory.cls) for CRUD related objects
 
 It's a pretty standard approach. You might choose to break things down by (business) domain. There's no right way.
+
+## Package-Based Development
+
+These repository (as of 18 May 2023) has been slightly reworked to provide better support for package-based development. The updates are primarily to show how the `example-app` folder can be in a completely separate package while still allowing for strongly-typed references (and package-specific factories and repo factories) to be referenced properly. For a concrete example, check out:
+
+- [The unit tests in HistoryRepoTests](example-app/history/HistoryRepoTests.cls)
+- [The extended factory](example-app/ExampleFactory.cls)
+- [The extended repo factory](example-app/ExampleRepoFactory.cls)
 
 ---
 

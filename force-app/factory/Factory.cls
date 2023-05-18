@@ -1,18 +1,16 @@
 public virtual class Factory {
-  // this is only "protected set" to show-case how your own
-  // Factory might function in the example app. Make this a private set
-  // in your own code!
-  public RepoFactory RepoFactory { get; protected set; }
+  public final RepoFactory repoFactory = new RepoFactory();
 
   @TestVisible
   private static Factory factory;
 
   protected Factory() {
-    this.RepoFactory = new RepoFactory();
+    // enforce getFactory() as the sole entry point for usage
   }
 
   public static Factory getFactory() {
     // production code can only initialize the factory through this method
+    // but tests can provide an alternative factory implementation
     if (factory == null) {
       factory = new Factory();
     }
@@ -21,12 +19,14 @@ public virtual class Factory {
   }
 
   // create methods to initialize your objects here
-  // (an example is included in the example app)
+  // (an example is included in the example-app folder)
 
   @TestVisible
   private Factory withMocks {
+    // you can call "withMocks" after "getFactory" in tests to swap out
+    // how repositories are created and DML is performed
     get {
-      this.RepoFactory = new RepoFactoryMock();
+      this.repoFactory.setFacade(new RepoFactoryMock.FacadeMock());
       return this;
     }
   }

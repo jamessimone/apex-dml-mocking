@@ -1,12 +1,18 @@
-public class ExampleFactory extends Factory {
-  // normally you would not be "overriding" the static method
-  // on the base factory; in your own code, you would be putting your
-  // dependencies IN the actual factory class itself.
-  // however, since this is an example app, to avoid over-writing the
-  // existing Factory instance, this little evil is necessary to show off
-  // the AccountHandler tests
+public virtual class ExampleFactory extends Factory {
+  public final ExampleRepoFactory repoFactory = new ExampleRepoFactory();
+
+  @TestVisible
+  private static ExampleFactory factory;
+
+  protected ExampleFactory() {
+    // enforce getFactory() as the sole way to interact with this class
+  }
+
   public static ExampleFactory getFactory() {
-    return new ExampleFactory();
+    if (factory == null) {
+      factory = new ExampleFactory();
+    }
+    return factory;
   }
 
   public virtual TriggerHandler getAccountHandler() {
@@ -16,7 +22,7 @@ public class ExampleFactory extends Factory {
   @TestVisible
   private ExampleFactory withMocks {
     get {
-      this.RepoFactory = new RepoFactoryMock();
+      this.repoFactory.setFacade(new RepoFactoryMock.FacadeMock());
       return this;
     }
   }

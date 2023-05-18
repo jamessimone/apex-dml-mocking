@@ -57,4 +57,8 @@ public class Aggregation {
   public override String toString() {
     return this.getBaseAggregation() + ' ' + this.alias;
   }
+
+  public Boolean equals(Object that) {
+    return this.toString() == that.toString();
+  }
 }

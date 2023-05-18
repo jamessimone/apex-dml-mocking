@@ -3,27 +3,52 @@ public virtual without sharing class Repository implements IRepository {
   private final List<Schema.SObjectField> queryFields;
   protected final Schema.SObjectType repoType;
   protected final Map<String, Object> bindVars = new Map<String, Object>();
-  private final Set<String> selectFields;
+  protected System.AccessLevel accessLevel = System.AccessLevel.SYSTEM_MODE;
+  private final Set<String> selectFields = new Set<String>();
   private final Map<Schema.SObjectField, String> childToRelationshipNames;
   private final Map<Schema.SObjectField, RepositorySortOrder> fieldToSortOrder = new Map<Schema.SObjectField, RepositorySortOrder>();
 
+  private Boolean shouldAddChildFields = true;
   private Integer limitAmount;
-  private System.AccessLevel accessLevel = System.AccessLevel.SYSTEM_MODE;
   private Boolean baseSelectUsed = false;
 
   public Repository(Schema.SObjectType repoType, List<Schema.SObjectField> queryFields, RepoFactory repoFactory) {
-    this(repoFactory);
+    this.dml = repoFactory.getDml();
     this.queryFields = queryFields;
     this.repoType = repoType;
-    this.selectFields = new Set<String>();
     this.childToRelationshipNames = this.getChildRelationshipNames(repoType);
   }
 
-  protected Repository(RepoFactory repoFactory) {
-    this.dml = repoFactory.getDml();
+  // SOQL
+  public Database.QueryLocator getQueryLocator(List<Query> queries) {
+    return this.getQueryLocator(queries, this.shouldAddChildFields);
   }
 
-  // SOQL
+  /**
+   * It's recommended that subqueries be removed from `Database.QueryLocator` instances (docs snippet below). This framework gives you the option
+   * of ignoring that advice, but it'd be my recommendation that callers to `Repository.getQueryLocator` always pass `false` as the second argument.
+   *
+   * From the docs:
+   *
+   * > Batch Apex jobs run faster when the start method returns a `QueryLocator` object that doesn't include related records via a subquery.
+   * > Avoiding relationship subqueries in a `QueryLocator` allows batch jobs to run using a faster, chunked implementation.
+   * > If the start method returns an `Iterable` or a `QueryLocator` object with a relationship subquery, the batch job uses a slower, non-chunking, implementation
+   *
+   */
+  public Database.QueryLocator getQueryLocator(List<Query> queries, Boolean shouldAddChildFields) {
+    Boolean originalValue = this.shouldAddChildFields;
+    this.shouldAddChildFields = shouldAddChildFields;
+    Database.QueryLocator locator = Database.getQueryLocatorWithBinds(
+      this.getFinalQuery(queries),
+      this.bindVars,
+      this.accessLevel
+    );
+    this.bindVars.clear();
+    this.shouldAddChildFields = originalValue;
+
+    return locator;
+  }
+
   public virtual List<SObject> get(Query query) {
     return this.get(new List<Query>{ query });
   }
@@ -75,7 +100,7 @@ public virtual without sharing class Repository implements IRepository {
     Map<Schema.SObjectField, RepositorySortOrder> fieldToSortOrder,
     Integer limitAmount
   ) {
-    if (this.childToRelationshipNames.containsKey(childFieldToken) == false) {
+    if (this.shouldAddChildFields == false || this.childToRelationshipNames.containsKey(childFieldToken) == false) {
       return this;
     }
 
@@ -153,6 +178,7 @@ public virtual without sharing class Repository implements IRepository {
   private List<SObject> performQuery(String finalQuery) {
     System.debug('Query: \n' + finalQuery);
     List<SObject> results = Database.queryWithBinds(finalQuery, this.bindVars, this.accessLevel);
+    this.bindVars.clear();
     System.debug('Number of results: ' + results.size() + '\nResults: \n' + results);
     return results;
   }

@@ -1,21 +1,8 @@
 public virtual without sharing class FieldLevelHistoryRepo extends AggregateRepository implements IHistoryRepository {
-  private final Type fieldLevelHistoryType;
-  private final String parentFieldName;
+  private Schema.SObjectField parentFieldToken;
+  private final Set<String> fullHistoryFields;
 
-  public FieldLevelHistoryRepo(
-    Schema.SObjectField parentField,
-    Schema.SObjectType repoType,
-    Type fieldLevelHistoryType,
-    RepoFactory repoFactory
-  ) {
-    super(repoType, new List<Schema.SObjectField>(), repoFactory);
-    this.fieldLevelHistoryType = fieldLevelHistoryType;
-    this.parentFieldName = parentField.getDescribe().getName();
-  }
-
-  public FieldLevelHistoryRepo(Schema.SObjectField parentField, Schema.SObjectType repoType, RepoFactory repoFactory) {
-    this(parentField, repoType, FieldLevelHistory.class, repoFactory);
-  }
+  private Boolean isHistoryQuery = false;
 
   public FieldLevelHistoryRepo(
     Schema.SObjectType repoType,
@@ -23,18 +10,11 @@ public virtual without sharing class FieldLevelHistoryRepo extends AggregateRepo
     RepoFactory repoFactory
   ) {
     super(repoType, queryFields, repoFactory);
+    this.fullHistoryFields = this.repoType.getDescribe(SObjectDescribeOptions.DEFERRED).fields.getMap().keySet();
   }
 
-  protected FieldLevelHistoryRepo(RepoFactory repoFactory) {
-    super(repoFactory);
-  }
-
-  protected virtual override Set<String> addSelectFields() {
-    Set<String> baseFields = super.addSelectFields();
-    return (baseFields.isEmpty() || baseFields.size() == 1 && baseFields.contains('Id')) &&
-      this.repoType.getDescribe().getName().contains('History')
-      ? new Set<String>{ 'CreatedById', 'CreatedDate', 'Field', 'Id', 'NewValue', 'OldValue', this.parentFieldName }
-      : baseFields;
+  public virtual List<FieldLevelHistory> getAllHistory() {
+    return this.getHistory(new List<Query>());
   }
 
   public List<FieldLevelHistory> getHistory(Query query) {
@@ -42,21 +22,29 @@ public virtual without sharing class FieldLevelHistoryRepo extends AggregateRepo
   }
 
   public virtual List<FieldLevelHistory> getHistory(List<Query> queries) {
+    this.isHistoryQuery = true;
     List<Object> unwrappedHistoryRecords = this.get(queries);
+    this.isHistoryQuery = false;
     if (unwrappedHistoryRecords instanceof List<FieldLevelHistory>) {
       return (List<FieldLevelHistory>) unwrappedHistoryRecords;
     }
 
     List<FieldLevelHistory> historyRecords = new List<FieldLevelHistory>();
     for (Object obj : unwrappedHistoryRecords) {
-      FieldLevelHistory historyRecord = (FieldLevelHistory) this.fieldLevelHistoryType.newInstance();
-      historyRecord.setValues((Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(obj)));
+      FieldLevelHistory historyRecord = new FieldLevelHistory()
+        .setParentLookup(this.parentFieldToken)
+        .setValues((Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(obj)));
       historyRecords.add(historyRecord);
     }
     return historyRecords;
   }
 
-  public virtual List<FieldLevelHistory> getAllHistory() {
-    return this.getHistory(new List<Query>());
+  public FieldLevelHistoryRepo setParentField(Schema.SObjectField parentField) {
+    this.parentFieldToken = parentField;
+    return this;
+  }
+
+  protected virtual override Set<String> addSelectFields() {
+    return this.isHistoryQuery ? this.fullHistoryFields : super.addSelectFields();
   }
 }

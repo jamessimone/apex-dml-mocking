@@ -1,20 +1,32 @@
 public virtual class RepoFactory {
-  public virtual IAggregateRepository getOppRepo() {
+  private static final Map<Schema.SObjectType, IHistoryRepository> CACHED_REPOS = new Map<Schema.SObjectType, IHistoryRepository>();
+
+  public Facade facade {
+    get {
+      if (this.facade == null) {
+        this.facade = new Facade();
+      }
+      return this.facade;
+    }
+    protected set;
+  }
+
+  public IAggregateRepository getOppRepo() {
     List<Schema.SObjectField> queryFields = new List<Schema.SObjectField>{
       Opportunity.IsWon,
       Opportunity.StageName
       // etc ...
     };
-    IAggregateRepository oppRepo = new FieldLevelHistoryRepo(Opportunity.SObjectType, queryFields, this);
+    IAggregateRepository oppRepo = this.facade.getRepo(Opportunity.SObjectType, queryFields, this);
     oppRepo.addParentFields(
       new List<Schema.SObjectField>{ Opportunity.AccountId },
-      new List<Schema.SObjectField>{ Opportunity.Account.Id }
+      new List<Schema.SObjectField>{ Account.Id }
     );
     return oppRepo;
   }
 
-  public virtual IAggregateRepository getAccountRepo() {
-    IAggregateRepository accountRepo = new FieldLevelHistoryRepo(
+  public IAggregateRepository getAccountRepo() {
+    IAggregateRepository accountRepo = this.facade.getRepo(
       Account.SObjectType,
       new List<Schema.SObjectField>{ Account.Name },
       this
@@ -23,21 +35,47 @@ public virtual class RepoFactory {
     return accountRepo;
   }
 
-  public virtual IHistoryRepository getOppLineItemRepo() {
+  public IHistoryRepository getOppLineItemRepo() {
     List<Schema.SObjectField> queryFields = new List<Schema.SObjectField>{
       OpportunityLineItem.Description,
       OpportunityLineItem.OpportunityId
       // etc
     };
-    return new FieldLevelHistoryRepo(OpportunityLineItem.SObjectType, queryFields, this);
+    return this.facade.getRepo(OpportunityLineItem.SObjectType, queryFields, this);
   }
 
-  public virtual IHistoryRepository getProfileRepo() {
-    List<Schema.SObjectField> queryFields = new List<Schema.SObjectField>{ Profile.Name };
-    return new FieldLevelHistoryRepo(Profile.SObjectType, queryFields, this);
+  public IHistoryRepository getProfileRepo() {
+    return this.facade.getRepo(Profile.SObjectType, new List<Schema.SObjectField>{ Profile.Name }, this);
   }
 
-  public virtual IDML getDML() {
-    return new DML();
+  public IDML getDML() {
+    return this.facade.getDML();
+  }
+
+  public RepoFactory setFacade(Facade mockFacade) {
+    if (Test.isRunningTest() == false) {
+      throw new IllegalArgumentException('Should not call this outside of tests');
+    }
+    this.facade = mockFacade;
+    return this;
+  }
+
+  public virtual class Facade {
+    public virtual IDML getDML() {
+      return new DML();
+    }
+
+    public virtual IHistoryRepository getRepo(
+      Schema.SObjectType repoType,
+      List<Schema.SObjectField> queryFields,
+      RepoFactory repoFactory
+    ) {
+      IHistoryRepository potentiallyCachedInstance = CACHED_REPOS.get(repoType);
+      if (potentiallyCachedInstance == null) {
+        potentiallyCachedInstance = new FieldLevelHistoryRepo(repoType, queryFields, repoFactory);
+        CACHED_REPOS.put(repoType, potentiallyCachedInstance);
+      }
+      return potentiallyCachedInstance;
+    }
   }
 }

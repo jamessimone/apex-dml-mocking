@@ -2,29 +2,19 @@
 private class HistoryRepoTests {
   @IsTest
   static void it_should_continue_to_act_as_base_repo() {
-    List<Profile> profiles = new RepoFactory().getProfileRepo().get(Query.equals(Profile.Name, 'System Administrator'));
-    System.assertNotEquals(null, profiles);
+    IHistoryRepository historyRepo = ExampleFactory.getFactory().repoFactory.getOppFieldHistoryRepo();
 
-    IHistoryRepository historyRepo = new FieldLevelHistoryRepo(
-      OpportunityFieldHistory.OpportunityId,
-      OpportunityFieldHistory.SObjectType,
-      OpportunityFieldHistoryExample.class,
-      new RepoFactory()
+    List<OpportunityFieldHistory> histories = historyRepo.get(
+      Query.equals(OpportunityFieldHistory.OpportunityId, null)
     );
-    // validate history repo can still return SObjects ...
-    List<OpportunityFieldHistory> histories = historyRepo.get(Query.equals(OpportunityFieldHistory.OpportunityId, ''));
+
     System.assertNotEquals(null, histories);
   }
 
   @IsTest
   static void it_should_continue_to_act_as_aggregate_repo() {
     Aggregation count = Aggregation.count(OpportunityFieldHistory.Id, 'countId');
-    IAggregateRepository repo = new FieldLevelHistoryRepo(
-      OpportunityFieldHistory.OpportunityId,
-      OpportunityFieldHistory.SObjectType,
-      OpportunityFieldHistoryExample.class,
-      new RepoFactory()
-    );
+    IAggregateRepository repo = ExampleFactory.getFactory().repoFactory.getOppFieldHistoryRepo();
     repo.groupBy(OpportunityFieldHistory.OpportunityId);
 
     List<AggregateRecord> records = repo.aggregate(count);
@@ -35,14 +25,11 @@ private class HistoryRepoTests {
 
   @IsTest
   static void it_should_query_history_records() {
-    IHistoryRepository historyRepo = new FieldLevelHistoryRepo(
-      OpportunityFieldHistory.OpportunityId,
-      OpportunityFieldHistory.SObjectType,
-      OpportunityFieldHistoryExample.class,
-      new RepoFactory()
-    );
+    IHistoryRepository historyRepo = ExampleFactory.getFactory().repoFactory.getOppFieldHistoryRepo();
+
     List<FieldLevelHistory> histories = historyRepo.getAllHistory();
     // History records can't be created during Apex unit testing, but we can at least validate the query
+    // and prove that the FieldLevelHistory decorator list is returned properly
     System.assertEquals(true, histories.isEmpty());
   }
 
@@ -60,26 +47,11 @@ private class HistoryRepoTests {
       }
     );
     RepoFactoryMock.HistoryResults.put(OpportunityFieldHistory.SObjectType, new List<FieldLevelHistory>{ mockRecord });
-    /**
-     * normally, you would be adding an IHistoryRepo implementation to the RepoFactory, and then overriding
-     * within RepoFactoryMock the concrete implementation with the call to getRepoFromSObjectType. Since I don't
-     * want to continue adding outer classes to force-app, however, we'll bypass that step here; you would be doing the equivalent
-     * of the AccountHandlerTests, though - either calling the base Factory to initialize a class with an IHistoryRepository dependency,
-     * or just new RepoFactoryMock().getMyAlreadyOverriddenRepo() to test the implementation directly.
-     * All of that is to say: the whole point behind this pattern is to have dependencies be registered in the Factory, and Repository
-     * implementations stubbed out in RepoFactoryMocks
-     */
-    IHistoryRepository historyRepo = new RepoFactoryMock()
-      .getRepoFromSObjectType(OpportunityFieldHistory.SObjectType, null);
+
+    IHistoryRepository historyRepo = ExampleFactory.getFactory().withMocks.repoFactory.getOppFieldHistoryRepo();
 
     List<FieldLevelHistory> histories = historyRepo.getAllHistory();
     System.assertNotEquals(true, histories.isEmpty());
     System.assertEquals(mockRecord, histories[0]);
-  }
-
-  private class OpportunityFieldHistoryExample extends FieldLevelHistory {
-    protected override String getParentFieldName() {
-      return OpportunityFieldHistory.OpportunityId.getDescribe().getName();
-    }
   }
 }

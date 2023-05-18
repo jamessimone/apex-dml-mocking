@@ -1,8 +1,8 @@
 public class AccountHandler extends TriggerHandler {
   private final IRepository oppRepo;
 
-  public AccountHandler(Factory factory) {
-    this.oppRepo = factory.RepoFactory.getOppRepo();
+  public AccountHandler(ExampleFactory factory) {
+    this.oppRepo = factory.repoFactory.getOppRepo();
   }
 
   public override void afterInsert(List<SObject> insertedRecords, Map<Id, SObject> unused) {

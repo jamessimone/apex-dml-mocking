@@ -1,4 +1,6 @@
 public interface IRepository extends IDML {
+  Database.QueryLocator getQueryLocator(List<Query> queries);
+  Database.QueryLocator getQueryLocator(List<Query> queries, Boolean shouldAddChildFields);
   List<SObject> get(Query query);
   List<SObject> get(List<Query> queries);
   List<SObject> getAll();
