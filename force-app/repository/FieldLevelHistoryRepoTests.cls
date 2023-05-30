@@ -1,8 +1,8 @@
 @IsTest
-private class HistoryRepoTests {
+private class FieldLevelHistoryRepoTests {
   @IsTest
   static void it_should_continue_to_act_as_base_repo() {
-    IHistoryRepository historyRepo = ExampleFactory.getFactory().repoFactory.getOppFieldHistoryRepo();
+    IHistoryRepository historyRepo = new ExampleRepoFactory().getOppFieldHistoryRepo();
 
     List<OpportunityFieldHistory> histories = historyRepo.get(
       Query.equals(OpportunityFieldHistory.OpportunityId, null)
@@ -14,7 +14,7 @@ private class HistoryRepoTests {
   @IsTest
   static void it_should_continue_to_act_as_aggregate_repo() {
     Aggregation count = Aggregation.count(OpportunityFieldHistory.Id, 'countId');
-    IAggregateRepository repo = ExampleFactory.getFactory().repoFactory.getOppFieldHistoryRepo();
+    IAggregateRepository repo = new ExampleRepoFactory().getOppFieldHistoryRepo();
     repo.groupBy(OpportunityFieldHistory.OpportunityId);
 
     List<AggregateRecord> records = repo.aggregate(count);
@@ -25,7 +25,7 @@ private class HistoryRepoTests {
 
   @IsTest
   static void it_should_query_history_records() {
-    IHistoryRepository historyRepo = ExampleFactory.getFactory().repoFactory.getOppFieldHistoryRepo();
+    IHistoryRepository historyRepo = new ExampleRepoFactory().getOppFieldHistoryRepo();
 
     List<FieldLevelHistory> histories = historyRepo.getAllHistory();
     // History records can't be created during Apex unit testing, but we can at least validate the query
@@ -48,10 +48,20 @@ private class HistoryRepoTests {
     );
     RepoFactoryMock.HistoryResults.put(OpportunityFieldHistory.SObjectType, new List<FieldLevelHistory>{ mockRecord });
 
-    IHistoryRepository historyRepo = ExampleFactory.getFactory().withMocks.repoFactory.getOppFieldHistoryRepo();
+    IHistoryRepository historyRepo = new ExampleRepoFactory().getOppFieldHistoryRepo();
 
     List<FieldLevelHistory> histories = historyRepo.getAllHistory();
     System.assertNotEquals(true, histories.isEmpty());
     System.assertEquals(mockRecord, histories[0]);
+  }
+
+  private without sharing class ExampleRepoFactory extends RepoFactory {
+    private ExampleRepoFactory() {
+      this.facade = new RepoFactoryMock.FacadeMock();
+    }
+    public IHistoryRepository getOppFieldHistoryRepo() {
+      return this.facade.getRepo(OpportunityFieldHistory.SObjectType, new List<Schema.SObjectField>(), this)
+        .setParentField(OpportunityFieldHistory.OpportunityId);
+    }
   }
 }

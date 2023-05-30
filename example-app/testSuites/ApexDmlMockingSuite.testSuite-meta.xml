@@ -5,7 +5,7 @@
     <testClassName>AggregationTests</testClassName>
     <testClassName>DMLTests</testClassName>
     <testClassName>ExampleSObjectTest</testClassName>
-    <testClassName>HistoryRepoTests</testClassName>
+    <testClassName>FieldLevelHistoryRepoTests</testClassName>
     <testClassName>QueryTests</testClassName>
     <testClassName>RepositoryTests</testClassName>
     <testClassName>TriggerHandler_Tests</testClassName>

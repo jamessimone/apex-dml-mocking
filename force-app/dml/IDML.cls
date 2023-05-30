@@ -1,18 +1,18 @@
 public interface IDML {
-  SObject doInsert(SObject record);
-  List<SObject> doInsert(List<SObject> recordList);
-  SObject doUpdate(SObject record);
-  List<SObject> doUpdate(List<SObject> recordList);
-  SObject doUpsert(SObject record);
-  List<SObject> doUpsert(List<SObject> recordList);
-  List<SObject> doUpsert(List<SObject> recordList, Schema.SObjectField externalIDField);
-  SObject doUndelete(SObject record);
-  List<SObject> doUndelete(List<SObject> recordList);
+  Database.SaveResult doInsert(SObject record);
+  List<Database.SaveResult> doInsert(List<SObject> recordList);
+  Database.SaveResult doUpdate(SObject record);
+  List<Database.SaveResult> doUpdate(List<SObject> recordList);
+  Database.UpsertResult doUpsert(SObject record);
+  List<Database.UpsertResult> doUpsert(List<SObject> recordList);
+  List<Database.UpsertResult> doUpsert(List<SObject> recordList, Schema.SObjectField externalIDField);
+  Database.UndeleteResult doUndelete(SObject record);
+  List<Database.UndeleteResult> doUndelete(List<SObject> recordList);
 
-  void doDelete(SObject record);
-  void doDelete(List<SObject> recordList);
-  void doHardDelete(SObject record);
-  void doHardDelete(List<SObject> recordList);
+  Database.DeleteResult doDelete(SObject record);
+  List<Database.DeleteResult> doDelete(List<SObject> recordList);
+  Database.DeleteResult doHardDelete(SObject record);
+  List<Database.DeleteResult> doHardDelete(List<SObject> recordList);
 
   IDML setOptions(Database.DMLOptions options, System.AccessLevel accessLevel);
 }

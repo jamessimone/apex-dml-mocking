@@ -21,60 +21,57 @@ public virtual class DML implements IDML {
     set;
   }
 
-  public virtual SObject doInsert(SObject record) {
+  public virtual Database.SaveResult doInsert(SObject record) {
     return this.doInsert(new List<SObject>{ record })[0];
   }
-  public virtual List<SObject> doInsert(List<SObject> records) {
+  public virtual List<Database.SaveResult> doInsert(List<SObject> records) {
     this.sortToPreventChunkingErrors(records);
-    Database.insert(records, this.options, this.accessLevel);
-    return records;
+    return Database.insert(records, this.options, this.accessLevel);
   }
 
-  public virtual SObject doUpdate(SObject record) {
+  public virtual Database.SaveResult doUpdate(SObject record) {
     return this.doUpdate(new List<SObject>{ record })[0];
   }
-  public virtual List<SObject> doUpdate(List<SObject> records) {
+  public virtual List<Database.SaveResult> doUpdate(List<SObject> records) {
     this.sortToPreventChunkingErrors(records);
-    Database.update(records, this.options, this.accessLevel);
-    return records;
+    return Database.update(records, this.options, this.accessLevel);
   }
 
-  public virtual SObject doUpsert(SObject record) {
+  public virtual Database.UpsertResult doUpsert(SObject record) {
     return this.doUpsert(new List<SObject>{ record })[0];
   }
 
-  public virtual List<SObject> doUpsert(List<SObject> records) {
+  public virtual List<Database.UpsertResult> doUpsert(List<SObject> records) {
     this.sortToPreventChunkingErrors(records);
-    Database.upsert(records, this.options.OptAllOrNone, this.accessLevel);
-    return records;
+    return Database.upsert(records, this.options.OptAllOrNone, this.accessLevel);
   }
 
-  public virtual List<SObject> doUpsert(List<SObject> records, Schema.SObjectField externalIdField) {
-    Database.upsert(records, externalIdField, this.options.OptAllOrNone, this.accessLevel);
-    return records;
+  public virtual List<Database.UpsertResult> doUpsert(List<SObject> records, Schema.SObjectField externalIdField) {
+    this.sortToPreventChunkingErrors(records);
+    return Database.upsert(records, externalIdField, this.options.OptAllOrNone, this.accessLevel);
   }
 
-  public virtual SObject doUndelete(SObject record) {
+  public virtual Database.UndeleteResult doUndelete(SObject record) {
     return this.doUnDelete(new List<SObject>{ record })[0];
   }
-  public virtual List<SObject> doUndelete(List<SObject> records) {
-    Database.undelete(records, this.options.OptAllOrNone, this.accessLevel);
-    return records;
+  public virtual List<Database.UndeleteResult> doUndelete(List<SObject> records) {
+    return Database.undelete(records, this.options.OptAllOrNone, this.accessLevel);
   }
 
-  public virtual void doDelete(SObject record) {
-    this.doDelete(new List<SObject>{ record });
+  public virtual Database.DeleteResult doDelete(SObject record) {
+    return this.doDelete(new List<SObject>{ record })[0];
   }
-  public virtual void doDelete(List<SObject> records) {
-    Database.delete(records, this.options.OptAllOrNone, this.accessLevel);
+  public virtual List<Database.DeleteResult> doDelete(List<SObject> records) {
+    return Database.delete(records, this.options.OptAllOrNone, this.accessLevel);
   }
 
-  public virtual void doHardDelete(SObject record) {
-    this.doHardDelete(new List<SObject>{ record });
+  public virtual Database.DeleteResult doHardDelete(SObject record) {
+    return this.doHardDelete(new List<SObject>{ record })[0];
   }
-  public virtual void doHardDelete(List<SObject> records) {
-    this.doDelete(records);
+  public virtual List<Database.DeleteResult> doHardDelete(List<SObject> records) {
+    List<Database.DeleteResult> results = this.doDelete(records);
     Database.emptyRecycleBin(records);
+    return results;
   }
 
   public DML setOptions(Database.DMLOptions options, System.AccessLevel accessLevel) {

@@ -5,44 +5,40 @@ public virtual class DMLMock extends DML {
   public static List<SObject> DeletedRecords = new List<SObject>();
   public static List<SObject> UndeletedRecords = new List<SObject>();
 
-  @TestVisible
-  private DMLMock() {
-    // @IsTest classes cannot be virtual, so enforce visibility
+  public override List<Database.SaveResult> doInsert(List<SObject> records) {
+    TestingUtils.generateIds(records);
+    InsertedRecords.addAll(records);
+    return (List<Database.SaveResult>) createDatabaseResults(Database.SaveResult.class, records);
   }
 
-  public override List<SObject> doInsert(List<SObject> recordList) {
-    TestingUtils.generateIds(recordList);
-    InsertedRecords.addAll(recordList);
-    return recordList;
+  public override List<Database.SaveResult> doUpdate(List<SObject> records) {
+    UpdatedRecords.addAll(records);
+    return (List<Database.SaveResult>) createDatabaseResults(Database.SaveResult.class, records);
   }
 
-  public override List<SObject> doUpdate(List<SObject> recordList) {
-    UpdatedRecords.addAll(recordList);
-    return recordList;
+  public override List<Database.UpsertResult> doUpsert(List<SObject> records) {
+    TestingUtils.generateIds(records);
+    UpsertedRecords.addAll(records);
+    return (List<Database.UpsertResult>) createDatabaseResults(Database.UpsertResult.class, records);
+  }
+  public override List<Database.UpsertResult> doUpsert(List<SObject> records, Schema.SObjectField field) {
+    return this.doUpsert(records);
   }
 
-  public override List<SObject> doUpsert(List<SObject> recordList) {
-    TestingUtils.generateIds(recordList);
-    UpsertedRecords.addAll(recordList);
-    return recordList;
-  }
-  public override List<SObject> doUpsert(List<SObject> recordList, Schema.SObjectField field) {
-    return this.doUpsert(recordList);
+  public override List<Database.UndeleteResult> doUndelete(List<SObject> records) {
+    UndeletedRecords.addAll(records);
+    return (List<Database.UndeleteResult>) createDatabaseResults(Database.UndeleteResult.class, records);
   }
 
-  public override List<SObject> doUndelete(List<SObject> recordList) {
-    UndeletedRecords.addAll(recordList);
-    return recordList;
-  }
-
-  public override void doDelete(List<SObject> recordList) {
-    if (recordList?.isEmpty() == false) {
-      DeletedRecords.addAll(recordList);
+  public override List<Database.DeleteResult> doDelete(List<SObject> records) {
+    if (records?.isEmpty() == false) {
+      DeletedRecords.addAll(records);
     }
+    return (List<Database.DeleteResult>) createDatabaseResults(Database.DeleteResult.class, records);
   }
 
-  public override void doHardDelete(List<SObject> recordList) {
-    this.doDelete(recordList);
+  public override List<Database.DeleteResult> doHardDelete(List<SObject> records) {
+    return this.doDelete(records);
   }
 
   public static RecordsWrapper Inserted {
@@ -122,23 +118,20 @@ public virtual class DMLMock extends DML {
     }
 
     public Boolean hasId(Id recordId) {
-      Boolean exists = false;
-      for (SObject record : this.recordList) {
-        if (record.Id == recordId) {
-          exists = true;
-        }
-      }
-      return exists;
+      return this.hasId(recordId, 'Id');
     }
 
-    public Boolean hasId(Id whatId, SObjectField idField) {
-      Boolean exists = false;
+    public Boolean hasId(Id relatedId, Schema.SObjectField idField) {
+      return this.hasId(relatedId, idField.getDescribe().getName());
+    }
+
+    private Boolean hasId(Id relatedId, String idFieldName) {
       for (SObject record : this.recordList) {
-        if (record.get(idField) == whatId) {
-          exists = true;
+        if (record.get(idFieldName) == relatedId) {
+          return true;
         }
       }
-      return exists;
+      return false;
     }
 
     public Integer size() {
@@ -172,5 +165,17 @@ public virtual class DMLMock extends DML {
       }
       return matchingRecords;
     }
+  }
+
+  private static List<Object> createDatabaseResults(Type clazz, List<SObject> records) {
+    List<Object> results = (List<Object>) Type.forName('List<' + clazz.getName() + '>').newInstance();
+    for (SObject record : records) {
+      results.add(createDatabaseResult(clazz, record));
+    }
+    return results;
+  }
+
+  private static Object createDatabaseResult(Type clazz, SObject record) {
+    return JSON.deserialize('{"success": true, "id": "' + record.Id + '"}', clazz);
   }
 }
