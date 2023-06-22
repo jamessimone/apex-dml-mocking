@@ -10,6 +10,10 @@ public class RepoFactoryMock {
   private static final List<Query> QueriesMade = new List<Query>();
   @TestVisible
   private static final Map<Schema.SObjectType, List<FieldLevelHistory>> HistoryResults = new Map<Schema.SObjectType, List<FieldLevelHistory>>();
+  @TestVisible
+  private static final Map<SObjectType, List<AggregateRepository.GroupBy>> GroupByFields = new Map<SObjectType, List<AggregateRepository.GroupBy>>();
+  @TestVisible
+  private static final Map<SObjectType, Map<String, RepositorySortOrder>> FieldToSortOrders = new Map<SObjectType, Map<String, RepositorySortOrder>>();
 
   private static final Map<Schema.SObjectType, List<Schema.ChildRelationship>> CACHED_CHILD_RELATIONSHIPS = new Map<Schema.SObjectType, List<Schema.ChildRelationship>>();
 
@@ -128,6 +132,21 @@ public class RepoFactoryMock {
     public override List<AggregateRecord> aggregate(List<Aggregation> aggregations, List<Query> queries) {
       AggregatesMade.addAll(aggregations);
       QueriesMade.addAll(queries);
+
+      List<AggregateRepository.GroupBy> fields = GroupByFields.get(this.repoType);
+      if (fields == null) {
+        fields = new List<AggregateRepository.GroupBy>();
+        GroupByFields.put(this.repoType, fields);
+      }
+      fields.addAll(this.groupedByFieldNames);
+
+      Map<String, RepositorySortOrder> localFieldToSortOrders = FieldToSortOrders.get(this.repoType);
+      if (localFieldToSortOrders == null) {
+        localFieldToSortOrders = new Map<String, RepositorySortOrder>();
+        FieldToSortOrders.put(this.repoType, localFieldToSortOrders);
+      }
+      localFieldToSortOrders.putAll(this.fieldToSortOrder);
+
       return this.aggRecords;
     }
   }

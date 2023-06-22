@@ -126,4 +126,40 @@ private class AggregateRepositoryTests {
     );
     System.assertEquals(mockAggregateResult.get(sum.getAlias()), returnedResult.get(sum.getAlias()));
   }
+
+  @IsTest
+  static void shouldOrderByDateFunction() {
+    IAggregateRepository cpaRepo = new AggregateRepository(
+      ContactPointAddress.SObjectType,
+      new List<SObjectField>{ ContactPointAddress.Name, ContactPointAddress.ActiveFromDate },
+      new RepoFactory()
+    );
+
+    insert new List<ContactPointAddress>{
+      new ContactPointAddress(Name = 'A', ActiveFromDate = System.today()),
+      new ContactPointAddress(Name = 'B', ActiveFromDate = System.today().addYears(-2)),
+      new ContactPointAddress(Name = 'C', ActiveFromDate = System.today().addYears(2)),
+      new ContactPointAddress(Name = 'D', ActiveFromDate = System.today().addYears(5)) // should be excluded through limit
+    };
+
+    String nameAlias = 'name';
+    cpaRepo.setLimit(3);
+    List<AggregateRecord> results = cpaRepo.groupBy(
+        DateFunction.CALENDAR_YEAR,
+        ContactPointAddress.ActiveFromDate,
+        'activeDate'
+      )
+      .addSortOrder(DateFunction.CALENDAR_YEAR, ContactPointAddress.ActiveFromDate, RepositorySortOrder.ASCENDING)
+      .aggregate(Aggregation.max(ContactPointAddress.Name, nameAlias));
+
+    Assert.areEqual(3, results.size());
+    Assert.isNotNull(results.get(0).get('activeDate'));
+    Assert.areEqual('B', results.get(0).get(nameAlias));
+    Assert.areEqual('A', results.get(1).get(nameAlias));
+    Assert.areEqual('C', results.get(2).get(nameAlias));
+
+    Aggregation maxName = Aggregation.max(ContactPointAddress.Name, 'maxName');
+    AggregateRecord result = cpaRepo.addSortOrder(maxName, RepositorySortOrder.DESCENDING).aggregate(maxName).get(0);
+    Assert.areEqual('D', result.get(maxName.getAlias()));
+  }
 }

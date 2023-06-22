@@ -1,12 +1,13 @@
 public virtual without sharing class Repository implements IRepository {
   private final IDML dml;
   private final List<Schema.SObjectField> queryFields;
+  private final Set<String> selectFields = new Set<String>();
+  private final Map<Schema.SObjectField, String> childToRelationshipNames;
+
   protected final Schema.SObjectType repoType;
   protected final Map<String, Object> bindVars = new Map<String, Object>();
   protected System.AccessLevel accessLevel = System.AccessLevel.SYSTEM_MODE;
-  private final Set<String> selectFields = new Set<String>();
-  private final Map<Schema.SObjectField, String> childToRelationshipNames;
-  private final Map<Schema.SObjectField, RepositorySortOrder> fieldToSortOrder = new Map<Schema.SObjectField, RepositorySortOrder>();
+  protected final Map<String, RepositorySortOrder> fieldToSortOrder = new Map<String, RepositorySortOrder>();
 
   private Boolean shouldAddChildFields = true;
   private Integer limitAmount;
@@ -43,7 +44,7 @@ public virtual without sharing class Repository implements IRepository {
       this.bindVars,
       this.accessLevel
     );
-    this.bindVars.clear();
+    this.clearState();
     this.shouldAddChildFields = originalValue;
 
     return locator;
@@ -68,7 +69,7 @@ public virtual without sharing class Repository implements IRepository {
   }
 
   public Repository addSortOrder(Schema.SObjectField fieldToken, RepositorySortOrder sortOrder) {
-    this.fieldToSortOrder.put(fieldToken, sortOrder);
+    this.fieldToSortOrder.put(fieldToken.getDescribe().getName(), sortOrder);
     return this;
   }
 
@@ -88,7 +89,7 @@ public virtual without sharing class Repository implements IRepository {
       childFieldToken,
       childFields,
       new List<Query>(),
-      new Map<Schema.SObjectField, RepositorySortOrder>(),
+      new Map<String, RepositorySortOrder>(),
       null
     );
   }
@@ -97,7 +98,7 @@ public virtual without sharing class Repository implements IRepository {
     Schema.SObjectField childFieldToken,
     List<Schema.SObjectField> childFields,
     List<Query> optionalWhereFilters,
-    Map<Schema.SObjectField, RepositorySortOrder> fieldToSortOrder,
+    Map<String, RepositorySortOrder> fieldToSortOrder,
     Integer limitAmount
   ) {
     if (this.shouldAddChildFields == false || this.childToRelationshipNames.containsKey(childFieldToken) == false) {
@@ -149,6 +150,12 @@ public virtual without sharing class Repository implements IRepository {
       this.getLimitAmount(this.limitAmount);
   }
 
+  protected virtual void clearState() {
+    this.bindVars.clear();
+    this.fieldToSortOrder.clear();
+    this.limitAmount = null;
+  }
+
   private Map<Schema.SObjectField, String> getChildRelationshipNames(Schema.SObjectType repoType) {
     Map<Schema.SObjectField, String> localChildToRelationshipNames = new Map<Schema.SObjectField, String>();
     for (Schema.ChildRelationship childRelationship : repoType.getDescribe().getChildRelationships()) {
@@ -178,18 +185,18 @@ public virtual without sharing class Repository implements IRepository {
   private List<SObject> performQuery(String finalQuery) {
     System.debug('Query: \n' + finalQuery);
     List<SObject> results = Database.queryWithBinds(finalQuery, this.bindVars, this.accessLevel);
-    this.bindVars.clear();
+    this.clearState();
     System.debug('Number of results: ' + results.size() + '\nResults: \n' + results);
     return results;
   }
 
-  private String getOrderBys(Map<Schema.SObjectField, RepositorySortOrder> sortOrders) {
+  private String getOrderBys(Map<String, RepositorySortOrder> sortOrders) {
     String orderByString = '';
     if (sortOrders.isEmpty() == false) {
       orderByString += ' \nORDER BY ';
       String separator = ', ';
-      for (Schema.SObjectField field : sortOrders.keySet()) {
-        orderByString += field.getDescribe().getName() + ' ' + sortOrders.get(field).toString() + separator;
+      for (String fieldName : sortOrders.keySet()) {
+        orderByString += fieldName + ' ' + sortOrders.get(fieldName).toString() + separator;
       }
       orderByString = orderByString.removeEnd(separator);
     }

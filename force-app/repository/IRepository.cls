@@ -14,7 +14,7 @@ public interface IRepository extends IDML {
     Schema.SObjectField childFieldToken,
     List<Schema.SObjectField> childFields,
     List<Query> optionalWhereFilters,
-    Map<Schema.SObjectField, RepositorySortOrder> fieldToSortOrder,
+    Map<String, RepositorySortOrder> fieldToSortOrder,
     Integer limitBy
   );
 }

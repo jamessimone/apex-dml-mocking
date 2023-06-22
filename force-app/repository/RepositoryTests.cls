@@ -122,7 +122,7 @@ private class RepositoryTests {
         Contact.AccountId,
         new List<Schema.SObjectField>{ Contact.AccountId, Contact.LastName },
         new List<Query>{ Query.notEquals(Contact.LastName, nameFilter) },
-        new Map<Schema.SObjectField, RepositorySortOrder>(),
+        new Map<String, RepositorySortOrder>(),
         1
       );
 

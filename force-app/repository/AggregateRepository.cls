@@ -1,8 +1,41 @@
 public without sharing virtual class AggregateRepository extends Repository implements IAggregateRepository {
+  protected final Set<GroupBy> groupedByFieldNames = new Set<GroupBy>();
   private final Set<String> havingFields = new Set<String>();
-  private final Set<String> groupedByFieldNames = new Set<String>();
   private List<Aggregation> aggregations;
   private Boolean isNumberCountQuery = false;
+
+  @TestVisible
+  private class GroupBy {
+    private final String selectName;
+    private final String groupByName;
+
+    public GroupBy(String groupByName, String alias) {
+      this.selectName = groupByName + ' ' + alias;
+      this.groupByName = groupByName;
+    }
+
+    public GroupBy(String fieldName) {
+      this.selectName = fieldName;
+      this.groupByName = fieldName;
+    }
+
+    public String getSelectName() {
+      return this.selectName;
+    }
+
+    public String getGroupByName() {
+      return this.groupByName;
+    }
+
+    public Boolean equals(Object other) {
+      if (other instanceof GroupBy) {
+        GroupBy that = (GroupBy) other;
+        return this.groupByName == that.groupByName && this.selectName == that.selectName;
+      }
+      return false;
+    }
+  }
+
   public AggregateRepository(
     Schema.SObjectType repoType,
     List<Schema.SObjectField> queryFields,
@@ -11,16 +44,37 @@ public without sharing virtual class AggregateRepository extends Repository impl
     super(repoType, queryFields, repoFactory);
   }
 
-  public IAggregateRepository groupBy(Schema.SObjectField fieldToken) {
-    this.groupedByFieldNames.add(fieldToken.getDescribe().getName());
+  public IAggregateRepository groupBy(DateFunction dateFunction, Schema.SObjectField fieldToken, String alias) {
+    String groupByName = this.getFormattedDateFunction(dateFunction, fieldToken);
+    this.groupedByFieldNames.add(new GroupBy(groupByName, alias));
     return this;
   }
+
+  public IAggregateRepository groupBy(Schema.SObjectField fieldToken) {
+    this.groupedByFieldNames.add(new GroupBy(fieldToken.getDescribe().getName()));
+    return this;
+  }
+
   public IAggregateRepository groupBy(List<Schema.SObjectField> parentFieldChain) {
     String parentFieldGroupBy = '';
     while (parentFieldChain.size() > 1) {
       parentFieldGroupBy += parentFieldChain.remove(0).getDescribe().getRelationshipName() + '.';
     }
-    this.groupedByFieldNames.add(parentFieldGroupBy + parentFieldChain.remove(0).getDescribe().getName());
+    this.groupedByFieldNames.add(new GroupBy(parentFieldGroupBy + parentFieldChain.remove(0).getDescribe().getName()));
+    return this;
+  }
+
+  public IAggregateRepository addSortOrder(Aggregation aggregate, RepositorySortOrder sortOrder) {
+    this.fieldToSortOrder.put(aggregate.getBaseAggregation(), sortOrder);
+    return this;
+  }
+
+  public IAggregateRepository addSortOrder(
+    DateFunction dateFunction,
+    Schema.SObjectField fieldToken,
+    RepositorySortOrder sortOrder
+  ) {
+    this.fieldToSortOrder.put(this.getFormattedDateFunction(dateFunction, fieldToken), sortOrder);
     return this;
   }
 
@@ -40,7 +94,7 @@ public without sharing virtual class AggregateRepository extends Repository impl
   public Integer count(List<Query> queries) {
     this.isNumberCountQuery = true;
     Integer recordCount = Database.countQueryWithBinds(this.getFinalQuery(queries), this.bindVars, this.accessLevel);
-    this.bindVars.clear();
+    this.clearState();
     this.isNumberCountQuery = false;
     return recordCount;
   }
@@ -71,9 +125,7 @@ public without sharing virtual class AggregateRepository extends Repository impl
       aggregateRecords.add(aggRecord);
     }
 
-    this.havingFields.clear();
-    this.groupedByFieldNames.clear();
-    this.aggregations = null;
+    this.clearState();
     return aggregateRecords;
   }
 
@@ -90,20 +142,46 @@ public without sharing virtual class AggregateRepository extends Repository impl
       }
     }
 
-    baseFields.addAll(this.groupedByFieldNames);
+    for (GroupBy groupBy : this.groupedByFieldNames) {
+      baseFields.add(groupBy.getSelectName());
+    }
     return baseFields.isEmpty() ? super.addSelectFields() : baseFields;
   }
 
   protected override String getFinalQuery(List<Query> queries) {
     String baseString = super.getFinalQuery(queries);
     if (this.groupedByFieldNames.isEmpty() == false) {
-      baseString += '\nGROUP BY ' + String.join(new List<String>(this.groupedByFieldNames), ',');
+      String potentialOrderBy = null;
+      String orderByKey = '\nORDER BY';
+      if (baseString.contains(orderByKey)) {
+        potentialOrderBy = baseString.substringAfter(orderByKey);
+        baseString = baseString.replace(orderByKey + potentialOrderBy, '');
+      }
+      baseString += '\nGROUP BY ';
+      for (GroupBy groupBy : this.groupedByFieldNames) {
+        baseString += groupBy.getGroupByName() + ',';
+      }
+      baseString = baseString.removeEnd(',');
       // having is only valid with a grouping
       if (this.havingFields.isEmpty() == false) {
-        baseString += '\nHAVING ' + String.join(new List<String>(this.havingFields), ',');
+        baseString += '\nHAVING ' + String.join(this.havingFields, ',');
+      }
+      if (potentialOrderBy != null) {
+        baseString += orderByKey + potentialOrderBy;
       }
     }
     return baseString;
+  }
+
+  protected override void clearState() {
+    super.clearState();
+    this.havingFields.clear();
+    this.groupedByFieldNames.clear();
+    this.aggregations = null;
+  }
+
+  private String getFormattedDateFunction(DateFunction dateFunction, Schema.SObjectField fieldToken) {
+    return dateFunction.name() + '(' + fieldToken + ')';
   }
 
   private class AggregateQuery extends Query {
