@@ -27,8 +27,8 @@ private class RepositoryTests {
     repo.get(setQuery);
     repo.get(setStringQuery);
     System.assertEquals(3, Limits.getQueries());
-    System.assertEquals('Name = :bindVar3', setStringQuery.toString());
-    System.assertEquals(cpaNames, setStringQuery.getBindVars().get('bindVar3'));
+    System.assertEquals('Name = :bindVar2', setStringQuery.toString());
+    System.assertEquals(cpaNames, setStringQuery.getBindVars().get('bindVar2'));
   }
 
   @IsTest

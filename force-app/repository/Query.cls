@@ -26,7 +26,7 @@ public virtual class Query {
 
   public Query usingParent(List<SObjectField> parentFields) {
     parentFields.add(this.fieldToken);
-    return new ParentQuery(parentFields, this.operator, this.predicate);
+    return new ParentQuery(parentFields, this);
   }
 
   public static Query equals(SObjectField field, Object predicate) {
@@ -125,18 +125,25 @@ public virtual class Query {
   }
 
   private class ParentQuery extends Query {
-    private ParentQuery(List<SObjectField> parentFields, Operator operator, Object predicate) {
-      super(getBuiltUpParentFieldName(parentFields), operator, predicate);
+    private ParentQuery(List<SObjectField> parentFields, Query innerQuery) {
+      super(innerQuery);
+      this.field = getBuiltUpParentFieldName(parentFields);
     }
   }
 
   protected Query() {
   }
 
+  protected Query(Query innerQuery) {
+    this.operator = innerQuery.operator;
+    this.predicate = innerQuery.predicate;
+    this.bindVars.putAll(innerQuery.getBindVars());
+  }
+
   protected Query(String fieldName, Operator operator, Object predicate) {
     this.field = fieldName;
     this.operator = operator;
-    this.predicate = predicate;
+    this.predicate = this.getPredicate(predicate);
   }
 
   private Query(SObjectField fieldToken, Operator operator, Object predicate) {
@@ -149,12 +156,11 @@ public virtual class Query {
   }
 
   public virtual override String toString() {
-    String predicateValue = this.getPredicate(this.predicate);
     if (this.operator == Query.Operator.NOT_LIKE) {
       // who knows why this is the format they wanted
-      return String.format(this.getOperator(), new List<String>{ this.field }) + ' ' + predicateValue;
+      return String.format(this.getOperator(), new List<String>{ this.field }) + ' ' + this.predicate;
     }
-    return this.field + ' ' + this.getOperator() + ' ' + predicateValue;
+    return this.field + ' ' + this.getOperator() + ' ' + this.predicate;
   }
 
   public Boolean equals(Object thatObject) {
