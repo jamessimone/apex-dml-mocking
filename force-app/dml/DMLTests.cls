@@ -149,4 +149,17 @@ private class DMLTests {
 
     System.assert(true, 'Should make it here');
   }
+
+  @IsTest
+  static void publishesEvents() {
+    BatchApexErrorEvent first = new BatchApexErrorEvent();
+    BatchApexErrorEvent second = new BatchApexErrorEvent();
+
+    IDML dml = new DML();
+    Database.SaveResult firstResult = dml.publish(first);
+    Database.SaveResult secondResult = dml.publish(new List<SObject>{ second }).get(0);
+
+    Assert.areEqual(true, firstResult.isSuccess());
+    Assert.areEqual(true, secondResult.isSuccess());
+  }
 }

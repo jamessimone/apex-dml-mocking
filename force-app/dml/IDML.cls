@@ -14,5 +14,8 @@ public interface IDML {
   Database.DeleteResult doHardDelete(SObject record);
   List<Database.DeleteResult> doHardDelete(List<SObject> recordList);
 
+  Database.SaveResult publish(SObject platformEvent);
+  List<Database.SaveResult> publish(List<SObject> platformEvent);
+
   IDML setOptions(Database.DMLOptions options, System.AccessLevel accessLevel);
 }

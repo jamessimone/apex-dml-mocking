@@ -189,6 +189,11 @@ private class RepositoryTests {
     repo.doHardDelete(acc);
     repo.doHardDelete(accs);
     System.assertEquals(acc, DMLMock.Deleted.Accounts.firstOrDefault);
+
+    BatchApexErrorEvent event = new BatchApexErrorEvent();
+    repo.publish(event);
+    repo.publish(new List<SObject>{ event });
+    System.assertEquals(event, DMLMock.Published.firstOrDefault);
   }
 
   private class GroupMemberRepo extends Repository {

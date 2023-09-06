@@ -253,6 +253,13 @@ public virtual without sharing class Repository implements IRepository {
     return this.dml.doHardDelete(records);
   }
 
+  public Database.SaveResult publish(SObject event) {
+    return this.dml.publish(event);
+  }
+  public List<Database.SaveResult> publish(List<SObject> events) {
+    return this.dml.publish(events);
+  }
+
   public IDML setOptions(Database.DMLOptions options, System.AccessLevel accessLevel) {
     this.accessLevel = accessLevel;
     return this.dml.setOptions(options, accessLevel);

@@ -4,6 +4,7 @@ public virtual class DMLMock extends DML {
   public static List<SObject> UpdatedRecords = new List<SObject>();
   public static List<SObject> DeletedRecords = new List<SObject>();
   public static List<SObject> UndeletedRecords = new List<SObject>();
+  public static List<SObject> PublishedRecords = new List<SObject>();
 
   public override List<Database.SaveResult> doInsert(List<SObject> records) {
     TestingUtils.generateIds(records);
@@ -41,6 +42,15 @@ public virtual class DMLMock extends DML {
     return this.doDelete(records);
   }
 
+  public override Database.SaveResult publish(SObject event) {
+    PublishedRecords.add(event);
+    return (Database.SaveResult) createDatabaseResult(Database.SaveResult.class, event);
+  }
+  public override List<Database.SaveResult> publish(List<SObject> events) {
+    PublishedRecords.addAll(events);
+    return (List<Database.SaveResult>) createDatabaseResults(Database.SaveResult.class, events);
+  }
+
   public static RecordsWrapper Inserted {
     get {
       return new RecordsWrapper(InsertedRecords);
@@ -68,6 +78,12 @@ public virtual class DMLMock extends DML {
   public static RecordsWrapper Undeleted {
     get {
       return new RecordsWrapper(UndeletedRecords);
+    }
+  }
+
+  public static RecordsWrapper Published {
+    get {
+      return new RecordsWrapper(PublishedRecords);
     }
   }
 
