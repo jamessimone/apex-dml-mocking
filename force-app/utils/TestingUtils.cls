@@ -1,9 +1,21 @@
-public abstract class TestingUtils {
+@IsTest
+public class TestingUtils {
   private static Integer startingNumber = 1;
 
   public static String generateId(Schema.SObjectType sObjectType) {
     String result = String.valueOf(startingNumber++);
-    return sObjectType.getDescribe().getKeyPrefix() + '0'.repeat(12 - result.length()) + result;
+    String keyPrefix = sObjectType.getDescribe().getKeyPrefix();
+    if (keyPrefix == null) {
+      switch on sObjectType.getDescribe().getAssociateEntityType() {
+        when 'History' {
+          keyPrefix = '017';
+        }
+        when 'Share' {
+          keyPrefix = '02c';
+        }
+      }
+    }
+    return keyPrefix + '0'.repeat(12 - result.length()) + result;
   }
 
   public static SObject generateId(SObject objectInstance) {
@@ -19,5 +31,15 @@ public abstract class TestingUtils {
         generateId(record);
       }
     }
+  }
+
+  @IsTest
+  static void generates_fake_history_ids() {
+    Assert.isNotNull(generateId(LeadHistory.SObjectType));
+  }
+
+  @IsTest
+  static void generates_fake_share_records() {
+    Assert.isNotNull(generateId(LeadShare.SObjectType));
   }
 }
