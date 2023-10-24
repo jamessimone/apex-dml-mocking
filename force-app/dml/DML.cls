@@ -84,6 +84,9 @@ public virtual class DML implements IDML {
   public DML setOptions(Database.DMLOptions options, System.AccessLevel accessLevel) {
     if (options != null) {
       this.options = options;
+      if (this.options.OptAllOrNone == null) {
+        this.options.OptAllOrNone = true;
+      }
     }
     this.accessLevel = accessLevel;
     return this;

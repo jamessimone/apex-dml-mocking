@@ -162,4 +162,15 @@ private class DMLTests {
     Assert.areEqual(true, firstResult.isSuccess());
     Assert.areEqual(true, secondResult.isSuccess());
   }
+
+  @IsTest
+  static void upsertWithDefaultSetOptionsWorks() {
+    // on some code paths, like insert, OptAllOrNone not being initialized on Database.DMLOptions is fine
+    // but on upsert (and possibly other operations), that specific value is always checked
+    Contact con = new Contact(LastName = 'Upsert');
+
+    new DML().setOptions(new Database.DMLOptions(), System.AccessLevel.SYSTEM_MODE).doUpsert(con);
+
+    Assert.isNotNull(con.Id);
+  }
 }
