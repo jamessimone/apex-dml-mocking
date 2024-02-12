@@ -163,4 +163,26 @@ private class QueryTests {
     System.assertEquals('AccountId != :bindVar0', notEquals.toString());
     System.assertEquals(new Set<Id>(), notEquals.getBindVars().get('bindVar0'));
   }
+
+  @IsTest
+  static void it_allows_subqueries() {
+    Query subquery = Query.subquery(
+      Contact.AccountId,
+      Account.Id,
+      Query.andQuery(
+        new List<Query>{
+          Query.equals(Account.AnnualRevenue, 50),
+          Query.equals(Account.Industry, 'Tech'),
+          Query.orQuery(
+            new List<Query>{ Query.equals(Account.NumberOfEmployees, 1), Query.equals(Account.Site, 'web3') }
+          )
+        }
+      )
+    );
+
+    Assert.areEqual(
+      'AccountId IN (SELECT Id FROM Account WHERE (AnnualRevenue = :bindVar0 AND Industry = :bindVar1 AND (NumberOfEmployees = :bindVar2 OR Site = :bindVar3)))',
+      subquery.toString()
+    );
+  }
 }

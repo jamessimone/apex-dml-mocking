@@ -29,6 +29,19 @@ public virtual class Query {
     return new ParentQuery(parentFields, this);
   }
 
+  public static Query subquery(Schema.SObjectField field, Schema.SObjectField innerMatchingField, Query subcondition) {
+    return subquery(field, innerMatchingField.getDescribe().getSObjectType(), innerMatchingField, subcondition);
+  }
+
+  public static Query subquery(
+    Schema.SObjectField field,
+    Schema.SObjectType objectType,
+    Schema.SObjectField innerMatchingField,
+    Query subcondition
+  ) {
+    return new SubQuery(field, objectType, innerMatchingField, subcondition);
+  }
+
   public static Query equals(SObjectField field, Object predicate) {
     return new Query(field, Operator.EQUALS, predicate);
   }
@@ -78,6 +91,37 @@ public virtual class Query {
 
   public static Query andQuery(List<Query> innerQueries) {
     return new AndQuery(innerQueries);
+  }
+
+  private class SubQuery extends Query {
+    private final Schema.SObjectField field;
+    private final Schema.SObjectType objectType;
+    private final Schema.SObjectField innerMatchingField;
+    private final Query subcondition;
+
+    public SubQuery(
+      Schema.SObjectField field,
+      Schema.SObjectType objectType,
+      Schema.SObjectField innerMatchingField,
+      Query subcondition
+    ) {
+      this.field = field;
+      this.objectType = objectType;
+      this.innerMatchingField = innerMatchingField;
+      this.subcondition = subcondition;
+    }
+
+    public override String toString() {
+      String whereClause = ' WHERE ' + this.subcondition.toString();
+      this.bindVars.putAll(this.subcondition.getBindVars());
+      return this.field.getDescribe().getName() +
+        ' IN (SELECT ' +
+        this.innerMatchingField +
+        ' FROM ' +
+        this.objectType +
+        whereClause +
+        ')';
+    }
   }
 
   private abstract class DelimitedQuery extends Query {
