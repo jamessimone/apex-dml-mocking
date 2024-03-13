@@ -202,7 +202,7 @@ public virtual class Query {
   public virtual override String toString() {
     if (this.operator == Query.Operator.NOT_LIKE) {
       // who knows why this is the format they wanted
-      return String.format(this.getOperator(), new List<String>{ this.field }) + ' ' + this.predicate;
+      return String.format(this.getOperator(), new List<String>{ this.field, this.predicate.toString() });
     }
     return this.field + ' ' + this.getOperator() + ' ' + this.predicate;
   }
@@ -243,7 +243,7 @@ public virtual class Query {
         returnVal = 'like';
       }
       when NOT_LIKE {
-        returnVal = 'not {0} like';
+        returnVal = '(not {0} like {1})';
       }
     }
     return returnVal;

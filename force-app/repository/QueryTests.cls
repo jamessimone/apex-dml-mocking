@@ -121,7 +121,7 @@ private class QueryTests {
 
     Query notLike = Query.notLike(Account.Name, expectedName);
 
-    System.assertEquals('not Name like :bindVar0', notLike.toString());
+    System.assertEquals('(not Name like :bindVar0)', notLike.toString());
     System.assertEquals(expectedName, notLike.getBindVars().get('bindVar0'));
   }
 
@@ -133,8 +133,23 @@ private class QueryTests {
 
     Query notLike = Query.notLike(Account.Name, values);
 
-    System.assertEquals('not Name like :bindVar0', notLike.toString());
+    System.assertEquals('(not Name like :bindVar0)', notLike.toString());
     System.assertEquals(values, notLike.getBindVars().get('bindVar0'));
+  }
+
+  @IsTest
+  static void it_should_allow_multiple_not_like_statements() {
+    String someName = '%someName%';
+    String otherName = '%otherName%';
+    
+    Query multipleNotLike = Query.andQuery(new List<Query> {
+      Query.notLike(Account.Name, someName),
+      Query.notLike(Account.Name, otherName)
+    });
+  
+    System.assertEquals('((not Name like :bindVar0) AND (not Name like :bindVar1))', multipleNotLike.toString());
+    System.assertEquals(someName, multipleNotLike.getBindVars().get('bindVar0'));
+    System.assertEquals(otherName, multipleNotLike.getBindVars().get('bindVar1'));
   }
 
   @IsTest
