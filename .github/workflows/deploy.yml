@@ -30,27 +30,27 @@ jobs:
     steps:
       # Checkout the code
       - name: "Checkout source code"
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
 
       - name: "Setup node"
         uses: actions/setup-node@v2
         with:
-          node-version: "14"
+          node-version: "18"
 
-      - name: "Restore node_modules cache"
-        id: cache-npm
-        uses: actions/cache@v2
-        with:
-          path: node_modules
-          key: npm-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            npm-${{ env.cache-name }}-
-            npm-
+      # - name: "Restore node_modules cache"
+      #   id: cache-npm
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: node_modules
+      #     key: npm-${{ hashFiles('**/package-lock.json') }}
+      #     restore-keys: |
+      #       npm-${{ env.cache-name }}-
+      #       npm-
 
       - name: "Install NPM"
-        if: steps.cache-npm.outputs.cache-hit != 'true'
+        # if: steps.cache-npm.outputs.cache-hit != 'true'
         run: npm ci
 
       # Authenticate using JWT flow
@@ -58,8 +58,8 @@ jobs:
         shell: bash
         run: |
           echo "${{ env.DEVHUB_SERVER_KEY }}" > ./jwt-server.key
-          npx sfdx force:auth:jwt:grant --clientid ${{ env.DEVHUB_CONSUMER_KEY }} --username ${{ env.DEVHUB_USERNAME }} --jwtkeyfile ./jwt-server.key --setdefaultdevhubusername
-          npx sfdx config:set defaultusername=${{ env.DEVHUB_USERNAME }}
+          npx sf org login jwt --client-id ${{ env.DEVHUB_CONSUMER_KEY }} --username ${{ env.DEVHUB_USERNAME }} --jwt-key-file ./jwt-server.key --set-default-dev-hub
+          npx sf config set target-org ${{ env.DEVHUB_USERNAME }}
         env:
           DEVHUB_USERNAME: ${{ secrets.DEVHUB_USERNAME }}
           DEVHUB_CONSUMER_KEY: ${{ secrets.DEVHUB_CONSUMER_KEY }}
