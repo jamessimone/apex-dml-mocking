@@ -39,18 +39,18 @@ jobs:
         with:
           node-version: "18"
 
-      # - name: "Restore node_modules cache"
-      #   id: cache-npm
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: node_modules
-      #     key: npm-${{ hashFiles('**/package-lock.json') }}
-      #     restore-keys: |
-      #       npm-${{ env.cache-name }}-
-      #       npm-
+      - name: "Restore node_modules cache"
+        id: cache-npm
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-${{ env.cache-name }}-
+            npm-
 
       - name: "Install NPM"
-        # if: steps.cache-npm.outputs.cache-hit != 'true'
+        if: steps.cache-npm.outputs.cache-hit != 'true'
         run: npm ci
 
       # Authenticate using JWT flow

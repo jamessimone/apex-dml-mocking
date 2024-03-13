@@ -52,7 +52,8 @@ if($scratchOrgAllotment -gt 0) {
   try {
     Write-Debug "Beginning scratch org creation"
     # Create Scratch Org
-    sf org create scratch --definition-file config/project-scratch-def.json --alias $userAlias --set-default --duration-days
+    npx sf org create scratch --definition-file config/project-scratch-def.json --alias $userAlias --set-default --duration-days
+    npx sf config set target-org $userAlias
   } catch {
     # Do nothing, we'll just try to deploy to the Dev Hub instead
   }
