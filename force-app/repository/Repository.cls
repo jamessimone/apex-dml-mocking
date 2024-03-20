@@ -230,7 +230,7 @@ public virtual without sharing class Repository implements IRepository {
       this.getLimitAmount(this.limitAmount) +
       ')';
     System.debug('Search query:\n' + searchQuery);
-    List<List<SObject>> results = Search.query(searchQuery);
+    List<List<SObject>> results = Search.query(searchQuery, this.accessLevel);
     System.debug('Number of results: ' + results.size() + '\nResults: \n' + results);
     this.clearState();
     this.isSosl = false;
