@@ -209,6 +209,19 @@ private class RepositoryTests {
     System.assertEquals(cpa.Id, results.get(0).get(0).Id);
   }
 
+  @IsTest
+  static void it_performs_sosl_set_backed_queries() {
+    ContactPointAddress cpa = new ContactPointAddress(Name = 'hello world', PreferenceRank = 1);
+    insert cpa;
+    Test.setFixedSearchResults(new List<Id>{ cpa.Id });
+
+    List<List<SObject>> results = new ContactPointAddressRepo()
+      .setSearchGroup(SearchGroup.NAME_FIELDS)
+      .getSosl('hel', Query.equals(ContactPointAddress.PreferenceRank, new Set<Integer>{ 1, 2 }));
+
+    System.assertEquals(cpa.Id, results.get(0).get(0).Id);
+  }
+
   private class GroupMemberRepo extends Repository {
     public GroupMemberRepo() {
       super(GroupMember.SObjectType, new List<Schema.SObjectField>{ GroupMember.GroupId }, new RepoFactory());

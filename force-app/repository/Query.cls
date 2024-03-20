@@ -212,6 +212,7 @@ public virtual class Query {
     for (String key : this.bindVars.keySet()) {
       startingString = startingString.replace(':' + key, this.getSoslPredicate(this.bindVars.get(key)));
     }
+    startingString = startingString.replaceAll('= \\(', 'IN \\(').replaceAll('!= \\(', 'NOT IN \\(');
     return startingString;
   }
 
