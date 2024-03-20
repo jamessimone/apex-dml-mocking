@@ -129,6 +129,11 @@ public class RepoFactoryMock {
       return this.results;
     }
 
+    public override List<List<SObject>> getSosl(String searchTerm, List<Query> queries) {
+      QueriesMade.addAll(queries);
+      return new List<List<SObject>>{ this.results };
+    }
+
     public override List<AggregateRecord> aggregate(List<Aggregation> aggregations, List<Query> queries) {
       AggregatesMade.addAll(aggregations);
       QueriesMade.addAll(queries);

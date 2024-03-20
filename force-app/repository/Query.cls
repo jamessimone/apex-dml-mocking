@@ -207,6 +207,15 @@ public virtual class Query {
     return this.field + ' ' + this.getOperator() + ' ' + this.predicate;
   }
 
+  public String toSoslString() {
+    String startingString = this.toString();
+    for (String key : this.bindVars.keySet()) {
+      startingString = startingString.replace(':' + key, this.getSoslPredicate(this.bindVars.get(key)));
+    }
+    startingString = startingString.replaceAll('= \\(', 'IN \\(').replaceAll('!= \\(', 'NOT IN \\(');
+    return startingString;
+  }
+
   public Boolean equals(Object thatObject) {
     if (thatObject instanceof Query) {
       Query that = (Query) thatObject;
@@ -268,5 +277,34 @@ public virtual class Query {
         : parentFieldDescribe.getRelationshipName() + '.';
     }
     return builtUpFieldName;
+  }
+
+  private String getSoslPredicate(Object predicate) {
+    if (predicate == null) {
+      return 'null';
+    } else if (predicate instanceof Datetime) {
+      // the most annoying one
+      Datetime dt = (Datetime) predicate;
+      return dt.format('yyyy-MM-dd\'T\'HH:mm:ss\'Z\'', 'Greenwich Mean Time');
+    } else if (predicate instanceof Iterable<Object>) {
+      Iterable<Object> localPredicates = (Iterable<Object>) predicate;
+      if (localPredicates.iterator().hasNext() == false) {
+        return '';
+      }
+      List<String> innerStrings = new List<String>();
+      for (Object innerPred : localPredicates) {
+        // recurse for string value
+        String innerString = this.getSoslPredicate(innerPred);
+        innerStrings.add(innerString);
+      }
+      String start = innerStrings.size() > 1 ? '(' : '';
+      String ending = innerStrings.size() > 1 ? ')' : '';
+      return start + String.join(innerStrings, ',') + ending;
+    } else if (predicate instanceof String) {
+      String input = (String) predicate;
+      return '\'' + String.escapeSingleQuotes(input) + '\'';
+    }
+
+    return String.valueOf(predicate);
   }
 }

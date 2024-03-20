@@ -1,0 +1,7 @@
+public enum SearchGroup {
+  ALL_FIELDS,
+  EMAIL_FIELDS,
+  NAME_FIELDS,
+  PHONE_FIELDS,
+  SIDEBAR_FIELDS
+}
