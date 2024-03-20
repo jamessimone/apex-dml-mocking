@@ -1,9 +1,3 @@
-private class OpportunityFieldHistoryExample extends FieldLevelHistory {
-  protected override String getParentFieldName() {
-      return OpportunityFieldHistory.OpportunityId.getDescribe().getName();
-  }
-}
-
 if ([SELECT COUNT() FROM OpportunityFieldHistory] == 0) {
   List<Opportunity> opps = [SELECT Id, Name FROM Opportunity LIMIT 1];
   if (opps.isEmpty()) {
@@ -15,6 +9,7 @@ if ([SELECT COUNT() FROM OpportunityFieldHistory] == 0) {
   Opportunity opp = opps[0];
   opp.Name = 'Something New';
   update opp;
+  System.debug('Updated opportunity to create history record');
 } else {
   System.debug('Histories already exist, continuing ...');
 }
@@ -23,11 +18,10 @@ Exception ex;
 List<FieldLevelHistory> histories;
 try {
   histories = new FieldLevelHistoryRepo(
-    OpportunityFieldHistory.OpportunityId,
     OpportunityFieldHistory.SObjectType,
-    OpportunityFieldHistoryExample.class,
+    new List<Schema.SObjectField>(),
     new RepoFactory()
-  ).getAllHistory();
+  ).setParentField(OpportunityFieldHistory.OpportunityId).getAllHistory();
   System.debug(histories);
 } catch (Exception e) {
   ex = e;
