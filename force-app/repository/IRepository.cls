@@ -5,6 +5,10 @@ public interface IRepository extends IDML {
   List<SObject> get(List<Query> queries);
   List<SObject> getAll();
 
+  List<List<SObject>> getSosl(String searchTerm, Query query);
+  List<List<SObject>> getSosl(String searchTerm, List<Query> queries);
+  IRepository setSearchGroup(SearchGroup searchGroup);
+
   IRepository setAccessLevel(System.AccessLevel accessLevel);
   IRepository setLimit(Integer limitAmount);
   IRepository addSortOrder(Schema.SObjectField fieldToken, RepositorySortOrder sortOrder);

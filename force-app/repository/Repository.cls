@@ -9,9 +9,11 @@ public virtual without sharing class Repository implements IRepository {
   protected System.AccessLevel accessLevel = System.AccessLevel.SYSTEM_MODE;
   protected final Map<String, RepositorySortOrder> fieldToSortOrder = new Map<String, RepositorySortOrder>();
 
+  private Boolean baseSelectUsed = false;
+  private Boolean isSosl = false;
   private Boolean shouldAddChildFields = true;
   private Integer limitAmount;
-  private Boolean baseSelectUsed = false;
+  private SearchGroup soslSearchGroup = SearchGroup.ALL_FIELDS;
 
   public Repository(Schema.SObjectType repoType, List<Schema.SObjectField> queryFields, RepoFactory repoFactory) {
     this.dml = repoFactory.getDml();
@@ -176,14 +178,14 @@ public virtual without sharing class Repository implements IRepository {
   private String addWheres(List<Query> queries) {
     List<String> wheres = new List<String>();
     for (Query qry : queries) {
-      wheres.add(qry.toString());
+      wheres.add(this.isSosl ? qry.toSoslString() : qry.toString());
       this.bindVars.putAll(qry.getBindVars());
     }
     return wheres.isEmpty() ? '' : '\nWHERE ' + String.join(wheres, '\nAND ');
   }
 
   private List<SObject> performQuery(String finalQuery) {
-    System.debug('Query: \n' + finalQuery);
+    System.debug('Query:\n' + finalQuery);
     List<SObject> results = Database.queryWithBinds(finalQuery, this.bindVars, this.accessLevel);
     this.clearState();
     System.debug('Number of results: ' + results.size() + '\nResults: \n' + results);
@@ -205,6 +207,39 @@ public virtual without sharing class Repository implements IRepository {
 
   private String getLimitAmount(Integer limitAmount) {
     return (limitAmount != null ? '\nLIMIT ' + limitAmount : '');
+  }
+
+  // SOSL
+
+  public List<List<SObject>> getSosl(String searchTerm, Query queryFilter) {
+    return this.getSosl(searchTerm, new List<Query>{ queryFilter });
+  }
+
+  public virtual List<List<SObject>> getSosl(String searchTerm, List<Query> queryFilters) {
+    this.isSosl = true;
+    String searchQuery =
+      'FIND \'' +
+      String.escapeSingleQuotes(searchTerm) +
+      '\' IN ' +
+      this.soslSearchGroup.name().replace('_', ' ') +
+      ' RETURNING ' +
+      this.repoType +
+      '(' +
+      String.join(this.addSelectFields(), ',') +
+      this.addWheres(queryFilters) +
+      this.getLimitAmount(this.limitAmount) +
+      ')';
+    System.debug('Search query:\n' + searchQuery);
+    List<List<SObject>> results = Search.query(searchQuery);
+    System.debug('Number of results: ' + results.size() + '\nResults: \n' + results);
+    this.clearState();
+    this.isSosl = false;
+    return results;
+  }
+
+  public Repository setSearchGroup(SearchGroup searchGroup) {
+    this.soslSearchGroup = searchGroup;
+    return this;
   }
 
   // DML
