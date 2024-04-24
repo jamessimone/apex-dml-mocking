@@ -126,12 +126,26 @@ public class RepoFactoryMock {
 
     public override List<SObject> get(List<Query> queries) {
       QueriesMade.addAll(queries);
+      this.clearState();
       return this.results;
     }
 
     public override List<List<SObject>> getSosl(String searchTerm, List<Query> queries) {
       QueriesMade.addAll(queries);
+      this.clearState();
       return new List<List<SObject>>{ this.results };
+    }
+
+    public override Integer count(List<Query> queries) {
+      QueriesMade.addAll(queries);
+      List<AggregateRecord> results = AggregateResults.get(this.repoType);
+      this.clearState();
+      if (results == null) {
+        return super.count(queries);
+      } else if (results.isEmpty() == false) {
+        return results.remove(0).getCount();
+      }
+      return null;
     }
 
     public override List<AggregateRecord> aggregate(List<Aggregation> aggregations, List<Query> queries) {
