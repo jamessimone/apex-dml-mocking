@@ -1,11 +1,12 @@
 public virtual without sharing class Repository implements IRepository {
+  private final Map<Schema.SObjectField, String> childToRelationshipNames;
   private final IDML dml;
   private final List<Schema.SObjectField> queryFields;
   private final Set<String> selectFields = new Set<String>();
-  private final Map<Schema.SObjectField, String> childToRelationshipNames;
 
   protected final Schema.SObjectType repoType;
   protected final Map<String, Object> bindVars = new Map<String, Object>();
+
   protected System.AccessLevel accessLevel = System.AccessLevel.SYSTEM_MODE;
   protected final Map<String, RepositorySortOrder> fieldToSortOrder = new Map<String, RepositorySortOrder>();
 
@@ -15,7 +16,11 @@ public virtual without sharing class Repository implements IRepository {
   private Integer limitAmount;
   private SearchGroup soslSearchGroup = SearchGroup.ALL_FIELDS;
 
-  public Repository(Schema.SObjectType repoType, List<Schema.SObjectField> queryFields, RepoFactory repoFactory) {
+  public Repository(
+    Schema.SObjectType repoType,
+    List<Schema.SObjectField> queryFields,
+    RepoFactory repoFactory
+  ) {
     this.dml = repoFactory.getDml();
     this.queryFields = queryFields;
     this.repoType = repoType;
@@ -27,17 +32,6 @@ public virtual without sharing class Repository implements IRepository {
     return this.getQueryLocator(queries, this.shouldAddChildFields);
   }
 
-  /**
-   * It's recommended that subqueries be removed from `Database.QueryLocator` instances (docs snippet below). This framework gives you the option
-   * of ignoring that advice, but it'd be my recommendation that callers to `Repository.getQueryLocator` always pass `false` as the second argument.
-   *
-   * From the docs:
-   *
-   * > Batch Apex jobs run faster when the start method returns a `QueryLocator` object that doesn't include related records via a subquery.
-   * > Avoiding relationship subqueries in a `QueryLocator` allows batch jobs to run using a faster, chunked implementation.
-   * > If the start method returns an `Iterable` or a `QueryLocator` object with a relationship subquery, the batch job uses a slower, non-chunking, implementation
-   *
-   */
   public Database.QueryLocator getQueryLocator(List<Query> queries, Boolean shouldAddChildFields) {
     Boolean originalValue = this.shouldAddChildFields;
     this.shouldAddChildFields = shouldAddChildFields;
@@ -46,7 +40,7 @@ public virtual without sharing class Repository implements IRepository {
       this.bindVars,
       this.accessLevel
     );
-    this.clearState();
+    this.bindVars.clear();
     this.shouldAddChildFields = originalValue;
 
     return locator;
@@ -75,7 +69,18 @@ public virtual without sharing class Repository implements IRepository {
     return this;
   }
 
-  public Repository addParentFields(List<Schema.SObjectField> parentTypes, List<Schema.SObjectField> parentFields) {
+  public Repository addSortOrder(
+    List<Schema.SObjectField> parentFieldChain,
+    RepositorySortOrder sortOrder
+  ) {
+    this.fieldToSortOrder.put(Query.getBuiltUpParentFieldName(parentFieldChain), sortOrder);
+    return this;
+  }
+
+  public Repository addParentFields(
+    List<Schema.SObjectField> parentTypes,
+    List<Schema.SObjectField> parentFields
+  ) {
     String parentBase = '';
     for (SObjectField parentId : parentTypes) {
       parentBase += parentId.getDescribe().getRelationshipName() + '.';
@@ -103,7 +108,7 @@ public virtual without sharing class Repository implements IRepository {
     Map<String, RepositorySortOrder> fieldToSortOrder,
     Integer limitAmount
   ) {
-    if (this.shouldAddChildFields == false || this.childToRelationshipNames.containsKey(childFieldToken) == false) {
+    if (this.childToRelationshipNames.containsKey(childFieldToken) == false || this.shouldAddChildFields == false) {
       return this;
     }
 
@@ -122,10 +127,7 @@ public virtual without sharing class Repository implements IRepository {
     this.selectFields.add(
       String.format(
         baseSubselect,
-        new List<String>{
-          String.join(new List<String>(childFieldNames), ','),
-          this.childToRelationshipNames.get(childFieldToken)
-        }
+        new List<String>{ String.join(childFieldNames, ','), this.childToRelationshipNames.get(childFieldToken) }
       )
     );
     return this;
@@ -172,7 +174,7 @@ public virtual without sharing class Repository implements IRepository {
       localSelectFields.addAll(this.selectFields);
       this.baseSelectUsed = false;
     }
-    return 'SELECT ' + String.join(new List<String>(localSelectFields), ', ') + '\nFROM ' + this.repoType;
+    return 'SELECT ' + String.join(localSelectFields, ', ') + '\nFROM ' + this.repoType;
   }
 
   private String addWheres(List<Query> queries) {
@@ -185,10 +187,10 @@ public virtual without sharing class Repository implements IRepository {
   }
 
   private List<SObject> performQuery(String finalQuery) {
-    System.debug('Query:\n' + finalQuery);
+    System.debug(finalQuery);
     List<SObject> results = Database.queryWithBinds(finalQuery, this.bindVars, this.accessLevel);
     this.clearState();
-    System.debug('Number of results: ' + results.size() + '\nResults: \n' + results);
+    System.debug(System.LoggingLevel.FINER, 'Number of results: ' + results.size() + '\nResults: \n' + results);
     return results;
   }
 
@@ -197,8 +199,8 @@ public virtual without sharing class Repository implements IRepository {
     if (sortOrders.isEmpty() == false) {
       orderByString += ' \nORDER BY ';
       String separator = ', ';
-      for (String fieldName : sortOrders.keySet()) {
-        orderByString += fieldName + ' ' + sortOrders.get(fieldName).toString() + separator;
+      for (String field : sortOrders.keySet()) {
+        orderByString += field + ' ' + sortOrders.get(field).toString() + separator;
       }
       orderByString = orderByString.removeEnd(separator);
     }
@@ -231,7 +233,7 @@ public virtual without sharing class Repository implements IRepository {
       ')';
     System.debug('Search query:\n' + searchQuery);
     List<List<SObject>> results = Search.query(searchQuery, this.accessLevel);
-    System.debug('Number of results: ' + results.size() + '\nResults: \n' + results);
+    System.debug(System.LoggingLevel.FINER, 'Number of results: ' + results.size() + '\nResults: \n' + results);
     this.clearState();
     this.isSosl = false;
     return results;
@@ -242,7 +244,6 @@ public virtual without sharing class Repository implements IRepository {
     return this;
   }
 
-  // DML
   public Database.SaveResult doInsert(SObject record) {
     return this.dml.doInsert(record);
   }

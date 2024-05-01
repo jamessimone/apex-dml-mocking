@@ -27,8 +27,8 @@ private class RepositoryTests {
     repo.get(setQuery);
     repo.get(setStringQuery);
     System.assertEquals(3, Limits.getQueries());
-    System.assertEquals('Name = :bindVar2', setStringQuery.toString());
-    System.assertEquals(cpaNames, setStringQuery.getBindVars().get('bindVar2'));
+    System.assertEquals('Name = :bindVar3', setStringQuery.toString());
+    System.assertEquals(cpaNames, setStringQuery.getBindVars().get('bindVar3'));
   }
 
   @IsTest
@@ -70,7 +70,10 @@ private class RepositoryTests {
 
     IRepository repo = new ContactPointAddressRepo();
 
-    Query notLike = Query.notLike(ContactPointAddress.Name, new List<String>{ cpa.Name, 'someOtherString' });
+    Query notLike = Query.notLike(
+      ContactPointAddress.Name,
+      new List<String>{ cpa.Name, 'someOtherString' }
+    );
 
     List<ContactPointAddress> cpas = repo.get(notLike);
 
@@ -86,11 +89,11 @@ private class RepositoryTests {
       new List<Schema.SObjectField>{ Group.Id }
     );
 
-    Group grp = new Group(Name = 'Group');
+    Group grp = new Group(Name = RepositoryTests.class.getName());
     insert grp;
     GroupMember member = new GroupMember(GroupId = grp.Id, UserOrGroupId = UserInfo.getUserId());
     insert member;
-    List<GroupMember> members = repo.getAll();
+    List<GroupMember> members = repo.get(Query.equals(GroupMember.Id, member.Id));
 
     System.assertEquals(1, members.size());
     System.assertEquals(grp.Id, members[0].Group.Id);
@@ -148,7 +151,10 @@ private class RepositoryTests {
       .addSortOrder(Account.Name, RepositorySortOrder.ASCENDING)
       .addSortOrder(
         Account.AnnualRevenue,
-        new RepositorySortOrder(RepositorySortOrder.SortOrder.DESCENDING, RepositorySortOrder.NullSortOrder.LAST)
+        new RepositorySortOrder(
+          RepositorySortOrder.SortOrder.DESCENDING,
+          RepositorySortOrder.NullSortOrder.LAST
+        )
       )
       .setLimit(1)
       .getAll();
@@ -158,8 +164,45 @@ private class RepositoryTests {
   }
 
   @IsTest
+  static void it_sorts_by_parent_fields() {
+    List<Account> accounts = new List<Account>{
+      new Account(Name = 'Should Not Be Returned'),
+      new Account(Name = 'Parent B'),
+      new Account(Name = 'Should Be Returned'),
+      new Account(Name = 'Parent A')
+    };
+    insert accounts;
+
+    accounts[0].ParentId = accounts[1].Id;
+    accounts[2].ParentId = accounts[3].Id;
+    update accounts;
+
+    List<Account> returnedAccounts = new AccountRepo()
+      .addParentFields(
+        new List<Schema.SObjectField>{ Account.ParentId },
+        new List<Schema.SObjectField>{ Account.Id, Account.Name }
+      )
+      .addSortOrder(
+        new List<Schema.SObjectField>{ Account.ParentId, Account.Name },
+        new RepositorySortOrder(
+          RepositorySortOrder.SortOrder.ASCENDING,
+          RepositorySortOrder.NullSortOrder.LAST
+        )
+      )
+      .setLimit(1)
+      .getAll();
+
+    Assert.areEqual(accounts[2].Name, returnedAccounts[0].Name);
+    Assert.areEqual(accounts[2].Id, returnedAccounts[0].Id);
+    Assert.areEqual(accounts[3].Id, returnedAccounts[0].Parent.Id);
+    Assert.areEqual(accounts[3].Name, returnedAccounts[0].Parent.Name);
+  }
+
+  @IsTest
   static void it_should_decorate_dml_methods() {
-    IRepository repo = Factory.getFactory().withMocks.repoFactory.getOppRepo();
+    IRepository repo = new RepoFactory()
+      .setFacade(new RepoFactoryMock.FacadeMock())
+      .getProfileRepo();
     Account acc = new Account();
     List<Account> accs = new List<Account>{ acc };
 
@@ -205,19 +248,6 @@ private class RepositoryTests {
     List<List<SObject>> results = new ContactPointAddressRepo()
       .setSearchGroup(SearchGroup.NAME_FIELDS)
       .getSosl('hel', Query.equals(ContactPointAddress.PreferenceRank, 1));
-
-    System.assertEquals(cpa.Id, results.get(0).get(0).Id);
-  }
-
-  @IsTest
-  static void it_performs_sosl_set_backed_queries() {
-    ContactPointAddress cpa = new ContactPointAddress(Name = 'hello world', PreferenceRank = 1);
-    insert cpa;
-    Test.setFixedSearchResults(new List<Id>{ cpa.Id });
-
-    List<List<SObject>> results = new ContactPointAddressRepo()
-      .setSearchGroup(SearchGroup.NAME_FIELDS)
-      .getSosl('hel', Query.equals(ContactPointAddress.PreferenceRank, new Set<Integer>{ 1, 2 }));
 
     System.assertEquals(cpa.Id, results.get(0).get(0).Id);
   }

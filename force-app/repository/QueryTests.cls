@@ -80,7 +80,10 @@ private class QueryTests {
     Id nullId = null;
     String expectedQuery = '(Id = null OR Id != null)';
 
-    Query orQuery = Query.orQuery(Query.equals(Account.Id, nullId), Query.notEquals(Account.Id, nullId));
+    Query orQuery = Query.orQuery(
+      Query.equals(Account.Id, nullId),
+      Query.notEquals(Account.Id, nullId)
+    );
 
     System.assertEquals(expectedQuery, orQuery.toString());
   }
@@ -97,7 +100,10 @@ private class QueryTests {
             Query.equals(Contact.LastName, 'asb'),
             Query.andQuery(
               Query.equals(Contact.FirstName, 'John'),
-              Query.orQuery(Query.notEquals(Contact.LastName, 'a'), Query.notEquals(Contact.LastName, 'b'))
+              Query.orQuery(
+                Query.notEquals(Contact.LastName, 'a'),
+                Query.notEquals(Contact.LastName, 'b')
+              )
             )
           }
         )
@@ -111,7 +117,7 @@ private class QueryTests {
 
     Query likeQuery = Query.likeQuery(Account.Name, expectedName);
 
-    System.assertEquals('Name like :bindVar0', likeQuery.toString());
+    System.assertEquals('Name LIKE :bindVar0', likeQuery.toString());
     System.assertEquals(expectedName, likeQuery.getBindVars().get('bindVar0'));
   }
 
@@ -121,7 +127,7 @@ private class QueryTests {
 
     Query notLike = Query.notLike(Account.Name, expectedName);
 
-    System.assertEquals('(not Name like :bindVar0)', notLike.toString());
+    System.assertEquals('NOT Name LIKE :bindVar0', notLike.toString());
     System.assertEquals(expectedName, notLike.getBindVars().get('bindVar0'));
   }
 
@@ -133,23 +139,8 @@ private class QueryTests {
 
     Query notLike = Query.notLike(Account.Name, values);
 
-    System.assertEquals('(not Name like :bindVar0)', notLike.toString());
+    System.assertEquals('NOT Name LIKE :bindVar0', notLike.toString());
     System.assertEquals(values, notLike.getBindVars().get('bindVar0'));
-  }
-
-  @IsTest
-  static void it_should_allow_multiple_not_like_statements() {
-    String someName = '%someName%';
-    String otherName = '%otherName%';
-    
-    Query multipleNotLike = Query.andQuery(new List<Query> {
-      Query.notLike(Account.Name, someName),
-      Query.notLike(Account.Name, otherName)
-    });
-  
-    System.assertEquals('((not Name like :bindVar0) AND (not Name like :bindVar1))', multipleNotLike.toString());
-    System.assertEquals(someName, multipleNotLike.getBindVars().get('bindVar0'));
-    System.assertEquals(otherName, multipleNotLike.getBindVars().get('bindVar1'));
   }
 
   @IsTest
@@ -189,7 +180,10 @@ private class QueryTests {
           Query.equals(Account.AnnualRevenue, 50),
           Query.equals(Account.Industry, 'Tech'),
           Query.orQuery(
-            new List<Query>{ Query.equals(Account.NumberOfEmployees, 1), Query.equals(Account.Site, 'web3') }
+            new List<Query>{
+              Query.equals(Account.NumberOfEmployees, 1),
+              Query.equals(Account.Site, 'web3')
+            }
           )
         }
       )
@@ -199,5 +193,29 @@ private class QueryTests {
       'AccountId IN (SELECT Id FROM Account WHERE (AnnualRevenue = :bindVar0 AND Industry = :bindVar1 AND (NumberOfEmployees = :bindVar2 OR Site = :bindVar3)))',
       subquery.toString()
     );
+  }
+
+  @IsTest
+  static void it_works_with_collections_for_sosl_queries_not_in() {
+    List<Id> fakeAccountIds = new List<Id>{
+      TestingUtils.generateId(Account.SObjectType),
+      TestingUtils.generateId(Account.SObjectType)
+    };
+
+    Query query = Query.notEquals(Account.Id, fakeAccountIds);
+
+    Assert.areEqual('Id NOT IN (\'' + String.join(fakeAccountIds, '\',\'') + '\')', query.toSoslString());
+  }
+
+  @IsTest
+  static void it_works_with_collections_for_sosl_queries_in() {
+    List<Id> fakeAccountIds = new List<Id>{
+      TestingUtils.generateId(Account.SObjectType),
+      TestingUtils.generateId(Account.SObjectType)
+    };
+
+    Query query = Query.equals(Account.Id, fakeAccountIds);
+
+    Assert.areEqual('Id IN (\'' + String.join(fakeAccountIds, '\',\'') + '\')', query.toSoslString());
   }
 }

@@ -26,10 +26,14 @@ public virtual class Query {
 
   public Query usingParent(List<SObjectField> parentFields) {
     parentFields.add(this.fieldToken);
-    return new ParentQuery(parentFields, this);
+    return new ParentQuery(parentFields, this.operator, this.predicate);
   }
 
-  public static Query subquery(Schema.SObjectField field, Schema.SObjectField innerMatchingField, Query subcondition) {
+  public static Query subquery(
+    Schema.SObjectField field,
+    Schema.SObjectField innerMatchingField,
+    Query subcondition
+  ) {
     return subquery(field, innerMatchingField.getDescribe().getSObjectType(), innerMatchingField, subcondition);
   }
 
@@ -91,6 +95,17 @@ public virtual class Query {
 
   public static Query andQuery(List<Query> innerQueries) {
     return new AndQuery(innerQueries);
+  }
+
+  public static String getBuiltUpParentFieldName(List<Schema.SObjectField> parentFields) {
+    String builtUpFieldName = '';
+    for (Integer index = 0; index < parentFields.size(); index++) {
+      Schema.DescribeFieldResult parentFieldDescribe = parentFields[index].getDescribe();
+      builtUpFieldName += index == parentFields.size() - 1
+        ? parentFieldDescribe.getName()
+        : parentFieldDescribe.getRelationshipName() + '.';
+    }
+    return builtUpFieldName;
   }
 
   private class SubQuery extends Query {
@@ -169,25 +184,18 @@ public virtual class Query {
   }
 
   private class ParentQuery extends Query {
-    private ParentQuery(List<SObjectField> parentFields, Query innerQuery) {
-      super(innerQuery);
-      this.field = getBuiltUpParentFieldName(parentFields);
+    private ParentQuery(List<SObjectField> parentFields, Operator operator, Object predicate) {
+      super(getBuiltUpParentFieldName(parentFields), operator, predicate);
     }
   }
 
   protected Query() {
   }
 
-  protected Query(Query innerQuery) {
-    this.operator = innerQuery.operator;
-    this.predicate = innerQuery.predicate;
-    this.bindVars.putAll(innerQuery.getBindVars());
-  }
-
   protected Query(String fieldName, Operator operator, Object predicate) {
     this.field = fieldName;
     this.operator = operator;
-    this.predicate = this.getPredicate(predicate);
+    this.predicate = predicate;
   }
 
   private Query(SObjectField fieldToken, Operator operator, Object predicate) {
@@ -200,11 +208,12 @@ public virtual class Query {
   }
 
   public virtual override String toString() {
+    String predicateValue = this.getPredicate(this.predicate);
     if (this.operator == Query.Operator.NOT_LIKE) {
       // who knows why this is the format they wanted
-      return String.format(this.getOperator(), new List<String>{ this.field, this.predicate.toString() });
+      return String.format(this.getOperator(), new List<String>{ this.field }) + ' ' + predicateValue;
     }
-    return this.field + ' ' + this.getOperator() + ' ' + this.predicate;
+    return this.field + ' ' + this.getOperator() + ' ' + predicateValue;
   }
 
   public String toSoslString() {
@@ -212,7 +221,23 @@ public virtual class Query {
     for (String key : this.bindVars.keySet()) {
       startingString = startingString.replace(':' + key, this.getSoslPredicate(this.bindVars.get(key)));
     }
-    startingString = startingString.replaceAll('= \\(', 'IN \\(').replaceAll('!= \\(', 'NOT IN \\(');
+    if (this.predicate instanceof Iterable<Object>) {
+      String operatorToReplace;
+      String newOperator;
+      switch on this.operator {
+        when EQUALS {
+          operatorToReplace = '=';
+          newOperator = 'IN';
+        }
+        when NOT_EQUALS {
+          operatorToReplace = '!=';
+          newOperator = 'NOT IN';
+        }
+      }
+      if (operatorToReplace != null) {
+        startingString = startingString.replace(operatorToReplace, newOperator);
+      }
+    }
     return startingString;
   }
 
@@ -249,10 +274,10 @@ public virtual class Query {
         returnVal = '>=';
       }
       when ALIKE {
-        returnVal = 'like';
+        returnVal = 'LIKE';
       }
       when NOT_LIKE {
-        returnVal = '(not {0} like {1})';
+        returnVal = 'NOT {0} LIKE';
       }
     }
     return returnVal;
@@ -266,17 +291,6 @@ public virtual class Query {
     BIND_VAR_NUMBER++;
     this.bindVars.put(predicateKey, predicate);
     return ':' + predicateKey;
-  }
-
-  private static String getBuiltUpParentFieldName(List<SObjectField> parentFields) {
-    String builtUpFieldName = '';
-    for (Integer index = 0; index < parentFields.size(); index++) {
-      Schema.DescribeFieldResult parentFieldDescribe = parentFields[index].getDescribe();
-      builtUpFieldName += index == parentFields.size() - 1
-        ? parentFieldDescribe.getName()
-        : parentFieldDescribe.getRelationshipName() + '.';
-    }
-    return builtUpFieldName;
   }
 
   private String getSoslPredicate(Object predicate) {
