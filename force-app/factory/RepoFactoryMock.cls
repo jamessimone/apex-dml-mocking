@@ -130,7 +130,7 @@ public class RepoFactoryMock {
       return this.results;
     }
 
-    public override List<List<SObject>> getSosl(String searchTerm, List<Query> queries) {
+    public override List<List<SObject>> getSosl(String searchTerm, List<Query> queries, List<AdditionalSoslObject> additionalSoslObjects) {
       QueriesMade.addAll(queries);
       this.clearState();
       return new List<List<SObject>>{ this.results };

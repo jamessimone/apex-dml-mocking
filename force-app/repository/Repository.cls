@@ -140,8 +140,12 @@ public virtual without sharing class Repository implements IRepository {
 
   protected virtual Set<String> addSelectFields() {
     this.baseSelectUsed = true;
+    return this.addSelectFields(this.queryFields);
+  }
+
+  private Set<String> addSelectFields(List<Schema.SObjectField> fields) {
     Set<String> fieldStrings = new Set<String>{ 'Id' };
-    for (SObjectField field : this.queryFields) {
+    for (SObjectField field : fields) {
       fieldStrings.add(field.getDescribe().getName());
     }
     return fieldStrings;
@@ -218,19 +222,27 @@ public virtual without sharing class Repository implements IRepository {
   }
 
   public virtual List<List<SObject>> getSosl(String searchTerm, List<Query> queryFilters) {
+    return this.getSosl(searchTerm, queryFilters, new List<AdditionalSoslObject>());
+  }
+
+    public virtual List<List<SObject>> getSosl(
+    String searchTerm,
+    List<Query> queryFilters,
+    List<AdditionalSoslObject> additionalSoslObjects
+  ) {
     this.isSosl = true;
+    List<AdditionalSoslObject> orderedSearchObjects = new List<AdditionalSoslObject>{
+      new AdditionalSoslObject(this.repoType, this.queryFields, queryFilters, this.limitAmount)
+    };
+    orderedSearchObjects.addAll(additionalSoslObjects);
     String searchQuery =
       'FIND \'' +
       String.escapeSingleQuotes(searchTerm) +
       '\' IN ' +
       this.soslSearchGroup.name().replace('_', ' ') +
       ' RETURNING ' +
-      this.repoType +
-      '(' +
-      String.join(this.addSelectFields(), ',') +
-      this.addWheres(queryFilters) +
-      this.getLimitAmount(this.limitAmount) +
-      ')';
+      this.formatAdditionalSoslObjects(orderedSearchObjects);
+
     System.debug('Search query:\n' + searchQuery);
     List<List<SObject>> results = Search.query(searchQuery, this.accessLevel);
     System.debug(System.LoggingLevel.FINER, 'Number of results: ' + results.size() + '\nResults: \n' + results);
@@ -242,6 +254,21 @@ public virtual without sharing class Repository implements IRepository {
   public Repository setSearchGroup(SearchGroup searchGroup) {
     this.soslSearchGroup = searchGroup;
     return this;
+  }
+
+  private String formatAdditionalSoslObjects(List<AdditionalSoslObject> soslObjects) {
+    List<String> objectsPreJoin = new List<String>();
+    for (AdditionalSoslObject soslObject : soslObjects) {
+      objectsPreJoin.add(
+        soslObject.objectType +
+        '(' +
+        String.join(this.addSelectFields(soslObject.selectFields), ',') +
+        this.addWheres(soslObject.queryFilters) +
+        this.getLimitAmount(soslObject.queryLimit) +
+        ')'
+      );
+    }
+    return String.join(objectsPreJoin, ',');
   }
 
   public Database.SaveResult doInsert(SObject record) {

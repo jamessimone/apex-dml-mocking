@@ -252,6 +252,31 @@ private class RepositoryTests {
     System.assertEquals(cpa.Id, results.get(0).get(0).Id);
   }
 
+  @IsTest
+  static void it_searches_for_additional_objects() {
+    ContactPointPhone record = new ContactPointPhone(TelephoneNumber = 'hello universe');
+    insert record;
+
+    Test.setFixedSearchResults(new List<Id>{ record.Id });
+
+    List<List<SObject>> results = new ContactPointAddressRepo()
+      .setSearchGroup(SearchGroup.NAME_FIELDS)
+      .getSosl(
+        'hel',
+        new List<Query>{ Query.equals(ContactPointAddress.PreferenceRank, 1) },
+        new List<AdditionalSoslObject>{
+          new AdditionalSoslObject(
+            ContactPointPhone.SObjectType,
+            new List<Schema.SObjectField>(),
+            new List<Query>{ Query.equals(ContactPointPhone.TelephoneNumber, 'hello universe') },
+            1
+          )
+        }
+      );
+
+    System.assertEquals(record.Id, results.get(1).get(0).Id);
+  }
+
   private class GroupMemberRepo extends Repository {
     public GroupMemberRepo() {
       super(GroupMember.SObjectType, new List<Schema.SObjectField>{ GroupMember.GroupId }, new RepoFactory());

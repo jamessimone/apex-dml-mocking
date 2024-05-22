@@ -7,6 +7,11 @@ public interface IRepository extends IDML {
 
   List<List<SObject>> getSosl(String searchTerm, Query query);
   List<List<SObject>> getSosl(String searchTerm, List<Query> queries);
+  List<List<SObject>> getSosl(
+    String searchTerm,
+    List<Query> queries,
+    List<AdditionalSoslObject> additionalSoslObjects
+  );
   IRepository setSearchGroup(SearchGroup searchGroup);
 
   IRepository setAccessLevel(System.AccessLevel accessLevel);
