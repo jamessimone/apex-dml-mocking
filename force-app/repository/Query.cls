@@ -1,4 +1,6 @@
 public virtual class Query {
+  private Boolean isSoslEmpty = false;
+
   public enum Operator {
     EQUALS,
     NOT_EQUALS,
@@ -19,6 +21,10 @@ public virtual class Query {
 
   private static final String BIND_VAR_MERGE = 'bindVar{0}';
   private static Integer BIND_VAR_NUMBER = 0;
+
+  public Boolean isSoslEmpty() {
+    return this.isSoslEmpty;
+  }
 
   public Query usingParent(Schema.SObjectField parentField) {
     return this.usingParent(new List<Schema.SObjectField>{ parentField });
@@ -238,6 +244,9 @@ public virtual class Query {
         startingString = startingString.replace(operatorToReplace, newOperator);
       }
     }
+    if (startingString.endsWith('()')) {
+      this.isSoslEmpty = true;
+    }
     return startingString;
   }
 
@@ -303,7 +312,7 @@ public virtual class Query {
     } else if (predicate instanceof Iterable<Object>) {
       Iterable<Object> localPredicates = (Iterable<Object>) predicate;
       if (localPredicates.iterator().hasNext() == false) {
-        return '';
+        return '()';
       }
       List<String> innerStrings = new List<String>();
       for (Object innerPred : localPredicates) {
@@ -311,8 +320,8 @@ public virtual class Query {
         String innerString = this.getSoslPredicate(innerPred);
         innerStrings.add(innerString);
       }
-      String start = innerStrings.size() > 1 ? '(' : '';
-      String ending = innerStrings.size() > 1 ? ')' : '';
+      String start = '(' ;
+      String ending = ')' ;
       return start + String.join(innerStrings, ',') + ending;
     } else if (predicate instanceof String) {
       String input = (String) predicate;

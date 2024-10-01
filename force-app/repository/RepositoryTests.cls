@@ -70,10 +70,7 @@ private class RepositoryTests {
 
     IRepository repo = new ContactPointAddressRepo();
 
-    Query notLike = Query.notLike(
-      ContactPointAddress.Name,
-      new List<String>{ cpa.Name, 'someOtherString' }
-    );
+    Query notLike = Query.notLike(ContactPointAddress.Name, new List<String>{ cpa.Name, 'someOtherString' });
 
     List<ContactPointAddress> cpas = repo.get(notLike);
 
@@ -151,10 +148,7 @@ private class RepositoryTests {
       .addSortOrder(Account.Name, RepositorySortOrder.ASCENDING)
       .addSortOrder(
         Account.AnnualRevenue,
-        new RepositorySortOrder(
-          RepositorySortOrder.SortOrder.DESCENDING,
-          RepositorySortOrder.NullSortOrder.LAST
-        )
+        new RepositorySortOrder(RepositorySortOrder.SortOrder.DESCENDING, RepositorySortOrder.NullSortOrder.LAST)
       )
       .setLimit(1)
       .getAll();
@@ -177,17 +171,15 @@ private class RepositoryTests {
     accounts[2].ParentId = accounts[3].Id;
     update accounts;
 
-    List<Account> returnedAccounts = new AccountRepo()
+    IRepository accountRepo = new AccountRepo();
+    List<Account> returnedAccounts = accountRepo
       .addParentFields(
         new List<Schema.SObjectField>{ Account.ParentId },
         new List<Schema.SObjectField>{ Account.Id, Account.Name }
       )
       .addSortOrder(
         new List<Schema.SObjectField>{ Account.ParentId, Account.Name },
-        new RepositorySortOrder(
-          RepositorySortOrder.SortOrder.ASCENDING,
-          RepositorySortOrder.NullSortOrder.LAST
-        )
+        new RepositorySortOrder(RepositorySortOrder.SortOrder.ASCENDING, RepositorySortOrder.NullSortOrder.LAST)
       )
       .setLimit(1)
       .getAll();
@@ -200,9 +192,7 @@ private class RepositoryTests {
 
   @IsTest
   static void it_should_decorate_dml_methods() {
-    IRepository repo = new RepoFactory()
-      .setFacade(new RepoFactoryMock.FacadeMock())
-      .getProfileRepo();
+    IRepository repo = new RepoFactory().setFacade(new RepoFactoryMock.FacadeMock()).getProfileRepo();
     Account acc = new Account();
     List<Account> accs = new List<Account>{ acc };
 
@@ -269,6 +259,34 @@ private class RepositoryTests {
             ContactPointPhone.SObjectType,
             new List<Schema.SObjectField>(),
             new List<Query>{ Query.equals(ContactPointPhone.TelephoneNumber, 'hello universe') },
+            1
+          )
+        }
+      );
+
+    System.assertEquals(record.Id, results.get(1).get(0).Id);
+  }
+
+  @IsTest
+  static void it_handles_empty_sosl_searches() {
+    ContactPointPhone record = new ContactPointPhone(TelephoneNumber = 'hello universe');
+    insert record;
+
+    Test.setFixedSearchResults(new List<Id>{ record.Id });
+
+    List<List<SObject>> results = new ContactPointAddressRepo()
+      .setSearchGroup(SearchGroup.NAME_FIELDS)
+      .getSosl(
+        'hel',
+        new List<Query>(),
+        new List<AdditionalSoslObject>{
+          new AdditionalSoslObject(
+            ContactPointPhone.SObjectType,
+            new List<Schema.SObjectField>(),
+            new List<Query>{
+              Query.notEquals(ContactPointPhone.Id, new List<Id>()),
+              Query.equals(ContactPointPhone.TelephoneNumber, 'hello universe')
+            },
             1
           )
         }

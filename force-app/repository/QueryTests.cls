@@ -80,10 +80,7 @@ private class QueryTests {
     Id nullId = null;
     String expectedQuery = '(Id = null OR Id != null)';
 
-    Query orQuery = Query.orQuery(
-      Query.equals(Account.Id, nullId),
-      Query.notEquals(Account.Id, nullId)
-    );
+    Query orQuery = Query.orQuery(Query.equals(Account.Id, nullId), Query.notEquals(Account.Id, nullId));
 
     System.assertEquals(expectedQuery, orQuery.toString());
   }
@@ -100,10 +97,7 @@ private class QueryTests {
             Query.equals(Contact.LastName, 'asb'),
             Query.andQuery(
               Query.equals(Contact.FirstName, 'John'),
-              Query.orQuery(
-                Query.notEquals(Contact.LastName, 'a'),
-                Query.notEquals(Contact.LastName, 'b')
-              )
+              Query.orQuery(Query.notEquals(Contact.LastName, 'a'), Query.notEquals(Contact.LastName, 'b'))
             )
           }
         )
@@ -180,10 +174,7 @@ private class QueryTests {
           Query.equals(Account.AnnualRevenue, 50),
           Query.equals(Account.Industry, 'Tech'),
           Query.orQuery(
-            new List<Query>{
-              Query.equals(Account.NumberOfEmployees, 1),
-              Query.equals(Account.Site, 'web3')
-            }
+            new List<Query>{ Query.equals(Account.NumberOfEmployees, 1), Query.equals(Account.Site, 'web3') }
           )
         }
       )
@@ -213,6 +204,15 @@ private class QueryTests {
       TestingUtils.generateId(Account.SObjectType),
       TestingUtils.generateId(Account.SObjectType)
     };
+
+    Query query = Query.equals(Account.Id, fakeAccountIds);
+
+    Assert.areEqual('Id IN (\'' + String.join(fakeAccountIds, '\',\'') + '\')', query.toSoslString());
+  }
+
+  @IsTest
+  static void it_works_for_singular_value_in_collections() {
+    List<Id> fakeAccountIds = new List<Id>{ TestingUtils.generateId(Account.SObjectType) };
 
     Query query = Query.equals(Account.Id, fakeAccountIds);
 

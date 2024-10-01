@@ -16,11 +16,7 @@ public virtual without sharing class Repository implements IRepository {
   private Integer limitAmount;
   private SearchGroup soslSearchGroup = SearchGroup.ALL_FIELDS;
 
-  public Repository(
-    Schema.SObjectType repoType,
-    List<Schema.SObjectField> queryFields,
-    RepoFactory repoFactory
-  ) {
+  public Repository(Schema.SObjectType repoType, List<Schema.SObjectField> queryFields, RepoFactory repoFactory) {
     this.dml = repoFactory.getDml();
     this.queryFields = queryFields;
     this.repoType = repoType;
@@ -69,18 +65,20 @@ public virtual without sharing class Repository implements IRepository {
     return this;
   }
 
-  public Repository addSortOrder(
-    List<Schema.SObjectField> parentFieldChain,
-    RepositorySortOrder sortOrder
-  ) {
+  public Repository addSortOrder(List<Schema.SObjectField> parentFieldChain, RepositorySortOrder sortOrder) {
     this.fieldToSortOrder.put(Query.getBuiltUpParentFieldName(parentFieldChain), sortOrder);
     return this;
   }
 
-  public Repository addParentFields(
-    List<Schema.SObjectField> parentTypes,
-    List<Schema.SObjectField> parentFields
-  ) {
+  public Repository addBaseFields(List<Schema.SObjectField> fields) {
+    Set<Schema.SObjectField> uniqueFields = new Set<Schema.SObjectField>(this.queryFields);
+    uniqueFields.addAll(fields);
+    this.queryFields.clear();
+    this.queryFields.addAll(uniqueFields);
+    return this;
+  }
+
+  public Repository addParentFields(List<Schema.SObjectField> parentTypes, List<Schema.SObjectField> parentFields) {
     String parentBase = '';
     for (SObjectField parentId : parentTypes) {
       parentBase += parentId.getDescribe().getRelationshipName() + '.';
@@ -138,17 +136,14 @@ public virtual without sharing class Repository implements IRepository {
     return this;
   }
 
+  public Repository clearBindVars() {
+    this.bindVars.clear();
+    return this;
+  }
+
   protected virtual Set<String> addSelectFields() {
     this.baseSelectUsed = true;
     return this.addSelectFields(this.queryFields);
-  }
-
-  private Set<String> addSelectFields(List<Schema.SObjectField> fields) {
-    Set<String> fieldStrings = new Set<String>{ 'Id' };
-    for (SObjectField field : fields) {
-      fieldStrings.add(field.getDescribe().getName());
-    }
-    return fieldStrings;
   }
 
   protected virtual String getFinalQuery(List<Query> queries) {
@@ -159,7 +154,6 @@ public virtual without sharing class Repository implements IRepository {
   }
 
   protected virtual void clearState() {
-    this.bindVars.clear();
     this.fieldToSortOrder.clear();
     this.limitAmount = null;
   }
@@ -181,11 +175,22 @@ public virtual without sharing class Repository implements IRepository {
     return 'SELECT ' + String.join(localSelectFields, ', ') + '\nFROM ' + this.repoType;
   }
 
+  private Set<String> addSelectFields(List<Schema.SObjectField> fields) {
+    Set<String> fieldStrings = new Set<String>{ 'Id' };
+    for (SObjectField field : fields) {
+      fieldStrings.add(field.getDescribe().getName());
+    }
+    return fieldStrings;
+  }
+
   private String addWheres(List<Query> queries) {
     List<String> wheres = new List<String>();
     for (Query qry : queries) {
-      wheres.add(this.isSosl ? qry.toSoslString() : qry.toString());
-      this.bindVars.putAll(qry.getBindVars());
+      String possibleClauseToAdd = this.isSosl ? qry.toSoslString() : qry.toString();
+      if (qry.isSoslEmpty() == false) {
+        wheres.add(possibleClauseToAdd);
+        this.bindVars.putAll(qry.getBindVars());
+      }
     }
     return wheres.isEmpty() ? '' : '\nWHERE ' + String.join(wheres, '\nAND ');
   }
@@ -225,7 +230,7 @@ public virtual without sharing class Repository implements IRepository {
     return this.getSosl(searchTerm, queryFilters, new List<AdditionalSoslObject>());
   }
 
-    public virtual List<List<SObject>> getSosl(
+  public virtual List<List<SObject>> getSosl(
     String searchTerm,
     List<Query> queryFilters,
     List<AdditionalSoslObject> additionalSoslObjects
@@ -261,11 +266,11 @@ public virtual without sharing class Repository implements IRepository {
     for (AdditionalSoslObject soslObject : soslObjects) {
       objectsPreJoin.add(
         soslObject.objectType +
-        '(' +
-        String.join(this.addSelectFields(soslObject.selectFields), ',') +
-        this.addWheres(soslObject.queryFilters) +
-        this.getLimitAmount(soslObject.queryLimit) +
-        ')'
+          '(' +
+          String.join(this.addSelectFields(soslObject.selectFields), ',') +
+          this.addWheres(soslObject.queryFilters) +
+          this.getLimitAmount(soslObject.queryLimit) +
+          ')'
       );
     }
     return String.join(objectsPreJoin, ',');
