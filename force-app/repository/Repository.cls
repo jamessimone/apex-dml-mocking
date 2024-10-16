@@ -1,6 +1,7 @@
 public virtual without sharing class Repository implements IRepository {
   private final Map<Schema.SObjectField, String> childToRelationshipNames;
   private final IDML dml;
+  @TestVisible
   private final List<Schema.SObjectField> queryFields;
   private final Set<String> selectFields = new Set<String>();
 
@@ -79,13 +80,7 @@ public virtual without sharing class Repository implements IRepository {
   }
 
   public Repository addParentFields(List<Schema.SObjectField> parentTypes, List<Schema.SObjectField> parentFields) {
-    String parentBase = '';
-    for (SObjectField parentId : parentTypes) {
-      parentBase += parentId.getDescribe().getRelationshipName() + '.';
-    }
-    for (SObjectField parentField : parentFields) {
-      this.selectFields.add(parentBase + parentField.getDescribe().getName());
-    }
+    this.selectFields.addAll(this.getParentFields(parentTypes, parentFields));
     return this;
   }
 
@@ -106,6 +101,22 @@ public virtual without sharing class Repository implements IRepository {
     Map<String, RepositorySortOrder> fieldToSortOrder,
     Integer limitAmount
   ) {
+    return this.addChildFields(
+      childFieldToken,
+      new List<QueryField>{ new QueryField(childFields) },
+      optionalWhereFilters,
+      fieldToSortOrder,
+      limitAmount
+    );
+  }
+
+  public Repository addChildFields(
+    Schema.SObjectField childFieldToken,
+    List<QueryField> childFields,
+    List<Query> optionalWhereFilters,
+    Map<String, RepositorySortOrder> fieldToSortOrder,
+    Integer limitBy
+  ) {
     if (this.childToRelationshipNames.containsKey(childFieldToken) == false || this.shouldAddChildFields == false) {
       return this;
     }
@@ -118,8 +129,8 @@ public virtual without sharing class Repository implements IRepository {
       ')';
 
     Set<String> childFieldNames = new Set<String>{ 'Id' };
-    for (SObjectField childField : childFields) {
-      childFieldNames.add(childField.getDescribe().getName());
+    for (QueryField childField : childFields) {
+      childFieldNames.add(childField.toString());
     }
 
     this.selectFields.add(
@@ -156,6 +167,22 @@ public virtual without sharing class Repository implements IRepository {
   protected virtual void clearState() {
     this.fieldToSortOrder.clear();
     this.limitAmount = null;
+  }
+
+  private List<String> getParentFields(
+    List<Schema.SObjectField> parentTypes,
+    List<Schema.SObjectField> parentFieldTokens
+  ) {
+    List<String> parentFields = new List<String>();
+    String parentBase = '';
+    for (Schema.SObjectField parentToken : parentTypes) {
+      String parentName = parentToken.getDescribe().getRelationshipName() ?? parentToken.toString().replace('__c', '__r');
+      parentBase += parentName + '.';
+    }
+    for (Schema.SObjectField parentField : parentFieldTokens) {
+      parentFields.add(parentBase + parentField.getDescribe().getName());
+    }
+    return parentFields;
   }
 
   private Map<Schema.SObjectField, String> getChildRelationshipNames(Schema.SObjectType repoType) {
@@ -276,6 +303,7 @@ public virtual without sharing class Repository implements IRepository {
     return String.join(objectsPreJoin, ',');
   }
 
+  // DML
   public Database.SaveResult doInsert(SObject record) {
     return this.dml.doInsert(record);
   }

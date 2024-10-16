@@ -37,8 +37,8 @@ private class RepositoryTests {
 
     IRepository repo = new ContactPointAddressRepo();
 
-    List<SObject> opps = repo.get(listQuery);
-    System.assertEquals(0, opps.size());
+    List<SObject> results = repo.get(listQuery);
+    System.assertEquals(0, results.size());
     System.assertEquals(1, Limits.getQueries());
   }
 
@@ -99,7 +99,20 @@ private class RepositoryTests {
   @IsTest
   static void it_should_add_child_fields() {
     IRepository repo = new AccountRepo()
-      .addChildFields(Contact.AccountId, new List<Schema.SObjectField>{ Contact.AccountId, Contact.LastName });
+      .addChildFields(
+        Contact.AccountId,
+        new List<QueryField>{
+          new QueryField(Contact.AccountId),
+          new QueryField(Contact.LastName),
+          new QueryField(
+            new List<Schema.SObjectField>{ Contact.AccountId },
+            new List<Schema.SObjectField>{ Account.Name }
+          )
+        },
+        new List<Query>(),
+        new Map<String, RepositorySortOrder>(),
+        1
+      );
 
     Account acc = new Account(Name = 'Parent');
     insert acc;
@@ -111,7 +124,8 @@ private class RepositoryTests {
     System.assertEquals(1, accounts.size());
     System.assertEquals(1, accounts.get(0).Contacts.size());
     Contact returnedCon = accounts.get(0).Contacts.get(0);
-    System.assertEquals(con, returnedCon);
+    System.assertEquals(con.LastName, returnedCon.LastName);
+    System.assertEquals(acc.Name, returnedCon.Account.Name);
   }
 
   @IsTest
@@ -171,8 +185,7 @@ private class RepositoryTests {
     accounts[2].ParentId = accounts[3].Id;
     update accounts;
 
-    IRepository accountRepo = new AccountRepo();
-    List<Account> returnedAccounts = accountRepo
+    List<Account> returnedAccounts = new AccountRepo()
       .addParentFields(
         new List<Schema.SObjectField>{ Account.ParentId },
         new List<Schema.SObjectField>{ Account.Id, Account.Name }
