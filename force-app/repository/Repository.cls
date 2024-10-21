@@ -99,14 +99,14 @@ public virtual without sharing class Repository implements IRepository {
     List<Schema.SObjectField> childFields,
     List<Query> optionalWhereFilters,
     Map<String, RepositorySortOrder> fieldToSortOrder,
-    Integer limitAmount
+    Integer limitBy
   ) {
     return this.addChildFields(
       childFieldToken,
       new List<QueryField>{ new QueryField(childFields) },
       optionalWhereFilters,
       fieldToSortOrder,
-      limitAmount
+      limitBy
     );
   }
 
@@ -125,7 +125,7 @@ public virtual without sharing class Repository implements IRepository {
       '(SELECT {0} FROM {1}' +
       this.addWheres(optionalWhereFilters) +
       this.getOrderBys(fieldToSortOrder) +
-      this.getLimitAmount(limitAmount) +
+      this.getLimitAmount(limitBy) +
       ')';
 
     Set<String> childFieldNames = new Set<String>{ 'Id' };

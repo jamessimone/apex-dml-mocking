@@ -135,7 +135,7 @@ private class RepositoryTests {
       .addChildFields(
         Contact.AccountId,
         new List<Schema.SObjectField>{ Contact.AccountId, Contact.LastName },
-        new List<Query>{ Query.notEquals(Contact.LastName, nameFilter) },
+        new List<Query>{ Query.equals(Contact.LastName, nameFilter) },
         new Map<String, RepositorySortOrder>(),
         1
       );
@@ -143,11 +143,13 @@ private class RepositoryTests {
     Account acc = new Account(Name = 'Parent');
     insert acc;
     Contact con = new Contact(AccountId = acc.Id, LastName = nameFilter);
-    insert con;
+    Contact secondRecord = new Contact(AccountId = acc.Id, LastName = nameFilter);
+    Contact excluded = new Contact(AccountId = acc.Id, LastName = 'Excluded');
+    insert new List<Contact>{ con, secondRecord, excluded };
 
     List<Account> accounts = repo.getAll();
     System.assertEquals(1, accounts.size());
-    System.assertEquals(0, accounts.get(0).Contacts.size());
+    System.assertEquals(1, accounts.get(0).Contacts.size());
   }
 
   @IsTest
