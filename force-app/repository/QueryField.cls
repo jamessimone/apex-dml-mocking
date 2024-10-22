@@ -16,7 +16,7 @@ public without sharing virtual class QueryField {
   public QueryField(List<Schema.SObjectField> parentFieldChain, List<Schema.SObjectField> parentFields) {
     String base = '';
     while (parentFieldChain.isEmpty() == false) {
-      base = parentFieldChain.remove(0).getDescribe().getRelationshipName() + '.';
+      base += parentFieldChain.remove(0).getDescribe().getRelationshipName() + '.';
     }
     List<String> fields = new List<String>();
     for (Schema.SObjectField field : parentFields) {
