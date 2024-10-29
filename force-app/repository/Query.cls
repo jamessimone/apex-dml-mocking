@@ -35,11 +35,7 @@ public virtual class Query {
     return new ParentQuery(parentFields, this.operator, this.predicate);
   }
 
-  public static Query subquery(
-    Schema.SObjectField field,
-    Schema.SObjectField innerMatchingField,
-    Query subcondition
-  ) {
+  public static Query subquery(Schema.SObjectField field, Schema.SObjectField innerMatchingField, Query subcondition) {
     return subquery(field, innerMatchingField.getDescribe().getSObjectType(), innerMatchingField, subcondition);
   }
 
@@ -107,9 +103,10 @@ public virtual class Query {
     String builtUpFieldName = '';
     for (Integer index = 0; index < parentFields.size(); index++) {
       Schema.DescribeFieldResult parentFieldDescribe = parentFields[index].getDescribe();
-      builtUpFieldName += index == parentFields.size() - 1
-        ? parentFieldDescribe.getName()
-        : parentFieldDescribe.getRelationshipName() ?? parentFieldDescribe.getName().replace('__c', '__r') + '.';
+      builtUpFieldName +=
+        index == parentFields.size() - 1
+          ? parentFieldDescribe.getName()
+          : (parentFieldDescribe.getRelationshipName() ?? parentFieldDescribe.getName().replace('__c', '__r')) + '.';
     }
     return builtUpFieldName;
   }
@@ -320,8 +317,8 @@ public virtual class Query {
         String innerString = this.getSoslPredicate(innerPred);
         innerStrings.add(innerString);
       }
-      String start = '(' ;
-      String ending = ')' ;
+      String start = '(';
+      String ending = ')';
       return start + String.join(innerStrings, ',') + ending;
     } else if (predicate instanceof String) {
       String input = (String) predicate;
