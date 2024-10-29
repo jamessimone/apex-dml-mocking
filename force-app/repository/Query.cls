@@ -109,7 +109,7 @@ public virtual class Query {
       Schema.DescribeFieldResult parentFieldDescribe = parentFields[index].getDescribe();
       builtUpFieldName += index == parentFields.size() - 1
         ? parentFieldDescribe.getName()
-        : parentFieldDescribe.getRelationshipName() + '.';
+        : parentFieldDescribe.getRelationshipName() ?? parentFieldDescribe.getName().replace('__c', '__r') + '.';
     }
     return builtUpFieldName;
   }
