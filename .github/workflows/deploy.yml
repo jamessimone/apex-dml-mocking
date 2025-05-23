@@ -6,22 +6,22 @@ on:
     branches:
       - main
     paths-ignore:
-      - "sfdx-project.json"
-      - "**/README.md"
-      - "package.json"
-      - "LICENSE"
-      - ".gitignore"
-      - ".prettierignore"
-      - ".prettierrc"
+      - 'sfdx-project.json'
+      - '**/README.md'
+      - 'package.json'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.prettierignore'
+      - '.prettierrc'
   pull_request:
     types: [opened, synchronize]
     paths-ignore:
-      - "sfdx-project.json"
-      - "**/README.md"
-      - "package.json"
-      - ".gitignore"
-      - ".prettierignore"
-      - ".prettierrc"
+      - 'sfdx-project.json'
+      - '**/README.md'
+      - 'package.json'
+      - '.gitignore'
+      - '.prettierignore'
+      - '.prettierrc'
 
 jobs:
   scratch-org-test:
@@ -29,32 +29,22 @@ jobs:
     environment: Test
     steps:
       # Checkout the code
-      - name: "Checkout source code"
+      - name: 'Checkout source code'
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
 
-      - name: "Setup node"
+      - name: 'Setup node'
         uses: actions/setup-node@v2
         with:
-          node-version: "18"
+          node-version: '18'
+          cache: 'npm'
 
-      - name: "Restore node_modules cache"
-        id: cache-npm
-        uses: actions/cache@v2
-        with:
-          path: node_modules
-          key: npm-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            npm-${{ env.cache-name }}-
-            npm-
-
-      - name: "Install NPM"
-        if: steps.cache-npm.outputs.cache-hit != 'true'
+      - name: 'Install NPM'
         run: npm ci
 
       # Authenticate using JWT flow
-      - name: "Auth to dev hub"
+      - name: 'Auth to dev hub'
         shell: bash
         run: |
           echo "${{ env.DEVHUB_SERVER_KEY }}" > ./jwt-server.key
@@ -65,6 +55,6 @@ jobs:
           DEVHUB_CONSUMER_KEY: ${{ secrets.DEVHUB_CONSUMER_KEY }}
           DEVHUB_SERVER_KEY: ${{ secrets.DEVHUB_SERVER_KEY }}
 
-      - name: "Deploy & Test"
+      - name: 'Deploy & Test'
         shell: pwsh
-        run: ". ./scripts/test.ps1"
+        run: '. ./scripts/test.ps1'
