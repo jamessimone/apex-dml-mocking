@@ -16,11 +16,14 @@ public virtual class Query {
   private final String field;
   private final Schema.SObjectField fieldToken;
   private final Object predicate;
-
   private final Map<String, Object> bindVars = new Map<String, Object>();
+
+  private Boolean hasBeenCompared = false;
 
   private static final String BIND_VAR_MERGE = 'bindVar{0}';
   private static Integer BIND_VAR_NUMBER = 0;
+  @TestVisible
+  private static Boolean shouldPerformStrictEquals = false;
 
   public Boolean isSoslEmpty() {
     return this.isSoslEmpty;
@@ -103,10 +106,9 @@ public virtual class Query {
     String builtUpFieldName = '';
     for (Integer index = 0; index < parentFields.size(); index++) {
       Schema.DescribeFieldResult parentFieldDescribe = parentFields[index].getDescribe();
-      builtUpFieldName +=
-        index == parentFields.size() - 1
-          ? parentFieldDescribe.getName()
-          : (parentFieldDescribe.getRelationshipName() ?? parentFieldDescribe.getName().replace('__c', '__r')) + '.';
+      builtUpFieldName += index == parentFields.size() - 1
+        ? parentFieldDescribe.getName()
+        : (parentFieldDescribe.getRelationshipName() ?? parentFieldDescribe.getName().replace('__c', '__r')) + '.';
     }
     return builtUpFieldName;
   }
@@ -212,11 +214,12 @@ public virtual class Query {
 
   public virtual override String toString() {
     String predicateValue = this.getPredicate(this.predicate);
+    String printedValue = ' ' + (shouldPerformStrictEquals ? this.predicate : predicateValue);
     if (this.operator == Query.Operator.NOT_LIKE) {
       // who knows why this is the format they wanted
-      return String.format(this.getOperator(), new List<String>{ this.field }) + ' ' + predicateValue;
+      return String.format(this.getOperator(), new List<String>{ this.field }) + printedValue;
     }
-    return this.field + ' ' + this.getOperator() + ' ' + predicateValue;
+    return this.field + ' ' + this.getOperator() + printedValue;
   }
 
   public String toSoslString() {
@@ -248,14 +251,26 @@ public virtual class Query {
   }
 
   public Boolean equals(Object thatObject) {
-    if (thatObject instanceof Query) {
-      Query that = (Query) thatObject;
-      return this.field == that.field &&
-        this.operator == that.operator &&
-        this.bindVars.values() == that.bindVars.values();
+    if ((thatObject instanceof Query) == false) {
+      return false;
+    }
+    Query that = (Query) thatObject;
+    if (this.hasBeenCompared == false && that.hasBeenCompared == false) {
+      that.toString();
+      this.toString();
+    }
+    this.hasBeenCompared = true;
+    that.hasBeenCompared = true;
+
+    Boolean areEqual =
+      this.field == that.field &&
+      this.operator == that.operator &&
+      this.bindVars.values() == that.bindVars.values();
+    if (areEqual == false) {
+      shouldPerformStrictEquals = true;
     }
 
-    return false;
+    return areEqual;
   }
 
   private String getOperator() {

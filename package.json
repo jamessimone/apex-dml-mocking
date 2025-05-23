@@ -5,8 +5,8 @@
   "dependencies": {},
   "devDependencies": {
     "@salesforce/cli": "latest",
-    "prettier-plugin-apex": "2.1.4",
-    "prettier": "3.3.3"
+    "prettier-plugin-apex": "2.2.6",
+    "prettier": "3.5.3"
   },
   "repository": {
     "type": "git",
