@@ -79,13 +79,13 @@ public virtual without sharing class Repository implements IRepository {
     return this;
   }
 
-  public Repository addFunctionBaseField(SelectFunction selectFunction, Schema.SObjectField field){
-    return this.addFunctionBaseFields(selectFunction, new List<Schema.SObjectField>{field});
+  public Repository addFunctionBaseField(SelectFunction selectFunction, Schema.SObjectField field) {
+    return this.addFunctionBaseFields(selectFunction, new List<Schema.SObjectField>{ field });
   }
 
-  public Repository addFunctionBaseFields(SelectFunction selectFunction, List<Schema.SObjectField> fields){
+  public Repository addFunctionBaseFields(SelectFunction selectFunction, List<Schema.SObjectField> fields) {
     Map<Schema.SObjectField, String> fieldsToAliases = new Map<Schema.SObjectfield, String>();
-    for(Schema.SObjectField field :fields){
+    for (Schema.SObjectField field : fields) {
       fieldsToAliases.put(
         field,
         this.queryFields.contains(field) ? field.getDescribe().getName() + '_' + selectFunction.name() : null
@@ -94,9 +94,12 @@ public virtual without sharing class Repository implements IRepository {
     return this.addFunctionBaseFields(selectFunction, fieldsToAliases);
   }
 
-  public Repository addFunctionBaseFields(SelectFunction selectFunction, Map<Schema.SObjectField, String> fieldsToAliases){
+  public Repository addFunctionBaseFields(
+    SelectFunction selectFunction,
+    Map<Schema.SObjectField, String> fieldsToAliases
+  ) {
     Map<String, String> fieldNamesToAliases = new Map<String, String>();
-    for(Schema.SObjectField field :fieldsToAliases.keySet()){
+    for (Schema.SObjectField field : fieldsToAliases.keySet()) {
       fieldNamesToAliases.put(field.getDescribe().getName(), fieldsToAliases.get(field));
     }
     this.selectFields.addAll(this.getFunctionBaseFields(selectFunction, fieldNamesToAliases));
@@ -193,11 +196,13 @@ public virtual without sharing class Repository implements IRepository {
     this.limitAmount = null;
   }
 
-  private List<String> getFunctionBaseFields(SelectFunction selectFunction, Map<String, String> fieldsToAliases){
+  private List<String> getFunctionBaseFields(SelectFunction selectFunction, Map<String, String> fieldsToAliases) {
     List<String> functionBaseFields = new List<String>();
-    for(String field :fieldsToAliases.keySet()){
+    for (String field : fieldsToAliases.keySet()) {
       Object alias = fieldsToAliases.get(field);
-      functionBaseFields.add(String.format(selectFunction.name() + '({0}){1}', new List<Object>{field, alias == null ? '' : ' ' + alias}));
+      functionBaseFields.add(
+        String.format(selectFunction.name() + '({0}){1}', new List<Object>{ field, alias == null ? '' : ' ' + alias })
+      );
     }
     return functionBaseFields;
   }
@@ -209,7 +214,8 @@ public virtual without sharing class Repository implements IRepository {
     List<String> parentFields = new List<String>();
     String parentBase = '';
     for (Schema.SObjectField parentToken : parentTypes) {
-      String parentName = parentToken.getDescribe().getRelationshipName() ?? parentToken.toString().replace('__c', '__r');
+      String parentName = parentToken.getDescribe().getRelationshipName() ??
+        parentToken.toString().replace('__c', '__r');
       parentBase += parentName + '.';
     }
     for (Schema.SObjectField parentField : parentFieldTokens) {

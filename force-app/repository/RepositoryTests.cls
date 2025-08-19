@@ -311,7 +311,7 @@ private class RepositoryTests {
   }
 
   @IsTest
-  static void it_adds_function_field_without_alias(){
+  static void it_adds_function_field_without_alias() {
     // Arrange
     Account acc = new Account(
       Name = 'hello world',
@@ -336,14 +336,18 @@ private class RepositoryTests {
   }
 
   @IsTest
-  static void it_adds_base_field_and_function_field_with_automatic_alias(){
+  static void it_adds_base_field_and_function_field_with_automatic_alias() {
     // Arrange
     Date activeFromDate = Date.newInstance(2001, 1, 1);
-    ContactPointAddress cpa = new ContactPointAddress(Name = 'hello world', PreferenceRank = 1, ActiveFromDate = activeFromDate);
+    ContactPointAddress cpa = new ContactPointAddress(
+      Name = 'hello world',
+      PreferenceRank = 1,
+      ActiveFromDate = activeFromDate
+    );
     insert cpa;
 
     IRepository repo = new ContactPointAddressRepo();
-    repo.addBaseFields(new List<Schema.SObjectField>{ContactPointAddress.ActiveFromDate});
+    repo.addBaseFields(new List<Schema.SObjectField>{ ContactPointAddress.ActiveFromDate });
     repo.addFunctionBaseField(SelectFunction.FORMAT, ContactPointAddress.ActiveFromDate);
 
     User testUserGerman = TestingUtils.generate_german_user();
@@ -352,7 +356,7 @@ private class RepositoryTests {
 
     // Act
     Test.startTest();
-    System.runAs(testUserGerman){
+    System.runAs(testUserGerman) {
       results = repo.setLimit(1).getAll();
       activeFromDateGerman = activeFromDate.format();
     }
@@ -368,15 +372,22 @@ private class RepositoryTests {
   }
 
   @IsTest
-  static void it_adds_base_field_and_function_field_with_manual_alias(){
+  static void it_adds_base_field_and_function_field_with_manual_alias() {
     // Arrange
     Date activeFromDate = Date.newInstance(2001, 1, 1);
-    ContactPointAddress cpa = new ContactPointAddress(Name = 'hello world', PreferenceRank = 1, ActiveFromDate = activeFromDate);
+    ContactPointAddress cpa = new ContactPointAddress(
+      Name = 'hello world',
+      PreferenceRank = 1,
+      ActiveFromDate = activeFromDate
+    );
     insert cpa;
 
     IRepository repo = new ContactPointAddressRepo();
-    repo.addBaseFields(new List<Schema.SObjectField>{ContactPointAddress.ActiveFromDate});
-    repo.addFunctionBaseFields(SelectFunction.FORMAT, new Map<Schema.SObjectField, String>{ContactPointAddress.ActiveFromDate => 'AktivSeit'});
+    repo.addBaseFields(new List<Schema.SObjectField>{ ContactPointAddress.ActiveFromDate });
+    repo.addFunctionBaseFields(
+      SelectFunction.FORMAT,
+      new Map<Schema.SObjectField, String>{ ContactPointAddress.ActiveFromDate => 'AktivSeit' }
+    );
 
     User testUserGerman = TestingUtils.generate_german_user();
     String activeFromDateGerman;
@@ -384,7 +395,7 @@ private class RepositoryTests {
 
     // Act
     Test.startTest();
-    System.runAs(testUserGerman){
+    System.runAs(testUserGerman) {
       results = repo.setLimit(1).getAll();
       activeFromDateGerman = activeFromDate.format();
     }
@@ -395,7 +406,7 @@ private class RepositoryTests {
     Assert.areEqual(
       activeFromDateGerman,
       results.get(0).get('AktivSeit'),
-      'AktivSeit should equal '+ activeFromDateGerman
+      'AktivSeit should equal ' + activeFromDateGerman
     );
   }
 
