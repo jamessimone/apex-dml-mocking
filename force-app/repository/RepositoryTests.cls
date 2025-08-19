@@ -310,6 +310,95 @@ private class RepositoryTests {
     System.assertEquals(record.Id, results.get(1).get(0).Id);
   }
 
+  @IsTest
+  static void it_adds_function_field_without_alias(){
+    // Arrange
+    Account acc = new Account(
+      Name = 'hello world',
+      Industry = Account.Industry.getDescribe().getPicklistValues().get(0).getValue()
+    );
+    insert acc;
+
+    IRepository repo = new AccountRepo();
+    repo.addFunctionBaseField(SelectFunction.TOLABEL, Account.Industry);
+
+    // Act
+    Test.startTest();
+    List<Account> results = repo.setLimit(1).getAll();
+    Test.stopTest();
+
+    // Assert
+    Assert.areEqual(
+      Account.Industry.getDescribe().getPicklistValues().get(0).getLabel(),
+      results.get(0).Industry,
+      'Account.Industry should equal label'
+    );
+  }
+
+  @IsTest
+  static void it_adds_base_field_and_function_field_with_automatic_alias(){
+    // Arrange
+    Date activeFromDate = Date.newInstance(2001, 1, 1);
+    ContactPointAddress cpa = new ContactPointAddress(Name = 'hello world', PreferenceRank = 1, ActiveFromDate = activeFromDate);
+    insert cpa;
+
+    IRepository repo = new ContactPointAddressRepo();
+    repo.addBaseFields(new List<Schema.SObjectField>{ContactPointAddress.ActiveFromDate});
+    repo.addFunctionBaseField(SelectFunction.FORMAT, ContactPointAddress.ActiveFromDate);
+
+    User testUserGerman = TestingUtils.generate_german_user();
+    String activeFromDateGerman;
+    List<ContactPointAddress> results = new List<ContactPointAddress>();
+
+    // Act
+    Test.startTest();
+    System.runAs(testUserGerman){
+      results = repo.setLimit(1).getAll();
+      activeFromDateGerman = activeFromDate.format();
+    }
+    Test.stopTest();
+
+    // Assert
+    Assert.isNotNull(results.get(0).ActiveFromDate, 'ActiveFromDate should not be null');
+    Assert.areEqual(
+      activeFromDateGerman,
+      results.get(0).get('ActiveFromDate_FORMAT'),
+      'ActiveFromDate_FORMAT should equal ' + activeFromDateGerman
+    );
+  }
+
+  @IsTest
+  static void it_adds_base_field_and_function_field_with_manual_alias(){
+    // Arrange
+    Date activeFromDate = Date.newInstance(2001, 1, 1);
+    ContactPointAddress cpa = new ContactPointAddress(Name = 'hello world', PreferenceRank = 1, ActiveFromDate = activeFromDate);
+    insert cpa;
+
+    IRepository repo = new ContactPointAddressRepo();
+    repo.addBaseFields(new List<Schema.SObjectField>{ContactPointAddress.ActiveFromDate});
+    repo.addFunctionBaseFields(SelectFunction.FORMAT, new Map<Schema.SObjectField, String>{ContactPointAddress.ActiveFromDate => 'AktivSeit'});
+
+    User testUserGerman = TestingUtils.generate_german_user();
+    String activeFromDateGerman;
+    List<ContactPointAddress> results = new List<ContactPointAddress>();
+
+    // Act
+    Test.startTest();
+    System.runAs(testUserGerman){
+      results = repo.setLimit(1).getAll();
+      activeFromDateGerman = activeFromDate.format();
+    }
+    Test.stopTest();
+
+    // Assert
+    Assert.isNotNull(results.get(0).ActiveFromDate, 'ActiveFromDate should not be null');
+    Assert.areEqual(
+      activeFromDateGerman,
+      results.get(0).get('AktivSeit'),
+      'AktivSeit should equal '+ activeFromDateGerman
+    );
+  }
+
   private class GroupMemberRepo extends Repository {
     public GroupMemberRepo() {
       super(GroupMember.SObjectType, new List<Schema.SObjectField>{ GroupMember.GroupId }, new RepoFactory());
