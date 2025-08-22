@@ -17,6 +17,9 @@ public interface IRepository extends IDML {
   IRepository addSortOrder(List<Schema.SObjectField> fieldChain, RepositorySortOrder sortOrder);
 
   IRepository addBaseFields(List<Schema.SObjectField> fields);
+  IRepository addFunctionBaseField(SelectFunction selectFunction, Schema.SObjectField field);
+  IRepository addFunctionBaseFields(SelectFunction selectFunction, List<Schema.SObjectField> fields);
+  IRepository addFunctionBaseFields(SelectFunction selectFunction, Map<Schema.SObjectField, String> fieldsToAliases);
   IRepository addParentFields(List<Schema.SObjectField> relationshipFields, List<Schema.SObjectField> parentFields);
   IRepository addChildFields(Schema.SObjectField childFieldToken, List<SObjectField> childFields);
   IRepository addChildFields(
