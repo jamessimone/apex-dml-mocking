@@ -1,5 +1,5 @@
 @IsTest
-public class RepoFactoryMock {
+public class RepoFactoryMock extends RepoFactory {
   @TestVisible
   private static final Map<Schema.SObjectType, List<AggregateRecord>> AggregateResults = new Map<Schema.SObjectType, List<AggregateRecord>>();
   @TestVisible
@@ -8,6 +8,8 @@ public class RepoFactoryMock {
   private static final List<SObject> QueryResults = new List<SObject>();
   @TestVisible
   private static final List<Query> QueriesMade = new List<Query>();
+  @TestVisible
+  private static final Map<SObjectType, List<Cursor>> CursorResults = new Map<SObjectType, List<Cursor>>();
   @TestVisible
   private static final Map<Schema.SObjectType, List<FieldLevelHistory>> HistoryResults = new Map<Schema.SObjectType, List<FieldLevelHistory>>();
   @TestVisible
@@ -75,8 +77,14 @@ public class RepoFactoryMock {
     List<SObject> queriedResults = getResults(sObjectType);
     List<AggregateRecord> aggRecords = AggregateResults.get(sObjectType);
     List<FieldLevelHistory> historyRecords = HistoryResults.get(SObjectType);
+    List<Cursor> cursorResults = CursorResults.get(sObjectType);
 
-    if (queriedResults.size() > 0 || aggRecords?.size() > 0 || historyRecords?.size() > 0) {
+    if (
+      queriedResults.size() > 0 ||
+      aggRecords?.size() > 0 ||
+      historyRecords?.size() > 0 ||
+      cursorResults?.size() > 0
+    ) {
       RepoMock mock = new RepoMock(sObjectType, repoFactory);
       mock.results.addAll(queriedResults);
       if (aggRecords != null) {
@@ -109,6 +117,12 @@ public class RepoFactoryMock {
 
     private RepoMock(Schema.SObjectType sObjectType, RepoFactory repoFactory) {
       super(sObjectType, new List<Schema.SObjectField>(), repoFactory);
+    }
+
+    public override Cursor getCursor(List<Query> queries) {
+      QueriesMade.addAll(queries);
+      List<Cursor> cursorResults = CursorResults.get(this.repoType);
+      return cursorResults.remove(0);
     }
 
     public override List<FieldLevelHistory> getHistory(List<Query> queries) {
@@ -177,6 +191,27 @@ public class RepoFactoryMock {
       localFieldToSortOrders.putAll(this.fieldToSortOrder);
 
       return this.aggRecords;
+    }
+  }
+
+  public class CursorMock extends Cursor {
+    private final List<SObject> records;
+
+    public CursorMock(List<SObject> records) {
+      this.records = records;
+    }
+
+    public override List<SObject> fetch(Integer start, Integer advanceBy) {
+      List<SObject> clonedRecords = records.deepClone();
+      clonedRecords.clear();
+      for (Integer index = start; index < start + advanceBy; index++) {
+        clonedRecords.add(this.records[index]);
+      }
+      return clonedRecords;
+    }
+
+    public override Integer getNumRecords() {
+      return this.records.size();
     }
   }
 }

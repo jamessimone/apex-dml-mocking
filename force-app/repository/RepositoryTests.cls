@@ -350,7 +350,7 @@ private class RepositoryTests {
     repo.addBaseFields(new List<Schema.SObjectField>{ ContactPointAddress.ActiveFromDate });
     repo.addFunctionBaseField(SelectFunction.FORMAT, ContactPointAddress.ActiveFromDate);
 
-    User testUserGerman = TestingUtils.generate_german_user();
+    User testUserGerman = generate_german_user();
     String activeFromDateGerman;
     List<ContactPointAddress> results = new List<ContactPointAddress>();
 
@@ -389,7 +389,7 @@ private class RepositoryTests {
       new Map<Schema.SObjectField, String>{ ContactPointAddress.ActiveFromDate => 'AktivSeit' }
     );
 
-    User testUserGerman = TestingUtils.generate_german_user();
+    User testUserGerman = generate_german_user();
     String activeFromDateGerman;
     List<ContactPointAddress> results = new List<ContactPointAddress>();
 
@@ -408,6 +408,24 @@ private class RepositoryTests {
       results.get(0).get('AktivSeit'),
       'AktivSeit should equal ' + activeFromDateGerman
     );
+  }
+
+  @IsTest
+  static void it_should_return_a_cursor() {
+    List<Account> accounts = new List<Account>{
+      new Account(Name = 'One'),
+      new Account(Name = 'Two'),
+      new Account(Name = 'Three')
+    };
+    insert accounts;
+
+    IRepository repo = new AccountRepo();
+    Cursor cursor = repo.getCursor(
+      new List<Query>{ Query.orQuery(Query.equals(Account.Name, 'One'), Query.equals(Account.Name, 'Two')) }
+    );
+    System.assertEquals(2, cursor.getNumRecords());
+    System.assertEquals(accounts[0].Id, cursor.fetch(0, 1).get(0).Id);
+    System.assertEquals(accounts[1].Id, cursor.fetch(1, 1).get(0).Id);
   }
 
   private class GroupMemberRepo extends Repository {
@@ -435,5 +453,22 @@ private class RepositoryTests {
     public AccountRepo() {
       super(Account.SObjectType, new List<Schema.SObjectField>{ Account.Name }, new RepoFactory());
     }
+  }
+
+  private static User generate_german_user() {
+    String uniqueUserName = 'standarduserGerman' + DateTime.now().getTime() + '@testorg.com';
+    Profile p = [SELECT Id FROM Profile WHERE Name = 'Standard User'];
+    User u = new User(
+      UserName = uniqueUserName,
+      ProfileId = p.Id,
+      Alias = 'stddeu',
+      Email = 'standardUserGerman@testorg.com',
+      EmailEncodingKey = 'UTF-8',
+      LastName = 'TestingGerman',
+      LanguageLocaleKey = 'de',
+      LocaleSidKey = 'de',
+      TimeZoneSidKey = 'Europe/Berlin'
+    );
+    return u;
   }
 }

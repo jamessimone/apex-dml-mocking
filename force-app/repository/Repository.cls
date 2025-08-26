@@ -25,6 +25,14 @@ public virtual without sharing class Repository implements IRepository {
   }
 
   // SOQL
+  public virtual Cursor getCursor(List<Query> queries) {
+    Cursor cursor = new Cursor(
+      Database.getCursorWithBinds(this.getFinalQuery(queries), this.bindVars, this.accessLevel)
+    );
+    this.bindVars.clear();
+    return cursor;
+  }
+
   public Database.QueryLocator getQueryLocator(List<Query> queries) {
     return this.getQueryLocator(queries, this.shouldAddChildFields);
   }

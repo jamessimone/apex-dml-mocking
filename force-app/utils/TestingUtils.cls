@@ -42,21 +42,4 @@ public class TestingUtils {
   static void generates_fake_share_records() {
     Assert.isNotNull(generateId(LeadShare.SObjectType));
   }
-
-  public static User generate_german_user() {
-    String uniqueUserName = 'standarduserGerman' + DateTime.now().getTime() + '@testorg.com';
-    Profile p = [SELECT Id FROM Profile WHERE Name = 'Standard User'];
-    User u = new User(
-      UserName = uniqueUserName,
-      ProfileId = p.Id,
-      Alias = 'stddeu',
-      Email = 'standardUserGerman@testorg.com',
-      EmailEncodingKey = 'UTF-8',
-      LastName = 'TestingGerman',
-      LanguageLocaleKey = 'de',
-      LocaleSidKey = 'de',
-      TimeZoneSidKey = 'Europe/Berlin'
-    );
-    return u;
-  }
 }
