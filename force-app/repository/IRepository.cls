@@ -5,7 +5,6 @@ public interface IRepository extends IDML {
   List<SObject> get(Query query);
   List<SObject> get(List<Query> queries);
   List<SObject> getAll();
-  Set<String> getSelectFields();
 
   List<List<SObject>> getSosl(String searchTerm, Query query);
   List<List<SObject>> getSosl(String searchTerm, List<Query> queries);

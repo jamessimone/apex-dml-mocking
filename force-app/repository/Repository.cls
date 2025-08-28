@@ -162,7 +162,9 @@ public virtual without sharing class Repository implements IRepository {
     Map<String, RepositorySortOrder> fieldToSortOrder,
     Integer limitBy
   ) {
-    Set<String> localSelectFields = childRepo.getSelectFields();
+    Repository cr = (Repository) childRepo;
+    cr.selectFields.addAll(cr.addSelectFields());
+    Set<String> localSelectFields = cr.selectFields;
     localSelectFields.remove('Id');
 
     return this.addChildFields(
@@ -214,11 +216,6 @@ public virtual without sharing class Repository implements IRepository {
   public Repository clearBindVars() {
     this.bindVars.clear();
     return this;
-  }
-
-  public Set<String> getSelectFields() {
-    this.selectFields.addAll(this.addSelectfields());
-    return this.selectFields;
   }
 
   protected virtual Set<String> addSelectFields() {
