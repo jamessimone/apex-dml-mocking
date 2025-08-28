@@ -129,12 +129,72 @@ private class RepositoryTests {
   }
 
   @IsTest
+  static void it_should_add_child_fields_from_repo() {
+    IRepository repo = new AccountRepo()
+      .addChildFields(
+        Opportunity.AccountId,
+        new OpportunityRepo().addChildFields(OpportunityContactRole.OpportunityId, new OpportunityContactRoleRepo())
+      );
+
+    Account acc = new Account(Name = 'Parent');
+    insert acc;
+    Contact con = new Contact(AccountId = acc.Id, LastName = 'Child Contact');
+    insert con;
+    Opportunity opp = new Opportunity(
+      AccountId = acc.Id,
+      Name = 'Chlid',
+      StageName = Opportunity.StageName.getDescribe().getPicklistValues().get(0).getValue(),
+      CloseDate = Date.today()
+    );
+    insert opp;
+    OpportunityContactRole ocr = new OpportunityContactRole(
+      OpportunityId = opp.Id,
+      ContactId = con.Id,
+      Role = OpportunityContactRole.Role.getDescribe().getPicklistValues().get(0).getValue()
+    );
+    insert ocr;
+
+    List<Account> accounts = repo.getAll();
+    Assert.areEqual(1, accounts.size());
+    Assert.areEqual(1, accounts.get(0).Opportunities.size());
+    Opportunity returnedOpp = accounts.get(0).Opportunities.get(0);
+    Assert.areEqual(opp.Name, returnedOpp.Name);
+    Assert.areEqual(1, returnedOpp.OpportunityContactRoles.size());
+    OpportunityContactRole returnedOcr = returnedOpp.OpportunityContactRoles.get(0);
+    Assert.areEqual(ocr.Role, returnedOcr.Role);
+  }
+
+  @IsTest
   static void it_adds_child_fields_with_filters() {
     String nameFilter = 'Child';
     IRepository repo = new AccountRepo()
       .addChildFields(
         Contact.AccountId,
         new List<Schema.SObjectField>{ Contact.AccountId, Contact.LastName },
+        new List<Query>{ Query.equals(Contact.LastName, nameFilter) },
+        new Map<String, RepositorySortOrder>(),
+        1
+      );
+
+    Account acc = new Account(Name = 'Parent');
+    insert acc;
+    Contact con = new Contact(AccountId = acc.Id, LastName = nameFilter);
+    Contact secondRecord = new Contact(AccountId = acc.Id, LastName = nameFilter);
+    Contact excluded = new Contact(AccountId = acc.Id, LastName = 'Excluded');
+    insert new List<Contact>{ con, secondRecord, excluded };
+
+    List<Account> accounts = repo.getAll();
+    System.assertEquals(1, accounts.size());
+    System.assertEquals(1, accounts.get(0).Contacts.size());
+  }
+
+  @IsTest
+  static void it_adds_child_fields_with_filters_from_repo() {
+    String nameFilter = 'Child';
+    IRepository repo = new AccountRepo()
+      .addChildFields(
+        Contact.AccountId,
+        new ContactRepo(),
         new List<Query>{ Query.equals(Contact.LastName, nameFilter) },
         new Map<String, RepositorySortOrder>(),
         1
@@ -452,6 +512,28 @@ private class RepositoryTests {
   private class AccountRepo extends Repository {
     public AccountRepo() {
       super(Account.SObjectType, new List<Schema.SObjectField>{ Account.Name }, new RepoFactory());
+    }
+  }
+
+  private class ContactRepo extends Repository {
+    public ContactRepo() {
+      super(Contact.SObjectType, new List<Schema.SObjectField>{ Contact.LastName }, new RepoFactory());
+    }
+  }
+
+  private class OpportunityRepo extends Repository {
+    public OpportunityRepo() {
+      super(Opportunity.SObjectType, new List<Schema.SObjectField>{ Opportunity.Name }, new RepoFactory());
+    }
+  }
+
+  private class OpportunityContactRoleRepo extends Repository {
+    public OpportunityContactRoleRepo() {
+      super(
+        OpportunityContactRole.SObjectType,
+        new List<Schema.SObjectField>{ OpportunityContactRole.Role },
+        new RepoFactory()
+      );
     }
   }
 
