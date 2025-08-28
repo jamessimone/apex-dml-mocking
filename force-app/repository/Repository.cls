@@ -129,6 +129,16 @@ public virtual without sharing class Repository implements IRepository {
     );
   }
 
+  public Repository addChildFields(Schema.SObjectField childFieldToken, IRepository childRepo) {
+    return this.addChildFields(
+      childFieldToken,
+      childRepo,
+      new List<Query>(),
+      new Map<String, RepositorySortOrder>(),
+      null
+    );
+  }
+
   public Repository addChildFields(
     Schema.SObjectField childFieldToken,
     List<Schema.SObjectField> childFields,
@@ -139,6 +149,25 @@ public virtual without sharing class Repository implements IRepository {
     return this.addChildFields(
       childFieldToken,
       new List<QueryField>{ new QueryField(childFields) },
+      optionalWhereFilters,
+      fieldToSortOrder,
+      limitBy
+    );
+  }
+
+  public Repository addChildFields(
+    Schema.SObjectField childFieldToken,
+    IRepository childRepo,
+    List<Query> optionalWhereFilters,
+    Map<String, RepositorySortOrder> fieldToSortOrder,
+    Integer limitBy
+  ) {
+    Set<String> localSelectFields = childRepo.getSelectFields();
+    localSelectFields.remove('Id');
+
+    return this.addChildFields(
+      childFieldToken,
+      new List<QueryField>{ new QueryField(new List<String>(localSelectFields)) },
       optionalWhereFilters,
       fieldToSortOrder,
       limitBy
@@ -185,6 +214,11 @@ public virtual without sharing class Repository implements IRepository {
   public Repository clearBindVars() {
     this.bindVars.clear();
     return this;
+  }
+
+  public Set<String> getSelectFields() {
+    this.selectFields.addAll(this.addSelectfields());
+    return this.selectFields;
   }
 
   protected virtual Set<String> addSelectFields() {
