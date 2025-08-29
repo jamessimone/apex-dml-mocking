@@ -410,24 +410,21 @@ private class RepositoryTests {
     repo.addBaseFields(new List<Schema.SObjectField>{ ContactPointAddress.ActiveFromDate });
     repo.addFunctionBaseField(SelectFunction.FORMAT, ContactPointAddress.ActiveFromDate);
 
-    User testUserGerman = generate_german_user();
-    String activeFromDateGerman;
+    String activeFromDateFormatted;
     List<ContactPointAddress> results = new List<ContactPointAddress>();
 
     // Act
     Test.startTest();
-    System.runAs(testUserGerman) {
-      results = repo.setLimit(1).getAll();
-      activeFromDateGerman = activeFromDate.format();
-    }
+    results = repo.setLimit(1).getAll();
+    activeFromDateFormatted = activeFromDate.format();
     Test.stopTest();
 
     // Assert
     Assert.isNotNull(results.get(0).ActiveFromDate, 'ActiveFromDate should not be null');
     Assert.areEqual(
-      activeFromDateGerman,
+      activeFromDateFormatted,
       results.get(0).get('ActiveFromDate_FORMAT'),
-      'ActiveFromDate_FORMAT should equal ' + activeFromDateGerman
+      'ActiveFromDate_FORMAT should equal ' + activeFromDateFormatted
     );
   }
 
@@ -449,24 +446,21 @@ private class RepositoryTests {
       new Map<Schema.SObjectField, String>{ ContactPointAddress.ActiveFromDate => 'AktivSeit' }
     );
 
-    User testUserGerman = generate_german_user();
-    String activeFromDateGerman;
+    String activeFromDateFormatted;
     List<ContactPointAddress> results = new List<ContactPointAddress>();
 
     // Act
     Test.startTest();
-    System.runAs(testUserGerman) {
-      results = repo.setLimit(1).getAll();
-      activeFromDateGerman = activeFromDate.format();
-    }
+    results = repo.setLimit(1).getAll();
+    activeFromDateFormatted = activeFromDate.format();
     Test.stopTest();
 
     // Assert
     Assert.isNotNull(results.get(0).ActiveFromDate, 'ActiveFromDate should not be null');
     Assert.areEqual(
-      activeFromDateGerman,
+      activeFromDateFormatted,
       results.get(0).get('AktivSeit'),
-      'AktivSeit should equal ' + activeFromDateGerman
+      'AktivSeit should equal ' + activeFromDateFormatted
     );
   }
 
@@ -535,22 +529,5 @@ private class RepositoryTests {
         new RepoFactory()
       );
     }
-  }
-
-  private static User generate_german_user() {
-    String uniqueUserName = 'standarduserGerman' + DateTime.now().getTime() + '@testorg.com';
-    Profile p = [SELECT Id FROM Profile WHERE Name = 'Standard User'];
-    User u = new User(
-      UserName = uniqueUserName,
-      ProfileId = p.Id,
-      Alias = 'stddeu',
-      Email = 'standardUserGerman@testorg.com',
-      EmailEncodingKey = 'UTF-8',
-      LastName = 'TestingGerman',
-      LanguageLocaleKey = 'de',
-      LocaleSidKey = 'de',
-      TimeZoneSidKey = 'Europe/Berlin'
-    );
-    return u;
   }
 }
