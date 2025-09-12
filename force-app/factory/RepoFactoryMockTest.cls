@@ -16,7 +16,7 @@ private class RepoFactoryMockTest {
 
   @IsTest
   static void addsMockCursor() {
-    Account acc = new Account(Id = '001000000000000');
+    Account acc = new Account(Id = TestingUtils.generateId(Schema.Account.SObjectType));
     List<Account> accounts = new List<Account>{ acc };
     RepoFactoryMock.CursorResults.put(
       Account.SObjectType,

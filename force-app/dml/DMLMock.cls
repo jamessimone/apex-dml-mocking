@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.FieldNamingConventions,PMD.PropertyNamingConventions')
 public virtual class DMLMock extends DML {
   public static List<SObject> InsertedRecords = new List<SObject>();
   public static List<SObject> UpsertedRecords = new List<SObject>();

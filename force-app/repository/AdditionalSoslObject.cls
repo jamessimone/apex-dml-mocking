@@ -4,6 +4,7 @@ public class AdditionalSoslObject {
   public final List<Query> queryFilters;
   public final List<Schema.SObjectField> selectFields;
 
+  @SuppressWarnings('PMD.ExcessiveParameterList')
   public AdditionalSoslObject(
     Schema.SObjectType objectType,
     List<Schema.SObjectField> selectFields,

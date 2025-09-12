@@ -1,3 +1,6 @@
+@SuppressWarnings(
+  'PMD.EmptyStatementBlock,PMD.ExcessivePublicCount,PMD.ExcessiveParameterList,PMD.FieldNamingConventions'
+)
 public virtual class Query {
   private Boolean isSoslEmpty = false;
 
@@ -271,6 +274,10 @@ public virtual class Query {
     }
 
     return areEqual;
+  }
+
+  public Integer hashCode() {
+    return this.toString().hashCode();
   }
 
   private String getOperator() {

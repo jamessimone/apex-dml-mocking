@@ -38,15 +38,15 @@ private class AggregateRepositoryTests {
     repo.groupBy(Opportunity.AccountId);
     List<AggregateRecord> results = repo.aggregate(sum);
 
-    System.assertEquals(2, results?.size());
+    Assert.areEqual(2, results?.size());
     for (AggregateRecord res : results) {
       if (res.get('AccountId') == secondParent.Id) {
-        System.assertEquals(2, res.get(sum.getAlias()));
+        Assert.areEqual(2, res.get(sum.getAlias()));
       } else {
-        System.assertEquals(1, res.get(sum.getAlias()));
+        Assert.areEqual(1, res.get(sum.getAlias()));
       }
     }
-    System.assertEquals(
+    Assert.areEqual(
       1,
       repo.groupBy(new List<Schema.SObjectField>{ Opportunity.AccountId, Account.NumberOfEmployees })
         .aggregate(sum)
@@ -69,9 +69,9 @@ private class AggregateRepositoryTests {
     Aggregation countOfAmount = Aggregation.count(Opportunity.Amount, 'wowza');
     List<AggregateRecord> results = repo.aggregate(countOfAmount);
 
-    System.assertEquals(1, results.size());
-    System.assertEquals(1, results[0].get(countOfAmount.getAlias()));
-    System.assertEquals(
+    Assert.areEqual(1, results.size());
+    Assert.areEqual(1, results[0].get(countOfAmount.getAlias()));
+    Assert.areEqual(
       1,
       repo.addHaving(countOfAmount, Query.Operator.GREATER_THAN, 0)
           .groupBy(Opportunity.CloseDate)
@@ -79,8 +79,8 @@ private class AggregateRepositoryTests {
         .get(countOfAmount.getAlias())
     );
     // prove equality works
-    System.assert(results.get(0).equals([SELECT COUNT(Amount) wowza FROM Opportunity].get(0)));
-    System.assertEquals(results.get(0), results.get(0));
+    Assert.isTrue(results.get(0).equals([SELECT COUNT(Amount) wowza FROM Opportunity].get(0)));
+    Assert.areEqual(results.get(0), results.get(0));
   }
 
   @IsTest
@@ -95,7 +95,7 @@ private class AggregateRepositoryTests {
       new RepoFactory()
     );
 
-    System.assertEquals(2, repo.count());
+    Assert.areEqual(2, repo.count());
   }
 
   @IsTest
@@ -117,14 +117,11 @@ private class AggregateRepositoryTests {
       .groupBy(Opportunity.AccountId)
       .aggregate(new List<Aggregation>{ countOfAmount, sum });
 
-    System.assertEquals(1, results.size());
+    Assert.areEqual(1, results.size());
     AggregateRecord returnedResult = results.get(0);
-    System.assertEquals(mockAggregateResult.get(accountKey), returnedResult.get(accountKey));
-    System.assertEquals(
-      mockAggregateResult.get(countOfAmount.getAlias()),
-      returnedResult.get(countOfAmount.getAlias())
-    );
-    System.assertEquals(mockAggregateResult.get(sum.getAlias()), returnedResult.get(sum.getAlias()));
+    Assert.areEqual(mockAggregateResult.get(accountKey), returnedResult.get(accountKey));
+    Assert.areEqual(mockAggregateResult.get(countOfAmount.getAlias()), returnedResult.get(countOfAmount.getAlias()));
+    Assert.areEqual(mockAggregateResult.get(sum.getAlias()), returnedResult.get(sum.getAlias()));
   }
 
   @IsTest

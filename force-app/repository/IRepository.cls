@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.AvoidBooleanMethodParameters,PMD.ExcessiveParameterList')
 public interface IRepository extends IDML {
   Cursor getCursor(List<Query> queries);
   Database.QueryLocator getQueryLocator(List<Query> queries);

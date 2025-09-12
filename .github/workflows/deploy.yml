@@ -43,6 +43,9 @@ jobs:
       - name: 'Install NPM'
         run: npm ci
 
+      - name: 'Static Code Analysis'
+        run: npm run scan
+
       # Authenticate using JWT flow
       - name: 'Auth to dev hub'
         shell: bash

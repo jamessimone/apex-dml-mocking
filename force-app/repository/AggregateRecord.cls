@@ -29,4 +29,8 @@ public class AggregateRecord {
     }
     return false;
   }
+
+  public Integer hashCode() {
+    return this.keyToAggregateResult.hashCode();
+  }
 }

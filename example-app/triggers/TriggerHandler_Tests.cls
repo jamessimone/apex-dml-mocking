@@ -1,66 +1,66 @@
 @IsTest
 private class TriggerHandler_Tests {
   @IsTest
-  static void it_should_perform_before_insert() {
+  static void itShouldPerformBeforeInsert() {
     TestTriggerHandler testHandler = new TestTriggerHandler();
 
     testHandler.beforeInsert(null);
 
-    System.assertEquals(TriggerOperation.BEFORE_INSERT, testHandler.Method);
+    Assert.areEqual(TriggerOperation.BEFORE_INSERT, testHandler.Method);
   }
 
   @IsTest
-  static void it_should_perform_before_update() {
+  static void itShouldPerformBeforeUpdate() {
     TestTriggerHandler testHandler = new TestTriggerHandler();
 
     testHandler.beforeUpdate(null, null, null, null);
 
-    System.assertEquals(TriggerOperation.BEFORE_UPDATE, testHandler.Method);
+    Assert.areEqual(TriggerOperation.BEFORE_UPDATE, testHandler.Method);
   }
 
   @IsTest
-  static void it_should_perform_before_delete() {
+  static void itShouldPerformBeforeDelete() {
     TestTriggerHandler testHandler = new TestTriggerHandler();
 
     testHandler.beforeDelete(null, null);
 
-    System.assertEquals(TriggerOperation.BEFORE_DELETE, testHandler.Method);
+    Assert.areEqual(TriggerOperation.BEFORE_DELETE, testHandler.Method);
   }
 
   @IsTest
-  static void it_should_perform_after_insert() {
+  static void itShouldPerformAfterInsert() {
     TestTriggerHandler testHandler = new TestTriggerHandler();
 
     testHandler.afterInsert(null, null);
 
-    System.assertEquals(TriggerOperation.AFTER_INSERT, testHandler.Method);
+    Assert.areEqual(TriggerOperation.AFTER_INSERT, testHandler.Method);
   }
 
   @IsTest
-  static void it_should_perform_after_update() {
+  static void itShouldPerformAfterUpdate() {
     TestTriggerHandler testHandler = new TestTriggerHandler();
 
     testHandler.afterUpdate(null, null, null, null);
 
-    System.assertEquals(TriggerOperation.AFTER_UPDATE, testHandler.Method);
+    Assert.areEqual(TriggerOperation.AFTER_UPDATE, testHandler.Method);
   }
 
   @IsTest
-  static void it_should_perform_after_delete() {
+  static void itShouldPerformAfterDelete() {
     TestTriggerHandler testHandler = new TestTriggerHandler();
 
     testHandler.afterDelete(null, null);
 
-    System.assertEquals(TriggerOperation.AFTER_DELETE, testHandler.Method);
+    Assert.areEqual(TriggerOperation.AFTER_DELETE, testHandler.Method);
   }
 
   @IsTest
-  static void it_should_perform_after_undelete() {
+  static void itShouldPerformAfterUndelete() {
     TestTriggerHandler testHandler = new TestTriggerHandler();
 
     testHandler.afterUndelete(null, null);
 
-    System.assertEquals(TriggerOperation.AFTER_UNDELETE, testHandler.Method);
+    Assert.areEqual(TriggerOperation.AFTER_UNDELETE, testHandler.Method);
   }
 
   private class TestTriggerHandler extends TriggerHandler {

@@ -4,6 +4,7 @@ public virtual class Factory {
   @TestVisible
   private static Factory factory;
 
+  @SuppressWarnings('PMD.EmptyStatementBlock')
   protected Factory() {
     // enforce getFactory() as the sole entry point for usage
   }

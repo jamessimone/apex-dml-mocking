@@ -6,14 +6,15 @@
   "devDependencies": {
     "@salesforce/cli": "latest",
     "prettier-plugin-apex": "2.2.6",
-    "prettier": "3.5.3"
+    "prettier": "3.6.2"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jamessimone/apex-dml-mocking.git"
   },
   "scripts": {
-    "prettier": "prettier --write \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,yaml,yml}\""
+    "prettier": "prettier --write \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,yaml,yml}\"",
+    "scan": "sf code-analyzer run -r pmd:1 -r pmd:2 -r pmd:3 --workspace force-app"
   },
   "keywords": [
     "apex",

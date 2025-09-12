@@ -34,6 +34,10 @@ public without sharing virtual class AggregateRepository extends Repository impl
       }
       return false;
     }
+
+    public Integer hashCode() {
+      return this.selectName.hashCode() + this.groupByName.hashCode();
+    }
   }
 
   public AggregateRepository(

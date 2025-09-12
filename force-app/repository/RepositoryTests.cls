@@ -1,16 +1,16 @@
 @IsTest
 private class RepositoryTests {
   @IsTest
-  static void it_should_take_in_a_query() {
+  static void itShouldTakeInAQuery() {
     Query basicQuery = Query.equals(ContactPointAddress.PreferenceRank, 1);
     IRepository repo = new ContactPointAddressRepo();
 
     repo.get(basicQuery);
-    System.assertEquals(1, Limits.getQueries());
+    Assert.areEqual(1, Limits.getQueries());
   }
 
   @IsTest
-  static void it_should_handle_lists_and_sets_of_ids_or_strings() {
+  static void itShouldHandleListsAndSetsOfIdsOrStrings() {
     Id accountId = TestingUtils.generateId(Account.SObjectType);
     Id secondAccountId = TestingUtils.generateId(Account.SObjectType);
     List<Id> ids = new List<Id>{ accountId, secondAccountId };
@@ -26,24 +26,24 @@ private class RepositoryTests {
     repo.get(listQuery);
     repo.get(setQuery);
     repo.get(setStringQuery);
-    System.assertEquals(3, Limits.getQueries());
-    System.assertEquals('Name = :bindVar3', setStringQuery.toString());
-    System.assertEquals(cpaNames, setStringQuery.getBindVars().get('bindVar3'));
+    Assert.areEqual(3, Limits.getQueries());
+    Assert.areEqual('Name = :bindVar3', setStringQuery.toString());
+    Assert.areEqual(cpaNames, setStringQuery.getBindVars().get('bindVar3'));
   }
 
   @IsTest
-  static void it_should_query_with_empty_collections() {
+  static void itShouldQueryWithEmptyCollections() {
     Query listQuery = Query.equals(ContactPointAddress.Id, new List<Id>());
 
     IRepository repo = new ContactPointAddressRepo();
 
     List<SObject> results = repo.get(listQuery);
-    System.assertEquals(0, results.size());
-    System.assertEquals(1, Limits.getQueries());
+    Assert.areEqual(0, results.size());
+    Assert.areEqual(1, Limits.getQueries());
   }
 
   @IsTest
-  static void it_should_respect_or_statements_in_queries() {
+  static void itShouldRespectOrStatementsInQueries() {
     ContactPointAddress cpa = new ContactPointAddress(Name = 'Test Or', PreferenceRank = 1);
     ContactPointAddress secondCpa = new ContactPointAddress(Name = 'Test Or Two', PreferenceRank = 2);
     insert new List<ContactPointAddress>{ cpa, secondCpa };
@@ -59,11 +59,11 @@ private class RepositoryTests {
     );
 
     List<ContactPointAddress> cpas = repo.get(new List<Query>{ andQuery, secondAnd, orQuery });
-    System.assertEquals(2, cpas.size());
+    Assert.areEqual(2, cpas.size());
   }
 
   @IsTest
-  static void it_should_respect_not_like_syntax_for_multiple_values() {
+  static void itShouldRespectNotLikeSyntaxForMultipleValues() {
     ContactPointAddress cpa = new ContactPointAddress(Name = 'Test Or', PreferenceRank = 1);
     ContactPointAddress secondCpa = new ContactPointAddress(Name = 'Something different', PreferenceRank = 2);
     insert new List<ContactPointAddress>{ cpa, secondCpa };
@@ -74,12 +74,12 @@ private class RepositoryTests {
 
     List<ContactPointAddress> cpas = repo.get(notLike);
 
-    System.assertEquals(1, cpas.size());
-    System.assertEquals(secondCpa.Id, cpas[0].Id);
+    Assert.areEqual(1, cpas.size());
+    Assert.areEqual(secondCpa.Id, cpas[0].Id);
   }
 
   @IsTest
-  static void it_should_add_parent_fields() {
+  static void itShouldAddParentFields() {
     GroupMemberRepo repo = new GroupMemberRepo();
     repo.addParentFields(
       new List<Schema.SObjectField>{ GroupMember.GroupId },
@@ -92,12 +92,12 @@ private class RepositoryTests {
     insert member;
     List<GroupMember> members = repo.get(Query.equals(GroupMember.Id, member.Id));
 
-    System.assertEquals(1, members.size());
-    System.assertEquals(grp.Id, members[0].Group.Id);
+    Assert.areEqual(1, members.size());
+    Assert.areEqual(grp.Id, members[0].Group.Id);
   }
 
   @IsTest
-  static void it_should_add_child_fields() {
+  static void itShouldAddChildFields() {
     IRepository repo = new AccountRepo()
       .addChildFields(
         Contact.AccountId,
@@ -121,15 +121,15 @@ private class RepositoryTests {
 
     List<Account> accounts = repo.getAll();
 
-    System.assertEquals(1, accounts.size());
-    System.assertEquals(1, accounts.get(0).Contacts.size());
+    Assert.areEqual(1, accounts.size());
+    Assert.areEqual(1, accounts.get(0).Contacts.size());
     Contact returnedCon = accounts.get(0).Contacts.get(0);
-    System.assertEquals(con.LastName, returnedCon.LastName);
-    System.assertEquals(acc.Name, returnedCon.Account.Name);
+    Assert.areEqual(con.LastName, returnedCon.LastName);
+    Assert.areEqual(acc.Name, returnedCon.Account.Name);
   }
 
   @IsTest
-  static void it_should_add_child_fields_from_repo() {
+  static void itShouldAddChildFieldsFromRepo() {
     IRepository repo = new AccountRepo()
       .addChildFields(
         Opportunity.AccountId,
@@ -165,7 +165,7 @@ private class RepositoryTests {
   }
 
   @IsTest
-  static void it_adds_child_fields_with_filters() {
+  static void itAddsChildFieldsWithFilters() {
     String nameFilter = 'Child';
     IRepository repo = new AccountRepo()
       .addChildFields(
@@ -184,12 +184,12 @@ private class RepositoryTests {
     insert new List<Contact>{ con, secondRecord, excluded };
 
     List<Account> accounts = repo.getAll();
-    System.assertEquals(1, accounts.size());
-    System.assertEquals(1, accounts.get(0).Contacts.size());
+    Assert.areEqual(1, accounts.size());
+    Assert.areEqual(1, accounts.get(0).Contacts.size());
   }
 
   @IsTest
-  static void it_adds_child_fields_with_filters_from_repo() {
+  static void itAddsChildFieldsWithFiltersFromRepo() {
     String nameFilter = 'Child';
     IRepository repo = new AccountRepo()
       .addChildFields(
@@ -208,12 +208,12 @@ private class RepositoryTests {
     insert new List<Contact>{ con, secondRecord, excluded };
 
     List<Account> accounts = repo.getAll();
-    System.assertEquals(1, accounts.size());
-    System.assertEquals(1, accounts.get(0).Contacts.size());
+    Assert.areEqual(1, accounts.size());
+    Assert.areEqual(1, accounts.get(0).Contacts.size());
   }
 
   @IsTest
-  static void it_should_sort_and_limit_correctly() {
+  static void itShouldSortAndLimitCorrectly() {
     insert new List<Account>{
       new Account(Name = 'Two', AnnualRevenue = 1),
       new Account(Name = 'One'),
@@ -229,12 +229,12 @@ private class RepositoryTests {
       .setLimit(1)
       .getAll();
 
-    System.assertEquals(1, accounts.size());
-    System.assertEquals('One', accounts.get(0).get(Account.Name));
+    Assert.areEqual(1, accounts.size());
+    Assert.areEqual('One', accounts.get(0).get(Account.Name));
   }
 
   @IsTest
-  static void it_sorts_by_parent_fields() {
+  static void itSortsByParentFields() {
     List<Account> accounts = new List<Account>{
       new Account(Name = 'Should Not Be Returned'),
       new Account(Name = 'Parent B'),
@@ -266,7 +266,7 @@ private class RepositoryTests {
   }
 
   @IsTest
-  static void it_should_decorate_dml_methods() {
+  static void itShouldDecorateDmlMethods() {
     IRepository repo = new RepoFactory().setFacade(new RepoFactoryMock.FacadeMock()).getProfileRepo();
     Account acc = new Account();
     List<Account> accs = new List<Account>{ acc };
@@ -276,36 +276,36 @@ private class RepositoryTests {
 
     repo.doInsert(acc);
     repo.doInsert(accs);
-    System.assertEquals(acc, DMLMock.Inserted.Accounts.firstOrDefault);
+    Assert.areEqual(acc, DMLMock.Inserted.Accounts.firstOrDefault);
 
     repo.doUpdate(acc);
     repo.doUpdate(accs);
-    System.assertEquals(acc, DMLMock.Updated.Accounts.firstOrDefault);
+    Assert.areEqual(acc, DMLMock.Updated.Accounts.firstOrDefault);
 
     repo.doUpsert(acc);
     repo.doUpsert(accs);
-    System.assertEquals(acc, DMLMock.Upserted.Accounts.firstOrDefault);
+    Assert.areEqual(acc, DMLMock.Upserted.Accounts.firstOrDefault);
 
     repo.doDelete(acc);
     repo.doDelete(accs);
-    System.assertEquals(acc, DMLMock.Deleted.Accounts.firstOrDefault);
+    Assert.areEqual(acc, DMLMock.Deleted.Accounts.firstOrDefault);
 
     repo.doUndelete(acc);
     repo.doUndelete(accs);
-    System.assertEquals(acc, DMLMock.Undeleted.Accounts.firstOrDefault);
+    Assert.areEqual(acc, DMLMock.Undeleted.Accounts.firstOrDefault);
 
     repo.doHardDelete(acc);
     repo.doHardDelete(accs);
-    System.assertEquals(acc, DMLMock.Deleted.Accounts.firstOrDefault);
+    Assert.areEqual(acc, DMLMock.Deleted.Accounts.firstOrDefault);
 
     BatchApexErrorEvent event = new BatchApexErrorEvent();
     repo.publish(event);
     repo.publish(new List<SObject>{ event });
-    System.assertEquals(event, DMLMock.Published.firstOrDefault);
+    Assert.areEqual(event, DMLMock.Published.firstOrDefault);
   }
 
   @IsTest
-  static void it_performs_sosl_queries() {
+  static void itPerformsSoslQueries() {
     ContactPointAddress cpa = new ContactPointAddress(Name = 'hello world', PreferenceRank = 1);
     insert cpa;
     Test.setFixedSearchResults(new List<Id>{ cpa.Id });
@@ -314,11 +314,11 @@ private class RepositoryTests {
       .setSearchGroup(SearchGroup.NAME_FIELDS)
       .getSosl('hel', Query.equals(ContactPointAddress.PreferenceRank, 1));
 
-    System.assertEquals(cpa.Id, results.get(0).get(0).Id);
+    Assert.areEqual(cpa.Id, results.get(0).get(0).Id);
   }
 
   @IsTest
-  static void it_searches_for_additional_objects() {
+  static void itSearchesForAdditionalObjects() {
     ContactPointPhone record = new ContactPointPhone(TelephoneNumber = 'hello universe');
     insert record;
 
@@ -339,11 +339,11 @@ private class RepositoryTests {
         }
       );
 
-    System.assertEquals(record.Id, results.get(1).get(0).Id);
+    Assert.areEqual(record.Id, results.get(1).get(0).Id);
   }
 
   @IsTest
-  static void it_handles_empty_sosl_searches() {
+  static void itHandlesEmptySoslSearches() {
     ContactPointPhone record = new ContactPointPhone(TelephoneNumber = 'hello universe');
     insert record;
 
@@ -367,11 +367,11 @@ private class RepositoryTests {
         }
       );
 
-    System.assertEquals(record.Id, results.get(1).get(0).Id);
+    Assert.areEqual(record.Id, results.get(1).get(0).Id);
   }
 
   @IsTest
-  static void it_adds_function_field_without_alias() {
+  static void itAddsFunctionFieldWithoutAlias() {
     // Arrange
     Account acc = new Account(
       Name = 'hello world',
@@ -396,7 +396,7 @@ private class RepositoryTests {
   }
 
   @IsTest
-  static void it_adds_base_field_and_function_field_with_automatic_alias() {
+  static void itAddsBaseFieldAndFunctionFieldWithAutomaticAlias() {
     // Arrange
     Date activeFromDate = Date.newInstance(2001, 1, 1);
     ContactPointAddress cpa = new ContactPointAddress(
@@ -429,7 +429,7 @@ private class RepositoryTests {
   }
 
   @IsTest
-  static void it_adds_base_field_and_function_field_with_manual_alias() {
+  static void itAddsBaseFieldAndFunctionFieldWithManualAlias() {
     // Arrange
     Date activeFromDate = Date.newInstance(2001, 1, 1);
     ContactPointAddress cpa = new ContactPointAddress(
@@ -465,7 +465,7 @@ private class RepositoryTests {
   }
 
   @IsTest
-  static void it_should_return_a_cursor() {
+  static void itShouldReturnACursor() {
     List<Account> accounts = new List<Account>{
       new Account(Name = 'One'),
       new Account(Name = 'Two'),
@@ -477,9 +477,20 @@ private class RepositoryTests {
     Cursor cursor = repo.getCursor(
       new List<Query>{ Query.orQuery(Query.equals(Account.Name, 'One'), Query.equals(Account.Name, 'Two')) }
     );
-    System.assertEquals(2, cursor.getNumRecords());
-    System.assertEquals(accounts[0].Id, cursor.fetch(0, 1).get(0).Id);
-    System.assertEquals(accounts[1].Id, cursor.fetch(1, 1).get(0).Id);
+    Assert.areEqual(2, cursor.getNumRecords());
+    Assert.areEqual(accounts[0].Id, cursor.fetch(0, 1).get(0).Id);
+    Assert.areEqual(accounts[1].Id, cursor.fetch(1, 1).get(0).Id);
+  }
+
+  @IsTest
+  static void itShouldReturnAnEmptyCursor() {
+    List<Account> accounts = new List<Account>{ new Account(Name = 'One'), new Account(Name = 'Two') };
+    insert accounts;
+
+    IRepository repo = new AccountRepo();
+    Cursor cursor = repo.getCursor(new List<Query>{ Query.equals(Account.Name, 'Three') });
+    Assert.areEqual(0, cursor.getNumRecords());
+    Assert.areEqual(new List<SObject>(), cursor.fetch(-111, -11111));
   }
 
   private class GroupMemberRepo extends Repository {

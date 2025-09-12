@@ -1,18 +1,18 @@
 @IsTest
 private class FieldLevelHistoryRepoTests {
   @IsTest
-  static void it_should_continue_to_act_as_base_repo() {
+  static void itShouldContinueToActAsBaseRepo() {
     IHistoryRepository historyRepo = new ExampleRepoFactory().getOppFieldHistoryRepo();
 
     List<OpportunityFieldHistory> histories = historyRepo.get(
       Query.equals(OpportunityFieldHistory.OpportunityId, null)
     );
 
-    System.assertNotEquals(null, histories);
+    Assert.areNotEqual(null, histories);
   }
 
   @IsTest
-  static void it_should_continue_to_act_as_aggregate_repo() {
+  static void itShouldContinueToActAsAggregateRepo() {
     Aggregation count = Aggregation.count(OpportunityFieldHistory.Id, 'countId');
     IAggregateRepository repo = new ExampleRepoFactory().getOppFieldHistoryRepo();
     repo.groupBy(OpportunityFieldHistory.OpportunityId);
@@ -20,21 +20,21 @@ private class FieldLevelHistoryRepoTests {
     List<AggregateRecord> records = repo.aggregate(count);
 
     // It's not much of an assert, but at least we know the query went through successfully
-    System.assertEquals(true, records.isEmpty());
+    Assert.areEqual(true, records.isEmpty());
   }
 
   @IsTest
-  static void it_should_query_history_records() {
+  static void itShouldQueryHistoryRecords() {
     IHistoryRepository historyRepo = new ExampleRepoFactory().getOppFieldHistoryRepo();
 
     List<FieldLevelHistory> histories = historyRepo.getAllHistory();
     // History records can't be created during Apex unit testing, but we can at least validate the query
     // and prove that the FieldLevelHistory decorator list is returned properly
-    System.assertEquals(true, histories.isEmpty());
+    Assert.areEqual(true, histories.isEmpty());
   }
 
   @IsTest
-  static void it_should_allow_mocking_of_history_records() {
+  static void itShouldAllowMockingOfHistoryRecords() {
     FieldLevelHistory mockRecord = new FieldLevelHistory();
     mockRecord.setValues(
       new Map<String, Object>{
@@ -51,8 +51,8 @@ private class FieldLevelHistoryRepoTests {
     IHistoryRepository historyRepo = new ExampleRepoFactory().getOppFieldHistoryRepo();
 
     List<FieldLevelHistory> histories = historyRepo.getAllHistory();
-    System.assertNotEquals(true, histories.isEmpty());
-    System.assertEquals(mockRecord, histories[0]);
+    Assert.areNotEqual(true, histories.isEmpty());
+    Assert.areEqual(mockRecord, histories[0]);
   }
 
   private without sharing class ExampleRepoFactory extends RepoFactory {
