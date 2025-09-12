@@ -4,7 +4,7 @@
   "description": "Easy DML / SOQL mocking through the Factory pattern in Apex",
   "dependencies": {},
   "devDependencies": {
-    "@salesforce/cli": "latest",
+    "@salesforce/cli": "2.105.6",
     "prettier-plugin-apex": "2.2.6",
     "prettier": "3.6.2"
   },
