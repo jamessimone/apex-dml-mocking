@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.PropertyNamingConventions')
 public class RepositorySortOrder {
   private final SortOrder sortOrder;
   private NullSortOrder nullSortOrder;
@@ -55,5 +56,9 @@ public class RepositorySortOrder {
       return this.nullSortOrder == that.nullSortOrder && this.sortOrder == that.sortOrder;
     }
     return false;
+  }
+
+  public Integer hashCode() {
+    return this.toString().hashCode();
   }
 }

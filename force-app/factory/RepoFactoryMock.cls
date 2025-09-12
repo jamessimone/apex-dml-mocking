@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.FieldNamingConventions')
 @IsTest
 public class RepoFactoryMock extends RepoFactory {
   @TestVisible

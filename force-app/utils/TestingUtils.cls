@@ -2,11 +2,13 @@
 public class TestingUtils {
   private static Integer startingNumber = 1;
 
+  @SuppressWarnings('PMD.EagerlyLoadedDescribeSObjectResult')
   public static String generateId(Schema.SObjectType sObjectType) {
     String result = String.valueOf(startingNumber++);
-    String keyPrefix = sObjectType.getDescribe().getKeyPrefix();
+    Schema.DescribeSObjectResult describe = sObjectType.getDescribe(Schema.SObjectDescribeOptions.DEFERRED);
+    String keyPrefix = describe.getKeyPrefix();
     if (keyPrefix == null) {
-      switch on sObjectType.getDescribe().getAssociateEntityType() {
+      switch on describe.getAssociateEntityType() {
         when 'History' {
           keyPrefix = '017';
         }
@@ -19,27 +21,23 @@ public class TestingUtils {
   }
 
   public static SObject generateId(SObject objectInstance) {
-    if (objectInstance.Id == null) {
-      objectInstance.Id = generateId(objectInstance.getSObjectType());
-    }
+    objectInstance.Id = objectInstance.Id ?? generateId(objectInstance.getSObjectType());
     return objectInstance;
   }
 
   public static void generateIds(List<SObject> records) {
     for (SObject record : records) {
-      if (record.Id == null) {
-        generateId(record);
-      }
+      generateId(record);
     }
   }
 
   @IsTest
-  static void generates_fake_history_ids() {
+  static void generatesFakeHistoryIds() {
     Assert.isNotNull(generateId(LeadHistory.SObjectType));
   }
 
   @IsTest
-  static void generates_fake_share_records() {
+  static void generatesFakeShareRecords() {
     Assert.isNotNull(generateId(LeadShare.SObjectType));
   }
 }

@@ -26,9 +26,9 @@ private class ExampleSObjectTest {
     List<ExampleSObject__c> children = repo.getAll();
 
     ExampleSObject__c expected = [SELECT Id, Account__r.Name, SecondAccountLookup__r.Name FROM ExampleSObject__c];
-    System.assertEquals(1, children.size());
-    System.assertEquals(expected.Account__r.Name, children.get(0).Account__r.Name);
-    System.assertEquals(expected.SecondAccountLookup__r.Name, children.get(0).SecondAccountLookup__r.Name);
+    Assert.areEqual(1, children.size());
+    Assert.areEqual(expected.Account__r.Name, children.get(0).Account__r.Name);
+    Assert.areEqual(expected.SecondAccountLookup__r.Name, children.get(0).SecondAccountLookup__r.Name);
   }
 
   @IsTest
@@ -49,9 +49,9 @@ private class ExampleSObjectTest {
       FROM Account
     ];
     Account actual = (Account) repo.getAll().get(0);
-    System.assertEquals(1, actual.Example_SObjects__r.size());
-    System.assertEquals(expected.Example_SObjects__r, actual.Example_SObjects__r);
-    System.assertEquals(1, actual.Example_SObjects1__r.size());
-    System.assertEquals(expected.Example_SObjects1__r, actual.Example_SObjects1__r);
+    Assert.areEqual(1, actual.Example_SObjects__r.size());
+    Assert.areEqual(expected.Example_SObjects__r, actual.Example_SObjects__r);
+    Assert.areEqual(1, actual.Example_SObjects1__r.size());
+    Assert.areEqual(expected.Example_SObjects1__r, actual.Example_SObjects1__r);
   }
 }

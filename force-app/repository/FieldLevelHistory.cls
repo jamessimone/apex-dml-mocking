@@ -1,13 +1,13 @@
+@SuppressWarnings('PMD.PropertyNamingConventions')
 public class FieldLevelHistory {
+  private String parentLookupName = 'ParentId';
+
   public Datetime CreatedDate { get; set; }
   public Id CreatedById { get; set; }
   public Object NewValue { get; set; }
   public Object OldValue { get; set; }
   public String Field { get; set; }
-
   public Id ParentId { get; private set; }
-
-  private String parentLookupName = 'ParentId';
 
   public override String toString() {
     return JSON.serialize(this);

@@ -12,7 +12,7 @@ private class DMLTests {
     Contact contact = new Contact(LastName = 'Test2');
     new DML().doInsert(contact);
 
-    System.assertNotEquals(null, contact.Id);
+    Assert.isNotNull(contact.Id);
   }
 
   @IsTest
@@ -22,7 +22,7 @@ private class DMLTests {
     contact.FirstName = 'Harry';
     new DML().doUpdate(contact);
 
-    System.assert(contact.FirstName == 'Harry');
+    Assert.isTrue(contact.FirstName == 'Harry');
   }
 
   @IsTest
@@ -30,7 +30,7 @@ private class DMLTests {
     List<Contact> contacts = new List<Contact>();
     new DML().doUpdate(contacts);
 
-    System.assert(true, 'Should make it here');
+    Assert.isTrue(true, 'Should make it here');
   }
 
   @IsTest
@@ -41,7 +41,7 @@ private class DMLTests {
 
     contact = [SELECT Id, FirstName FROM Contact WHERE Id = :contact.Id];
 
-    System.assert(contact.FirstName == 'Harry');
+    Assert.isTrue(contact.FirstName == 'Harry');
   }
 
   @IsTest
@@ -51,7 +51,7 @@ private class DMLTests {
     new DML().doDelete(contact);
     List<Contact> deletedContacts = [SELECT Id, IsDeleted FROM Contact ALL ROWS];
 
-    System.assert(deletedContacts[0].IsDeleted);
+    Assert.isTrue(deletedContacts[0].IsDeleted);
   }
 
   @IsTest
@@ -61,7 +61,7 @@ private class DMLTests {
     new DML().doHardDelete(contact);
     List<Contact> deletedContacts = [SELECT Id, IsDeleted FROM Contact ALL ROWS];
 
-    System.assert(deletedContacts[0].IsDeleted);
+    Assert.isTrue(deletedContacts[0].IsDeleted);
   }
 
   @IsTest
@@ -73,7 +73,7 @@ private class DMLTests {
     dml.doUndelete(contact);
 
     List<Contact> notDeletedContacts = [SELECT Id FROM Contact];
-    System.assert(!notDeletedContacts.isEmpty());
+    Assert.isTrue(!notDeletedContacts.isEmpty());
   }
 
   @IsTest
@@ -83,12 +83,14 @@ private class DMLTests {
     try {
       // this should fail because name is a required field on Account
       new DML().doUpsert(new List<Account>{ one, two });
+      Assert.fail('Should throw in above unit');
     } catch (Exception e) {
+      Assert.isInstanceOfType(e, System.DmlException.class);
       // do nothing, in this case
     }
 
-    System.assertEquals(null, one.Id);
-    System.assertEquals(null, two.Id);
+    Assert.areEqual(null, one.Id);
+    Assert.areEqual(null, two.Id);
   }
 
   @IsTest
@@ -113,7 +115,7 @@ private class DMLTests {
     try {
       new DML().doUpdate(records);
     } catch (Exception ex) {
-      System.assert(false, ex);
+      Assert.isNull(ex, ex.getMessage());
     }
   }
 
@@ -138,16 +140,13 @@ private class DMLTests {
     mock.doUndelete(accs);
 
     DMLMock.RecordsWrapper wrapper = DMLMock.Inserted.ofType(Account.SObjectType);
-    System.assertEquals(accs, wrapper.Records);
-    System.assertEquals(1, wrapper.size());
-    System.assertEquals(accs[0], wrapper.singleOrDefault);
-    System.assertEquals(accs[0], wrapper.firstOrDefault);
+    Assert.areEqual(accs, wrapper.Records);
+    Assert.areEqual(1, wrapper.size());
+    Assert.areEqual(accs[0], wrapper.singleOrDefault);
+    Assert.areEqual(accs[0], wrapper.firstOrDefault);
 
-    Id fakeAccountId = TestingUtils.generateId(Account.SObjectType);
-    System.assertEquals(true, wrapper.hasId(accs[0].Id));
-    System.assertEquals(true, wrapper.hasId(accs[0].Id, Account.Id));
-
-    System.assert(true, 'Should make it here');
+    Assert.areEqual(true, wrapper.hasId(accs[0].Id));
+    Assert.areEqual(true, wrapper.hasId(accs[0].Id, Account.Id));
   }
 
   @IsTest

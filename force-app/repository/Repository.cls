@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.AvoidBooleanMethodParameters,PMD.ExcessiveParameterList,PMD.ExcessivePublicCount')
 public virtual without sharing class Repository implements IRepository {
   private final Map<Schema.SObjectField, String> childToRelationshipNames;
   private final IDML dml;
@@ -26,9 +27,9 @@ public virtual without sharing class Repository implements IRepository {
 
   // SOQL
   public virtual Cursor getCursor(List<Query> queries) {
-    Cursor cursor = new Cursor(
-      Database.getCursorWithBinds(this.getFinalQuery(queries), this.bindVars, this.accessLevel)
-    );
+    String finalQuery = this.getFinalQuery(queries);
+    Cursor cursor = new Cursor(finalQuery, this.bindVars, this.accessLevel);
+    this.clearState();
     this.bindVars.clear();
     return cursor;
   }
@@ -46,6 +47,7 @@ public virtual without sharing class Repository implements IRepository {
       this.accessLevel
     );
     this.bindVars.clear();
+    this.clearState();
     this.shouldAddChildFields = originalValue;
 
     return locator;

@@ -37,11 +37,14 @@ jobs:
       - name: 'Setup node'
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'npm'
 
       - name: 'Install NPM'
         run: npm ci
+
+      - name: 'Static Code Analysis'
+        run: npm run scan
 
       # Authenticate using JWT flow
       - name: 'Auth to dev hub'

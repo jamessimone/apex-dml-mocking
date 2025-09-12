@@ -1,4 +1,4 @@
-public virtual class DML implements IDML {
+public virtual without sharing class DML implements IDML {
   /**
    * To use this class properly, see the Factory class:
    * DML should be injected as a dependency by the factory
@@ -6,7 +6,7 @@ public virtual class DML implements IDML {
    * becomes your one-stop-shop signal for switching to the DMLMock in tests
    */
   @TestVisible
-  private static Integer MAX_DML_CHUNKING = 10;
+  private static final Integer MAX_DML_CHUNKING = 10;
 
   private System.AccessLevel accessLevel = System.AccessLevel.SYSTEM_MODE;
 

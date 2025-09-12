@@ -1,7 +1,7 @@
 @IsTest
 private class AccountHandlerTests {
   @IsTest
-  static void it_should_insert_new_opps_when_accounts_are_inserted() {
+  static void itShouldInsertNewOppsWhenAccountsAreInserted() {
     Account acc = new Account(Name = 'Test Corp.', Id = TestingUtils.generateId(Account.SObjectType));
 
     // this is a unit test; an integration test would have a trigger on Account,
@@ -14,8 +14,8 @@ private class AccountHandlerTests {
       .afterInsert(new List<SObject>{ acc }, new Map<Id, SObject>(new List<SObject>{ acc }));
 
     Opportunity insertedOpp = (Opportunity) DMLMock.Inserted.Opportunities.singleOrDefault;
-    System.assertNotEquals(null, insertedOpp, 'Opp should have been inserted!');
-    System.assertEquals('Prospecting Opp for: Test Corp.', insertedOpp.Name);
-    System.assertEquals(acc.Id, insertedOpp.AccountId);
+    Assert.areNotEqual(null, insertedOpp, 'Opp should have been inserted!');
+    Assert.areEqual('Prospecting Opp for: Test Corp.', insertedOpp.Name);
+    Assert.areEqual(acc.Id, insertedOpp.AccountId);
   }
 }

@@ -61,4 +61,8 @@ public class Aggregation {
   public Boolean equals(Object that) {
     return this.toString() == that.toString();
   }
+
+  public Integer hashCode() {
+    return this.toString().hashCode();
+  }
 }
