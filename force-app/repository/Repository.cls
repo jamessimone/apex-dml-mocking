@@ -28,9 +28,11 @@ public virtual without sharing class Repository implements IRepository {
   // SOQL
   public virtual Cursor getCursor(List<Query> queries) {
     String finalQuery = this.getFinalQuery(queries);
+    System.debug(System.LoggingLevel.DEBUG, 'cursor query:\n' + finalQuery);
     Cursor cursor = new Cursor(finalQuery, this.bindVars, this.accessLevel);
     this.clearState();
     this.bindVars.clear();
+    System.debug(System.LoggingLevel.FINER, 'number of results: ' + cursor.getNumRecords());
     return cursor;
   }
 
@@ -41,6 +43,8 @@ public virtual without sharing class Repository implements IRepository {
   public Database.QueryLocator getQueryLocator(List<Query> queries, Boolean shouldAddChildFields) {
     Boolean originalValue = this.shouldAddChildFields;
     this.shouldAddChildFields = shouldAddChildFields;
+    String finalQuery = this.getFinalQuery(queries);
+    System.debug('query locator query:\n' + finalQuery);
     Database.QueryLocator locator = Database.getQueryLocatorWithBinds(
       this.getFinalQuery(queries),
       this.bindVars,
@@ -293,20 +297,21 @@ public virtual without sharing class Repository implements IRepository {
   private String addWheres(List<Query> queries) {
     List<String> wheres = new List<String>();
     for (Query qry : queries) {
-      String possibleClauseToAdd = this.isSosl ? qry.toSoslString() : qry.toString();
-      if (qry.isSoslEmpty() == false) {
-        wheres.add(possibleClauseToAdd);
+      String possibleWhere = this.isSosl ? qry.toSoslString() : qry.toString();
+      if (qry.isSoslEmpty() == false && String.isNotBlank(possibleWhere)) {
+        wheres.add(possibleWhere);
         this.bindVars.putAll(qry.getBindVars());
       }
     }
-    return wheres.isEmpty() ? '' : '\nWHERE ' + String.join(wheres, '\nAND ');
+    String whereClause = String.join(wheres, '\nAND ');
+    return wheres.isEmpty() || String.isBlank(whereClause) ? '' : '\nWHERE ' + whereClause;
   }
 
   private List<SObject> performQuery(String finalQuery) {
-    System.debug(finalQuery);
+    System.debug(System.LoggingLevel.DEBUG, 'performQuery query:\n' + finalQuery);
     List<SObject> results = Database.queryWithBinds(finalQuery, this.bindVars, this.accessLevel);
     this.clearState();
-    System.debug(System.LoggingLevel.FINER, 'Number of results: ' + results.size() + '\nResults: \n' + results);
+    System.debug(System.LoggingLevel.FINER, 'number of results: ' + results.size() + '\nresults: \n' + results);
     return results;
   }
 
@@ -355,9 +360,9 @@ public virtual without sharing class Repository implements IRepository {
       ' RETURNING ' +
       this.formatAdditionalSoslObjects(orderedSearchObjects);
 
-    System.debug('Search query:\n' + searchQuery);
+    System.debug(System.LoggingLevel.DEBUG, 'search query:\n' + searchQuery);
     List<List<SObject>> results = Search.query(searchQuery, this.accessLevel);
-    System.debug(System.LoggingLevel.FINER, 'Number of results: ' + results.size() + '\nResults: \n' + results);
+    System.debug(System.LoggingLevel.FINER, 'number of results: ' + results.size() + '\nresults: \n' + results);
     this.clearState();
     this.isSosl = false;
     return results;
@@ -434,6 +439,10 @@ public virtual without sharing class Repository implements IRepository {
   }
   public List<Database.SaveResult> publish(List<SObject> events) {
     return this.dml.publish(events);
+  }
+
+  public IDML setOptions(Database.DMLOptions options) {
+    return this.setOptions(options, this.accessLevel);
   }
 
   public IDML setOptions(Database.DMLOptions options, System.AccessLevel accessLevel) {

@@ -1,5 +1,5 @@
 @IsTest
-private class AggregationTests {
+private class AggregationTest {
   @IsTest
   static void shouldCorrectlyFormatSum() {
     String expectedAlias = 'myAlias';

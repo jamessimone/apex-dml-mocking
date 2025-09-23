@@ -11,39 +11,6 @@ public virtual class RepoFactory {
     protected set;
   }
 
-  public IAggregateRepository getOppRepo() {
-    List<Schema.SObjectField> queryFields = new List<Schema.SObjectField>{
-      Opportunity.IsWon,
-      Opportunity.StageName
-      // etc ...
-    };
-    IAggregateRepository oppRepo = this.facade.getRepo(Opportunity.SObjectType, queryFields, this);
-    oppRepo.addParentFields(
-      new List<Schema.SObjectField>{ Opportunity.AccountId },
-      new List<Schema.SObjectField>{ Account.Id }
-    );
-    return oppRepo;
-  }
-
-  public IAggregateRepository getAccountRepo() {
-    IAggregateRepository accountRepo = this.facade.getRepo(
-      Account.SObjectType,
-      new List<Schema.SObjectField>{ Account.Name },
-      this
-    );
-    accountRepo.addChildFields(Contact.AccountId, new List<Schema.SObjectField>{ Contact.LastName });
-    return accountRepo;
-  }
-
-  public IHistoryRepository getOppLineItemRepo() {
-    List<Schema.SObjectField> queryFields = new List<Schema.SObjectField>{
-      OpportunityLineItem.Description,
-      OpportunityLineItem.OpportunityId
-      // etc
-    };
-    return this.facade.getRepo(OpportunityLineItem.SObjectType, queryFields, this);
-  }
-
   public IHistoryRepository getProfileRepo() {
     return this.facade.getRepo(Profile.SObjectType, new List<Schema.SObjectField>{ Profile.Name }, this);
   }
@@ -74,6 +41,9 @@ public virtual class RepoFactory {
       if (potentiallyCachedInstance == null) {
         potentiallyCachedInstance = new FieldLevelHistoryRepo(repoType, queryFields, repoFactory);
         CACHED_REPOS.put(repoType, potentiallyCachedInstance);
+        System.debug(System.LoggingLevel.FINER, 'Instantiating new repository of type: ' + repoType);
+      } else {
+        System.debug(System.LoggingLevel.FINER, 'Using cached repository of type: ' + repoType);
       }
       return potentiallyCachedInstance;
     }

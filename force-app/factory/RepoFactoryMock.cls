@@ -20,6 +20,9 @@ public class RepoFactoryMock extends RepoFactory {
 
   private static final Map<Schema.SObjectType, List<Schema.ChildRelationship>> CACHED_CHILD_RELATIONSHIPS = new Map<Schema.SObjectType, List<Schema.ChildRelationship>>();
 
+  @TestVisible
+  private static Boolean alwaysUseMock = false;
+
   private class ChildrenSObjects {
     public final List<SObject> records;
     public final Boolean done = true;
@@ -84,7 +87,8 @@ public class RepoFactoryMock extends RepoFactory {
       queriedResults.size() > 0 ||
       aggRecords?.size() > 0 ||
       historyRecords?.size() > 0 ||
-      cursorResults?.size() > 0
+      cursorResults?.size() > 0 ||
+      alwaysUseMock == true
     ) {
       RepoMock mock = new RepoMock(sObjectType, repoFactory);
       mock.results.addAll(queriedResults);
@@ -101,7 +105,7 @@ public class RepoFactoryMock extends RepoFactory {
     return repo;
   }
 
-  private static List<SObject> getResults(SObjectType sobjType) {
+  private static List<SObject> getResults(Schema.SObjectType sobjType) {
     List<SObject> resultList = new List<SObject>();
     for (SObject potentialResult : QueryResults) {
       if (potentialResult.getSObjectType() == sobjType) {
@@ -128,6 +132,7 @@ public class RepoFactoryMock extends RepoFactory {
 
     public override List<FieldLevelHistory> getHistory(List<Query> queries) {
       QueriesMade.addAll(queries);
+      this.trackFieldToSortOrder();
       return this.historyRecords;
     }
 
@@ -141,6 +146,7 @@ public class RepoFactoryMock extends RepoFactory {
 
     public override List<SObject> get(List<Query> queries) {
       QueriesMade.addAll(queries);
+      this.trackFieldToSortOrder();
       this.clearState();
       return this.results;
     }
@@ -191,7 +197,18 @@ public class RepoFactoryMock extends RepoFactory {
       }
       localFieldToSortOrders.putAll(this.fieldToSortOrder);
 
+      this.trackFieldToSortOrder();
+
       return this.aggRecords;
+    }
+
+    private void trackFieldToSortOrder() {
+      Map<String, RepositorySortOrder> localFieldToSortOrders = FieldToSortOrders.get(this.repoType);
+      if (localFieldToSortOrders == null) {
+        localFieldToSortOrders = new Map<String, RepositorySortOrder>();
+        FieldToSortOrders.put(this.repoType, localFieldToSortOrders);
+      }
+      localFieldToSortOrders.putAll(this.fieldToSortOrder);
     }
   }
 
@@ -205,7 +222,7 @@ public class RepoFactoryMock extends RepoFactory {
     public override List<SObject> fetch(Integer start, Integer advanceBy) {
       List<SObject> clonedRecords = records.deepClone();
       clonedRecords.clear();
-      for (Integer index = start; index < start + advanceBy; index++) {
+      for (Integer index = start; index < this.getAdvanceBy(start, advanceBy); index++) {
         clonedRecords.add(this.records[index]);
       }
       return clonedRecords;

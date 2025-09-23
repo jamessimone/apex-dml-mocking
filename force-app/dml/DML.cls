@@ -14,8 +14,8 @@ public virtual without sharing class DML implements IDML {
     get {
       if (this.options == null) {
         this.options = new Database.DMLOptions();
-        this.options.OptAllOrNone = true;
       }
+      this.options.OptAllOrNone = this.options.OptAllOrNone ?? true;
       return this.options;
     }
     set;
@@ -81,13 +81,12 @@ public virtual without sharing class DML implements IDML {
     return EventBus.publish(events);
   }
 
+  public DML setOptions(Database.DMLOptions options) {
+    return this.setOptions(options, this.accessLevel);
+  }
+
   public DML setOptions(Database.DMLOptions options, System.AccessLevel accessLevel) {
-    if (options != null) {
-      this.options = options;
-      if (this.options.OptAllOrNone == null) {
-        this.options.OptAllOrNone = true;
-      }
-    }
+    this.options = options ?? this.options;
     this.accessLevel = accessLevel;
     return this;
   }

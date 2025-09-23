@@ -1,5 +1,5 @@
 @IsTest
-private class QueryFieldTests {
+private class QueryFieldTest {
   @IsTest
   static void parentFieldChainsConcatenatedProperly() {
     QueryField queryField = new QueryField(

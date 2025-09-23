@@ -1,5 +1,6 @@
 @SuppressWarnings('PMD.FieldNamingConventions,PMD.PropertyNamingConventions')
-public virtual class DMLMock extends DML {
+@IsTest
+public class DMLMock extends DML {
   public static List<SObject> InsertedRecords = new List<SObject>();
   public static List<SObject> UpsertedRecords = new List<SObject>();
   public static List<SObject> UpdatedRecords = new List<SObject>();
@@ -139,10 +140,10 @@ public virtual class DMLMock extends DML {
     }
 
     public Boolean hasId(Id relatedId, Schema.SObjectField idField) {
-      return this.hasId(relatedId, idField.getDescribe().getName());
+      return this.hasId(relatedId, idField.toString());
     }
 
-    private Boolean hasId(Id relatedId, String idFieldName) {
+    public Boolean hasId(Id relatedId, String idFieldName) {
       for (SObject record : this.recordList) {
         if (record.get(idFieldName) == relatedId) {
           return true;

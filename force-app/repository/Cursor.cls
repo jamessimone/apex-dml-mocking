@@ -6,7 +6,10 @@ public virtual without sharing class Cursor {
     try {
       this.cursor = Database.getCursorWithBinds(finalQuery, bindVars, accessLevel);
     } catch (FatalCursorException e) {
-      // I recommend logging a warning for this using Nebula Logger in your own code
+      System.debug(
+        System.LoggingLevel.WARN,
+        'Error creating cursor. This can happen if there are no records returned by the query: ' + e.getMessage()
+      );
     }
   }
 
@@ -14,10 +17,18 @@ public virtual without sharing class Cursor {
   }
 
   public virtual List<SObject> fetch(Integer start, Integer advanceBy) {
-    return this.cursor?.fetch(start, advanceBy) ?? new List<SObject>();
+    if (this.getNumRecords() == 0) {
+      System.debug(System.LoggingLevel.WARN, 'Bypassing fetch call, no records to fetch');
+      return new List<SObject>();
+    }
+    return this.cursor?.fetch(start, this.getAdvanceBy(start, advanceBy)) ?? new List<SObject>();
   }
 
   public virtual Integer getNumRecords() {
     return this.cursor?.getNumRecords() ?? 0;
+  }
+
+  protected Integer getAdvanceBy(Integer start, Integer advanceBy) {
+    return Math.min(advanceBy, this.getNumRecords() - start);
   }
 }

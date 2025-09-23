@@ -1,5 +1,5 @@
 @IsTest
-private class RepositoryTests {
+private class RepositoryTest {
   @IsTest
   static void itShouldTakeInAQuery() {
     Query basicQuery = Query.equals(ContactPointAddress.PreferenceRank, 1);
@@ -18,7 +18,7 @@ private class RepositoryTests {
     Set<String> cpaNames = new Set<String>{ 'Open', 'Closed' };
 
     Query listQuery = Query.equals(ContactPointAddress.ParentId, ids);
-    Query setQuery = Query.equals(ContactPointAddress.ParentId, setIds);
+    Query setQuery = Query.equals(ContactPointAddress.Id, setIds);
     Query setStringQuery = Query.equals(ContactPointAddress.Name, cpaNames);
 
     IRepository repo = new ContactPointAddressRepo();
@@ -27,8 +27,12 @@ private class RepositoryTests {
     repo.get(setQuery);
     repo.get(setStringQuery);
     Assert.areEqual(3, Limits.getQueries());
-    Assert.areEqual('Name = :bindVar3', setStringQuery.toString());
-    Assert.areEqual(cpaNames, setStringQuery.getBindVars().get('bindVar3'));
+    Assert.areEqual('ParentId = :bindVar0', listQuery.toString());
+    Assert.areEqual(ids, listQuery.getBindVars().get('bindVar0'));
+    Assert.areEqual('Id = :bindVar1', setQuery.toString());
+    Assert.areEqual(setIds, setQuery.getBindVars().get('bindVar1'));
+    Assert.areEqual('Name = :bindVar2', setStringQuery.toString());
+    Assert.areEqual(cpaNames, setStringQuery.getBindVars().get('bindVar2'));
   }
 
   @IsTest
@@ -86,7 +90,7 @@ private class RepositoryTests {
       new List<Schema.SObjectField>{ Group.Id }
     );
 
-    Group grp = new Group(Name = RepositoryTests.class.getName());
+    Group grp = new Group(Name = RepositoryTest.class.getName());
     insert grp;
     GroupMember member = new GroupMember(GroupId = grp.Id, UserOrGroupId = UserInfo.getUserId());
     insert member;

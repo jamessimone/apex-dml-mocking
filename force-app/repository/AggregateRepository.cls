@@ -97,7 +97,10 @@ public without sharing virtual class AggregateRepository extends Repository impl
   }
   public virtual Integer count(List<Query> queries) {
     this.isNumberCountQuery = true;
-    Integer recordCount = Database.countQueryWithBinds(this.getFinalQuery(queries), this.bindVars, this.accessLevel);
+    String finalQuery = this.getFinalQuery(queries);
+    System.debug(System.LoggingLevel.DEBUG, 'count query:\n' + finalQuery);
+    Integer recordCount = Database.countQueryWithBinds(finalQuery, this.bindVars, this.accessLevel);
+    System.debug(System.LoggingLevel.FINER, 'number of results: ' + recordCount);
     this.clearState();
     this.isNumberCountQuery = false;
     return recordCount;

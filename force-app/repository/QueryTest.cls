@@ -1,5 +1,5 @@
 @IsTest
-private class QueryTests {
+private class QueryTest {
   @IsTest
   static void itShouldEncapsulateSobjectFieldsAndValues() {
     Query basicQuery = Query.equals(Opportunity.IsWon, true);

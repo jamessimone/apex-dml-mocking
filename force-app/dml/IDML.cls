@@ -17,5 +17,6 @@ public interface IDML {
   Database.SaveResult publish(SObject platformEvent);
   List<Database.SaveResult> publish(List<SObject> platformEvent);
 
+  IDML setOptions(Database.DMLOptions options);
   IDML setOptions(Database.DMLOptions options, System.AccessLevel accessLevel);
 }

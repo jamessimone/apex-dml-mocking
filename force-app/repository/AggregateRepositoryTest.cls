@@ -1,8 +1,8 @@
 @IsTest
-private class AggregateRepositoryTests {
+private class AggregateRepositoryTest {
   @IsTest
   static void shouldAggregateSum() {
-    Account parent = new Account(Name = AggregateRepositoryTests.class.getName(), NumberOfEmployees = 1);
+    Account parent = new Account(Name = AggregateRepositoryTest.class.getName(), NumberOfEmployees = 1);
     Account secondParent = new Account(Name = 'Second parent', NumberOfEmployees = 1);
     insert new List<Account>{ parent, secondParent };
 
@@ -111,8 +111,10 @@ private class AggregateRepositoryTests {
     AggregateRecord res = new AggregateRecord().putAll(mockAggregateResult);
     RepoFactoryMock.AggregateResults.put(Opportunity.SObjectType, new List<AggregateRecord>{ res });
 
-    List<AggregateRecord> results = new RepoFactory()
-      .setFacade(new RepoFactoryMock.FacadeMock())
+    OppRepoFactory repoFactory = new OppRepoFactory();
+    repoFactory.setFacade(new RepoFactoryMock.FacadeMock());
+
+    List<AggregateRecord> results = repoFactory
       .getOppRepo()
       .groupBy(Opportunity.AccountId)
       .aggregate(new List<Aggregation>{ countOfAmount, sum });
@@ -158,5 +160,21 @@ private class AggregateRepositoryTests {
     Aggregation maxName = Aggregation.max(ContactPointAddress.Name, 'maxName');
     AggregateRecord result = cpaRepo.addSortOrder(maxName, RepositorySortOrder.DESCENDING).aggregate(maxName).get(0);
     Assert.areEqual('D', result.get(maxName.getAlias()));
+  }
+
+  private class OppRepoFactory extends RepoFactory {
+    public IAggregateRepository getOppRepo() {
+      List<Schema.SObjectField> queryFields = new List<Schema.SObjectField>{
+        Opportunity.IsWon,
+        Opportunity.StageName
+        // etc ...
+      };
+      IAggregateRepository oppRepo = this.facade.getRepo(Opportunity.SObjectType, queryFields, this);
+      oppRepo.addParentFields(
+        new List<Schema.SObjectField>{ Opportunity.AccountId },
+        new List<Schema.SObjectField>{ Account.Id }
+      );
+      return oppRepo;
+    }
   }
 }

@@ -2,7 +2,9 @@
   'PMD.EmptyStatementBlock,PMD.ExcessivePublicCount,PMD.ExcessiveParameterList,PMD.FieldNamingConventions'
 )
 public virtual class Query {
+  private Boolean hasBeenCompared = false;
   private Boolean isSoslEmpty = false;
+  private String predicateKey;
 
   public enum Operator {
     EQUALS,
@@ -21,9 +23,9 @@ public virtual class Query {
   private final Object predicate;
   private final Map<String, Object> bindVars = new Map<String, Object>();
 
-  private Boolean hasBeenCompared = false;
-
   private static final String BIND_VAR_MERGE = 'bindVar{0}';
+  private static final String EMPTYISH_STRING = '()';
+
   private static Integer BIND_VAR_NUMBER = 0;
   @TestVisible
   private static Boolean shouldPerformStrictEquals = false;
@@ -160,10 +162,14 @@ public virtual class Query {
     public override String toString() {
       String baseString = '(';
       for (Query innerQuery : this.queries) {
-        baseString += innerQuery.toString() + this.getDelimiter();
-        this.bindVars.putAll(innerQuery.getBindVars());
+        String potentialString = innerQuery.toString();
+        if (String.isNotBlank(potentialString) && potentialString != EMPTYISH_STRING) {
+          baseString += potentialString + this.getDelimiter();
+          this.bindVars.putAll(innerQuery.getBindVars());
+        }
       }
-      return baseString.removeEnd(this.getDelimiter()) + ')';
+      String potentialFinalString = baseString.removeEnd(this.getDelimiter()) + ')';
+      return potentialFinalString == EMPTYISH_STRING ? '' : potentialFinalString;
     }
   }
 
@@ -231,6 +237,10 @@ public virtual class Query {
       startingString = startingString.replace(':' + key, this.getSoslPredicate(this.bindVars.get(key)));
     }
     if (this.predicate instanceof Iterable<Object>) {
+      Iterable<Object> localPredicate = (Iterable<Object>) this.predicate;
+      if (localPredicate.iterator().hasNext() == false) {
+        return '';
+      }
       String operatorToReplace;
       String newOperator;
       switch on this.operator {
@@ -247,7 +257,7 @@ public virtual class Query {
         startingString = startingString.replace(operatorToReplace, newOperator);
       }
     }
-    if (startingString.endsWith('()')) {
+    if (startingString.endsWith(EMPTYISH_STRING)) {
       this.isSoslEmpty = true;
     }
     return startingString;
@@ -315,9 +325,11 @@ public virtual class Query {
     if (predicate == null || predicate instanceof Boolean) {
       return '' + predicate;
     }
-    String predicateKey = String.format(BIND_VAR_MERGE, new List<String>{ BIND_VAR_NUMBER.format() });
-    BIND_VAR_NUMBER++;
-    this.bindVars.put(predicateKey, predicate);
+    if (this.predicateKey == null) {
+      this.predicateKey = String.format(BIND_VAR_MERGE, new List<String>{ BIND_VAR_NUMBER.format() });
+      BIND_VAR_NUMBER++;
+      this.bindVars.put(this.predicateKey, predicate);
+    }
     return ':' + predicateKey;
   }
 
@@ -331,7 +343,7 @@ public virtual class Query {
     } else if (predicate instanceof Iterable<Object>) {
       Iterable<Object> localPredicates = (Iterable<Object>) predicate;
       if (localPredicates.iterator().hasNext() == false) {
-        return '()';
+        return EMPTYISH_STRING;
       }
       List<String> innerStrings = new List<String>();
       for (Object innerPred : localPredicates) {

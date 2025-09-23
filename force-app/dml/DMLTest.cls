@@ -1,5 +1,5 @@
 @IsTest
-private class DMLTests {
+private class DMLTest {
   @TestSetup
   static void setup() {
     Contact con = new Contact(LastName = 'Test1');
