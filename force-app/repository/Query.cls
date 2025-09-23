@@ -330,7 +330,7 @@ public virtual class Query {
       BIND_VAR_NUMBER++;
       this.bindVars.put(this.predicateKey, predicate);
     }
-    return ':' + predicateKey;
+    return ':' + this.predicateKey;
   }
 
   private String getSoslPredicate(Object predicate) {

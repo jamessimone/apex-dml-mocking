@@ -190,13 +190,6 @@ public class RepoFactoryMock extends RepoFactory {
       }
       fields.addAll(this.groupedByFieldNames);
 
-      Map<String, RepositorySortOrder> localFieldToSortOrders = FieldToSortOrders.get(this.repoType);
-      if (localFieldToSortOrders == null) {
-        localFieldToSortOrders = new Map<String, RepositorySortOrder>();
-        FieldToSortOrders.put(this.repoType, localFieldToSortOrders);
-      }
-      localFieldToSortOrders.putAll(this.fieldToSortOrder);
-
       this.trackFieldToSortOrder();
 
       return this.aggRecords;

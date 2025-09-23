@@ -99,7 +99,7 @@ private class DMLTest {
     List<Account> accounts = new List<Account>();
     List<Contact> contacts = new List<Contact>();
 
-    for (Integer i = 0; i < dml.MAX_DML_CHUNKING; i++) {
+    for (Integer i = 0; i < DML.MAX_DML_CHUNKING; i++) {
       Account a = new Account(Name = '' + i);
       accounts.add(a);
       records.add(a);
@@ -160,6 +160,17 @@ private class DMLTest {
 
     Assert.areEqual(true, firstResult.isSuccess());
     Assert.areEqual(true, secondResult.isSuccess());
+  }
+
+  @IsTest
+  static void shouldPassNonNullValueOnOperatonThatDoesNotUseDmlOptions() {
+    Database.DMLOptions dmlOptions = new Database.DMLOptions();
+    dmlOptions.AllowFieldTruncation = true;
+    Contact contact = new Contact(LastName = 'Test2');
+
+    new DML().setOptions(dmlOptions).doUpsert(contact);
+
+    Assert.isNotNull(contact.Id);
   }
 
   @IsTest

@@ -47,6 +47,18 @@ private class RepositoryTest {
   }
 
   @IsTest
+  static void itShouldSearchWithEmptyCollections() {
+    Query listQuery = Query.equals(ContactPointAddress.Id, new List<Id>());
+
+    IRepository repo = new ContactPointAddressRepo();
+
+    List<List<SObject>> results = repo.getSosl('aaa', listQuery);
+    Assert.areEqual(1, results.size());
+    Assert.areEqual(0, results.get(0).size());
+    Assert.areEqual(1, Limits.getSoslQueries());
+  }
+
+  @IsTest
   static void itShouldRespectOrStatementsInQueries() {
     ContactPointAddress cpa = new ContactPointAddress(Name = 'Test Or', PreferenceRank = 1);
     ContactPointAddress secondCpa = new ContactPointAddress(Name = 'Test Or Two', PreferenceRank = 2);

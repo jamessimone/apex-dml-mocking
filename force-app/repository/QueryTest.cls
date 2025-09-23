@@ -241,4 +241,13 @@ private class QueryTest {
 
     Assert.areEqual('Id IN (\'' + String.join(fakeAccountIds, '\',\'') + '\')', query.toSoslString());
   }
+
+  @IsTest
+  static void itDoesNotAddEmptyParenthesisToTheEnd() {
+    Query query = Query.andQuery(
+      new List<Query>{ Query.equals(Account.Id, new List<Id>()), Query.orQuery(new List<Query>()) }
+    );
+
+    Assert.areEqual('(Id = :bindVar0)', query.toString());
+  }
 }
