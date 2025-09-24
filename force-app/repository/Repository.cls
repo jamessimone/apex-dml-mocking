@@ -44,7 +44,7 @@ public virtual without sharing class Repository implements IRepository {
     Boolean originalValue = this.shouldAddChildFields;
     this.shouldAddChildFields = shouldAddChildFields;
     String finalQuery = this.getFinalQuery(queries);
-    System.debug('query locator query:\n' + finalQuery);
+    System.debug(System.LoggingLevel.DEBUG, 'query locator query:\n' + finalQuery);
     Database.QueryLocator locator = Database.getQueryLocatorWithBinds(
       this.getFinalQuery(queries),
       this.bindVars,
