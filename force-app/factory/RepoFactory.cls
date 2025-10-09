@@ -1,5 +1,6 @@
 public virtual class RepoFactory {
   private static final Map<Schema.SObjectType, IHistoryRepository> CACHED_REPOS = new Map<Schema.SObjectType, IHistoryRepository>();
+  private Boolean shouldPrintBindVars = false;
 
   public Facade facade {
     get {
@@ -9,6 +10,11 @@ public virtual class RepoFactory {
       return this.facade;
     }
     protected set;
+  }
+
+  public RepoFactory setShouldPrintBindVars(Boolean shouldPrintBindVars) {
+    this.shouldPrintBindVars = shouldPrintBindVars;
+    return this;
   }
 
   public IHistoryRepository getProfileRepo() {
@@ -45,6 +51,7 @@ public virtual class RepoFactory {
       } else {
         System.debug(System.LoggingLevel.FINER, 'Using cached repository of type: ' + repoType);
       }
+      potentiallyCachedInstance.setShouldPrintBindVars(repoFactory.shouldPrintBindVars);
       return potentiallyCachedInstance;
     }
   }
