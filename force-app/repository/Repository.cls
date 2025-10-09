@@ -12,6 +12,7 @@ public virtual without sharing class Repository implements IRepository {
   protected System.AccessLevel accessLevel = System.AccessLevel.SYSTEM_MODE;
   protected final Map<String, RepositorySortOrder> fieldToSortOrder = new Map<String, RepositorySortOrder>();
 
+  private Boolean shouldPrintBindVars = false;
   private Boolean baseSelectUsed = false;
   private Boolean isSosl = false;
   private Boolean shouldAddChildFields = true;
@@ -28,7 +29,7 @@ public virtual without sharing class Repository implements IRepository {
   // SOQL
   public virtual Cursor getCursor(List<Query> queries) {
     String finalQuery = this.getFinalQuery(queries);
-    System.debug(System.LoggingLevel.DEBUG, 'cursor query:\n' + finalQuery);
+    this.logQuery('cursor query:\n' + finalQuery);
     Cursor cursor = new Cursor(finalQuery, this.bindVars, this.accessLevel);
     this.clearState();
     this.bindVars.clear();
@@ -44,7 +45,7 @@ public virtual without sharing class Repository implements IRepository {
     Boolean originalValue = this.shouldAddChildFields;
     this.shouldAddChildFields = shouldAddChildFields;
     String finalQuery = this.getFinalQuery(queries);
-    System.debug(System.LoggingLevel.DEBUG, 'query locator query:\n' + finalQuery);
+    this.logQuery('query locator query:\n' + finalQuery);
     Database.QueryLocator locator = Database.getQueryLocatorWithBinds(
       this.getFinalQuery(queries),
       this.bindVars,
@@ -118,6 +119,10 @@ public virtual without sharing class Repository implements IRepository {
     }
     this.selectFields.addAll(this.getFunctionBaseFields(selectFunction, fieldNamesToAliases));
     return this;
+  }
+
+  public Repository addParentFields(Schema.SObjectField parentType, List<Schema.SObjectField> parentFields) {
+    return this.addParentFields(new List<Schema.SObjectField>{ parentType }, parentFields);
   }
 
   public Repository addParentFields(List<Schema.SObjectField> parentTypes, List<Schema.SObjectField> parentFields) {
@@ -224,6 +229,11 @@ public virtual without sharing class Repository implements IRepository {
     return this;
   }
 
+  public Repository setShouldPrintBindVars(Boolean shouldPrintBindVars) {
+    this.shouldPrintBindVars = shouldPrintBindVars;
+    return this;
+  }
+
   protected virtual Set<String> addSelectFields() {
     this.baseSelectUsed = true;
     return this.addSelectFields(this.queryFields);
@@ -308,7 +318,7 @@ public virtual without sharing class Repository implements IRepository {
   }
 
   private List<SObject> performQuery(String finalQuery) {
-    System.debug(System.LoggingLevel.DEBUG, 'performQuery query:\n' + finalQuery);
+    this.logQuery('performQuery query:\n' + finalQuery);
     List<SObject> results = Database.queryWithBinds(finalQuery, this.bindVars, this.accessLevel);
     this.clearState();
     System.debug(System.LoggingLevel.FINER, 'number of results: ' + results.size() + '\nresults: \n' + results);
@@ -360,7 +370,7 @@ public virtual without sharing class Repository implements IRepository {
       ' RETURNING ' +
       this.formatAdditionalSoslObjects(orderedSearchObjects);
 
-    System.debug(System.LoggingLevel.DEBUG, 'search query:\n' + searchQuery);
+    this.logQuery('search query:\n' + searchQuery);
     List<List<SObject>> results = Search.query(searchQuery, this.accessLevel);
     System.debug(System.LoggingLevel.FINER, 'number of results: ' + results.size() + '\nresults: \n' + results);
     this.clearState();
@@ -386,6 +396,13 @@ public virtual without sharing class Repository implements IRepository {
       );
     }
     return String.join(objectsPreJoin, ',');
+  }
+
+  protected void logQuery(String logString) {
+    if (this.shouldPrintBindVars) {
+      logString += '\n\nBind vars: ' + JSON.serializePretty(this.bindVars);
+    }
+    System.debug(System.LoggingLevel.DEBUG, logString);
   }
 
   // DML
