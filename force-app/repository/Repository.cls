@@ -32,7 +32,6 @@ public virtual without sharing class Repository implements IRepository {
     this.logQuery('cursor query:\n' + finalQuery);
     Cursor cursor = new Cursor(finalQuery, this.bindVars, this.accessLevel);
     this.clearState();
-    this.bindVars.clear();
     System.debug(System.LoggingLevel.FINER, 'number of results: ' + cursor.getNumRecords());
     return cursor;
   }
@@ -51,7 +50,6 @@ public virtual without sharing class Repository implements IRepository {
       this.bindVars,
       this.accessLevel
     );
-    this.bindVars.clear();
     this.clearState();
     this.shouldAddChildFields = originalValue;
 
@@ -247,6 +245,7 @@ public virtual without sharing class Repository implements IRepository {
   }
 
   protected virtual void clearState() {
+    this.clearBindVars();
     this.fieldToSortOrder.clear();
     this.limitAmount = null;
   }
