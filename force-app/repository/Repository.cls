@@ -5,6 +5,7 @@ public virtual without sharing class Repository implements IRepository {
   @TestVisible
   private final List<Schema.SObjectField> queryFields;
   private final Set<String> selectFields = new Set<String>();
+  private final Set<String> childBindVarKeys = new Set<String>();
 
   protected final Schema.SObjectType repoType;
   protected final Map<String, Object> bindVars = new Map<String, Object>();
@@ -208,6 +209,10 @@ public virtual without sharing class Repository implements IRepository {
       childFieldNames.add(childField.toString());
     }
 
+    for (Query query : optionalWhereFilters) {
+      this.childBindVarKeys.addAll(query.getBindVars().keySet());
+    }
+
     this.selectFields.add(
       String.format(
         baseSubselect,
@@ -223,7 +228,11 @@ public virtual without sharing class Repository implements IRepository {
   }
 
   public Repository clearBindVars() {
-    this.bindVars.clear();
+    for (String key : this.bindVars.keySet()) {
+      if (this.childBindVarKeys.contains(key) == false) {
+        this.bindVars.remove(key);
+      }
+    }
     return this;
   }
 
@@ -312,6 +321,7 @@ public virtual without sharing class Repository implements IRepository {
         this.bindVars.putAll(qry.getBindVars());
       }
     }
+
     String whereClause = String.join(wheres, '\nAND ');
     return wheres.isEmpty() || String.isBlank(whereClause) ? '' : '\nWHERE ' + whereClause;
   }

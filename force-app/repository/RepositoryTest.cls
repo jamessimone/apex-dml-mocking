@@ -226,6 +226,10 @@ private class RepositoryTest {
     List<Account> accounts = repo.getAll();
     Assert.areEqual(1, accounts.size());
     Assert.areEqual(1, accounts.get(0).Contacts.size());
+    // verify that filters can be used multiple times
+    accounts = repo.getAll();
+    Assert.areEqual(1, accounts.size());
+    Assert.areEqual(1, accounts.get(0).Contacts.size());
   }
 
   @IsTest
@@ -388,7 +392,6 @@ private class RepositoryTest {
 
   @IsTest
   static void itAddsFunctionFieldWithoutAlias() {
-    // Arrange
     Account acc = new Account(
       Name = 'hello world',
       Industry = Account.Industry.getDescribe().getPicklistValues().get(0).getValue()
@@ -398,12 +401,10 @@ private class RepositoryTest {
     IRepository repo = new AccountRepo();
     repo.addFunctionBaseField(SelectFunction.TOLABEL, Account.Industry);
 
-    // Act
     Test.startTest();
     List<Account> results = repo.setLimit(1).getAll();
     Test.stopTest();
 
-    // Assert
     Assert.areEqual(
       Account.Industry.getDescribe().getPicklistValues().get(0).getLabel(),
       results.get(0).Industry,
@@ -413,7 +414,6 @@ private class RepositoryTest {
 
   @IsTest
   static void itAddsBaseFieldAndFunctionFieldWithAutomaticAlias() {
-    // Arrange
     Date activeFromDate = Date.newInstance(2001, 1, 1);
     ContactPointAddress cpa = new ContactPointAddress(
       Name = 'hello world',
@@ -429,13 +429,11 @@ private class RepositoryTest {
     String activeFromDateFormatted;
     List<ContactPointAddress> results = new List<ContactPointAddress>();
 
-    // Act
     Test.startTest();
     results = repo.setLimit(1).getAll();
     activeFromDateFormatted = activeFromDate.format();
     Test.stopTest();
 
-    // Assert
     Assert.isNotNull(results.get(0).ActiveFromDate, 'ActiveFromDate should not be null');
     Assert.areEqual(
       activeFromDateFormatted,
@@ -446,7 +444,6 @@ private class RepositoryTest {
 
   @IsTest
   static void itAddsBaseFieldAndFunctionFieldWithManualAlias() {
-    // Arrange
     Date activeFromDate = Date.newInstance(2001, 1, 1);
     ContactPointAddress cpa = new ContactPointAddress(
       Name = 'hello world',
@@ -465,13 +462,11 @@ private class RepositoryTest {
     String activeFromDateFormatted;
     List<ContactPointAddress> results = new List<ContactPointAddress>();
 
-    // Act
     Test.startTest();
     results = repo.setLimit(1).getAll();
     activeFromDateFormatted = activeFromDate.format();
     Test.stopTest();
 
-    // Assert
     Assert.isNotNull(results.get(0).ActiveFromDate, 'ActiveFromDate should not be null');
     Assert.areEqual(
       activeFromDateFormatted,
