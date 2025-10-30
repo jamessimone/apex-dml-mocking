@@ -55,6 +55,10 @@ You can have as many Factories as you'd like. I like to break my Factories out b
 
 It's a pretty standard approach. You might choose to break things down by (business) domain. There's no right way.
 
+## Lazy-Loading Dependencies
+
+The one (possible) downside to using a big Factory class comes with respect to runtime performance when referencing the factory. This is because the Apex compiler "spiders" out, loading type signatures referenced by public methods. While this performance hit is typically negligible, there are some niche use-cases where loading _every_ class reference you need means a performance hit that you can't afford to take. For these cases, consider using the [LazyFactory](force-app/factory/LazyFactory.cls) approach - initializing it directly within your dependencies, and using getters within the `LazyFactory` to reference the dependencies you need. By using getters (see the example in [LazyFactoryTest](force-app/factory/LazyFactoryTest.cls)), you can delay the type-loading and spidering until a dependency is actually used.
+
 ## Package-Based Development
 
 These repository (as of 18 May 2023) has been slightly reworked to provide better support for package-based development. The updates are primarily to show how the `example-app` folder can be in a completely separate package while still allowing for strongly-typed references (and package-specific factories and repo factories) to be referenced properly. For a concrete example, check out:
