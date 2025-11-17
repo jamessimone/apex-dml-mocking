@@ -215,7 +215,7 @@ public class RepoFactoryMock extends RepoFactory {
     public override List<SObject> fetch(Integer start, Integer advanceBy) {
       List<SObject> clonedRecords = records.deepClone();
       clonedRecords.clear();
-      for (Integer index = start; index < this.getAdvanceBy(start, advanceBy); index++) {
+      for (Integer index = start; index < this.getAdvanceBy(start, advanceBy) + start; index++) {
         clonedRecords.add(this.records[index]);
       }
       return clonedRecords;

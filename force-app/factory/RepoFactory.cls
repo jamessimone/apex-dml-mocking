@@ -12,6 +12,7 @@ public virtual class RepoFactory {
     protected set;
   }
 
+  @SuppressWarnings('PMD.AvoidBooleanMethodParameters')
   public RepoFactory setShouldPrintBindVars(Boolean shouldPrintBindVars) {
     this.shouldPrintBindVars = shouldPrintBindVars;
     return this;
