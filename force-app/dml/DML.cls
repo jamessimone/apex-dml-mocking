@@ -31,8 +31,7 @@ public virtual without sharing class DML implements IDML {
   }
 
   public virtual Database.SaveResult doInsert(SObject record) {
-    log(OperationLoggingValue.INSERTING, record);
-    return Database.insert(record, this.options, this.accessLevel);
+    return this.doInsert(new List<SObject>{ record })[0];
   }
   public virtual List<Database.SaveResult> doInsert(List<SObject> records) {
     this.sortToPreventChunkingErrors(records);
@@ -41,8 +40,7 @@ public virtual without sharing class DML implements IDML {
   }
 
   public virtual Database.SaveResult doUpdate(SObject record) {
-    log(OperationLoggingValue.UPDATING, record);
-    return Database.update(record, this.options, this.accessLevel);
+    return this.doUpdate(new List<SObject>{ record })[0];
   }
   public virtual List<Database.SaveResult> doUpdate(List<SObject> records) {
     this.sortToPreventChunkingErrors(records);
@@ -51,8 +49,7 @@ public virtual without sharing class DML implements IDML {
   }
 
   public virtual Database.UpsertResult doUpsert(SObject record) {
-    log(OperationLoggingValue.UPSERTING, record);
-    return Database.upsert(record, this.options.OptAllOrNone, this.accessLevel);
+    return this.doUpsert(new List<SObject>{ record })[0];
   }
 
   public virtual List<Database.UpsertResult> doUpsert(List<SObject> records) {
@@ -68,8 +65,7 @@ public virtual without sharing class DML implements IDML {
   }
 
   public virtual Database.UndeleteResult doUndelete(SObject record) {
-    log(OperationLoggingValue.UNDELETING, record);
-    return Database.undelete(record, this.options.OptAllOrNone, this.accessLevel);
+    return this.doUndelete(new List<SObject>{ record })[0];
   }
   public virtual List<Database.UndeleteResult> doUndelete(List<SObject> records) {
     log(OperationLoggingValue.UNDELETING, records);
@@ -77,8 +73,7 @@ public virtual without sharing class DML implements IDML {
   }
 
   public virtual Database.DeleteResult doDelete(SObject record) {
-    log(OperationLoggingValue.DELETING, record);
-    return Database.delete(record, this.options.OptAllOrNone, this.accessLevel);
+    return this.doDelete(new List<SObject>{ record })[0];
   }
   public virtual List<Database.DeleteResult> doDelete(List<SObject> records) {
     log(OperationLoggingValue.DELETING, records);
