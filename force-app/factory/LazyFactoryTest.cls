@@ -1,5 +1,7 @@
 @IsTest
 private class LazyFactoryTest {
+  private static Integer loadCounter = 0;
+
   @IsTest
   static void properlyCachesLazyLoadedInstances() {
     ExtendedLazyFactory extendedExampleFactory = new ExtendedLazyFactory();
@@ -21,7 +23,6 @@ private class LazyFactoryTest {
     }
   }
 
-  private static Integer loadCounter = 0;
   private class Example implements LazyFactory.Instance {
     public Example() {
       loadCounter++;
