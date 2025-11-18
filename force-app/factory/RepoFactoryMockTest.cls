@@ -17,10 +17,10 @@ private class RepoFactoryMockTest {
   @IsTest
   static void addsMockCursor() {
     Account acc = new Account(Id = TestingUtils.generateId(Schema.Account.SObjectType));
-    List<Account> accounts = new List<Account>{ acc };
+    Account secondAccount = new Account(Id = TestingUtils.generateId(Schema.Account.SObjectType));
     RepoFactoryMock.CursorResults.put(
       Account.SObjectType,
-      new List<Cursor>{ new RepoFactoryMock.CursorMock(accounts) }
+      new List<Cursor>{ new RepoFactoryMock.CursorMock(new List<Account>{ acc, secondAccount }) }
     );
 
     RepoFactoryMock.FacadeMock facade = new RepoFactoryMock.FacadeMock();
@@ -31,7 +31,9 @@ private class RepoFactoryMockTest {
     );
     Cursor cursor = repo.getCursor(new List<Query>());
 
-    Assert.areEqual(1, cursor.getNumRecords());
+    Assert.areEqual(2, cursor.getNumRecords());
     Assert.areEqual(acc.Id, cursor.fetch(0, 1)[0].Id);
+    // verify we don't overindex past the actual cursor end
+    Assert.areEqual(secondAccount.Id, cursor.fetch(1, 3)[0].Id);
   }
 }
