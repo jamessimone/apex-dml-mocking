@@ -1,6 +1,7 @@
 @SuppressWarnings('PMD.AvoidBooleanMethodParameters,PMD.ExcessiveParameterList,PMD.ExcessivePublicCount')
 public virtual without sharing class Repository implements IRepository {
   private final Map<Schema.SObjectField, String> childToRelationshipNames;
+  private final Map<String, String> relationshipNameToChildQuery = new Map<String, String>();
   private final IDML dml;
   @TestVisible
   private final List<Schema.SObjectField> queryFields;
@@ -174,6 +175,7 @@ public virtual without sharing class Repository implements IRepository {
   ) {
     Repository cr = (Repository) childRepo;
     cr.selectFields.addAll(cr.addSelectFields());
+    cr.selectFields.addAll(cr.relationshipNameToChildQuery.values());
     Set<String> localSelectFields = cr.selectFields;
     localSelectFields.remove('Id');
 
@@ -213,12 +215,12 @@ public virtual without sharing class Repository implements IRepository {
       this.childBindVarKeys.addAll(query.getBindVars().keySet());
     }
 
-    this.selectFields.add(
-      String.format(
-        baseSubselect,
-        new List<String>{ String.join(childFieldNames, ','), this.childToRelationshipNames.get(childFieldToken) }
-      )
+    String relationshipName = this.childToRelationshipNames.get(childFieldToken);
+    String childFieldsToAdd = String.format(
+      baseSubselect,
+      new List<String>{ String.join(childFieldNames, ','), this.childToRelationshipNames.get(childFieldToken) }
     );
+    this.relationshipNameToChildQuery.put(relationshipName, childFieldsToAdd);
     return this;
   }
 
@@ -301,6 +303,7 @@ public virtual without sharing class Repository implements IRepository {
       localSelectFields.addAll(this.selectFields);
       this.baseSelectUsed = false;
     }
+    localSelectFields.addAll(this.relationshipNameToChildQuery.values());
     return 'SELECT ' + String.join(localSelectFields, ', ') + '\nFROM ' + this.repoType;
   }
 

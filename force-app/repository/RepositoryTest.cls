@@ -145,6 +145,52 @@ private class RepositoryTest {
   }
 
   @IsTest
+  static void itSupportsCallingAddChildFieldsWithSameArgumentsTwice() {
+    IRepository repo = new AccountRepo()
+      .addChildFields(
+        Contact.AccountId,
+        new List<QueryField>{
+          new QueryField(Contact.AccountId),
+          new QueryField(Contact.LastName),
+          new QueryField(
+            new List<Schema.SObjectField>{ Contact.AccountId },
+            new List<Schema.SObjectField>{ Account.Name }
+          )
+        },
+        new List<Query>{ Query.notEquals(Account.Name, 'somepredicate') },
+        new Map<String, RepositorySortOrder>(),
+        1
+      );
+    repo.addChildFields(
+      Contact.AccountId,
+      new List<QueryField>{
+        new QueryField(Contact.AccountId),
+        new QueryField(Contact.LastName),
+        new QueryField(
+          new List<Schema.SObjectField>{ Contact.AccountId },
+          new List<Schema.SObjectField>{ Account.Name }
+        )
+      },
+      new List<Query>{ Query.notEquals(Account.Name, 'somepredicate') },
+      new Map<String, RepositorySortOrder>(),
+      1
+    );
+
+    Account acc = new Account(Name = 'Parent');
+    insert acc;
+    Contact con = new Contact(AccountId = acc.Id, LastName = 'Child');
+    insert con;
+
+    List<Account> accounts = repo.getAll();
+
+    Assert.areEqual(1, accounts.size());
+    Assert.areEqual(1, accounts.get(0).Contacts.size());
+    Contact returnedCon = accounts.get(0).Contacts.get(0);
+    Assert.areEqual(con.LastName, returnedCon.LastName);
+    Assert.areEqual(acc.Name, returnedCon.Account.Name);
+  }
+
+  @IsTest
   static void itShouldAddChildFieldsFromRepo() {
     IRepository repo = new AccountRepo()
       .addChildFields(
