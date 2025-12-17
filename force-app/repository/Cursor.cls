@@ -40,6 +40,7 @@ public virtual without sharing class Cursor {
     return this;
   }
 
+  @SuppressWarnings('PMD.EmptyStatementBlock')
   protected Cursor() {
   }
 
