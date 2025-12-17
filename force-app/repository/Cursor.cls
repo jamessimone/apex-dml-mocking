@@ -1,12 +1,22 @@
 public virtual without sharing class Cursor {
-  @TestVisible
-  private static Integer maxFetchSize = 2000;
+  public static final Integer MAX_FETCH_SIZE {
+    get {
+      MAX_FETCH_SIZE = MAX_FETCH_SIZE ?? maxRecordsPerFetchCall;
+      return MAX_FETCH_SIZE;
+    }
+    private set;
+  }
+
   private static final Integer MAX_FETCHES_PER_TRANSACTION = Limits.getLimitFetchCallsOnApexCursor();
+
+  @TestVisible
+  private static Integer maxRecordsPerFetchCall = 2000;
+
   @TestVisible
   private static Integer localFetchesMade;
 
   private Integer cursorNumRecords;
-  private Integer fetchesPerTransaction = 1;
+  private Integer fetchesPerTransaction = MAX_FETCHES_PER_TRANSACTION;
   private final Database.Cursor cursor;
 
   public Cursor(String finalQuery, Map<String, Object> bindVars, System.AccessLevel accessLevel) {
@@ -66,24 +76,22 @@ public virtual without sharing class Cursor {
   }
 
   public virtual Integer getNumRecords() {
-    // cache the value for now, as changes made to Apex Cursors currently have calling getNumRecords()
-    // consume a SOQL query each time
     this.cursorNumRecords = this.cursorNumRecords ?? this.cursor?.getNumRecords() ?? 0;
     return this.cursorNumRecords;
   }
 
   protected Integer getAdvanceBy(Integer start, Integer advanceBy) {
     Integer possibleFetchSize = Math.min(advanceBy, this.getNumRecords() - start);
-    if (possibleFetchSize > maxFetchSize) {
+    if (possibleFetchSize > maxRecordsPerFetchCall) {
       System.debug(
         System.LoggingLevel.DEBUG,
         'Fetch size: ' +
           possibleFetchSize +
           ' exceeded platform max fetch size of ' +
-          maxFetchSize +
+          maxRecordsPerFetchCall +
           ', defaulting to max fetch size'
       );
-      possibleFetchSize = maxFetchSize;
+      possibleFetchSize = maxRecordsPerFetchCall;
     } else if (possibleFetchSize < 0) {
       possibleFetchSize = 0;
     }

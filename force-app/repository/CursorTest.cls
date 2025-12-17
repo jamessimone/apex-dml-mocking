@@ -15,15 +15,16 @@ private class CursorTest {
   }
 
   @IsTest
-  static void itCapsMaxFetchSize() {
-    Cursor.maxFetchSize = 20;
+  static void itCapsmaxRecordsPerFetchCall() {
+    Cursor.maxRecordsPerFetchCall = 20;
+    Integer oneMoreThanMaxFetch = Cursor.maxRecordsPerFetchCall + 1;
+
     List<Account> accounts = new List<Account>();
-    for (Integer i = 0; i < Cursor.maxFetchSize + 1; i++) {
+    for (Integer i = 0; i < oneMoreThanMaxFetch; i++) {
       accounts.add(new Account(Name = 'Fetch ' + i));
     }
     insert accounts;
 
-    Integer oneMoreThanMaxFetch = Cursor.maxFetchSize + 1;
     Exception ex;
     List<SObject> results;
     Cursor instance = new Cursor('SELECT Id FROM Account', new Map<String, Object>(), System.AccessLevel.SYSTEM_MODE);
@@ -34,27 +35,27 @@ private class CursorTest {
     }
 
     Assert.areEqual(null, ex?.getMessage());
-    Assert.areEqual(Cursor.maxFetchSize, results.size());
-    Assert.areEqual(1, Cursor.localFetchesMade);
+    Assert.areEqual(2, Cursor.localFetchesMade);
+    Assert.areEqual(oneMoreThanMaxFetch, results.size());
   }
 
   @IsTest
   static void itFetchesMultipleTimesPerTransactionWhenMoreThanMaxFetch() {
-    Cursor.maxFetchSize = 20;
+    Cursor.maxRecordsPerFetchCall = 20;
     List<Account> accounts = new List<Account>();
     Set<String> expectedFetchNames = new Set<String>();
-    for (Integer i = 0; i < Cursor.maxFetchSize + 1; i++) {
+    for (Integer i = 0; i < Cursor.maxRecordsPerFetchCall + 1; i++) {
       String accountName = 'Fetch' + i;
       expectedFetchNames.add(accountName);
       accounts.add(new Account(Name = accountName));
     }
     insert accounts;
 
-    Integer oneMoreThanMaxFetch = Cursor.maxFetchSize + 1;
+    Integer oneMoreThanMaxFetch = Cursor.maxRecordsPerFetchCall + 1;
     Cursor instance = new Cursor('SELECT Name FROM Account', new Map<String, Object>(), System.AccessLevel.SYSTEM_MODE);
     List<SObject> results = instance.setFetchesPerTransaction(2).fetch(0, oneMoreThanMaxFetch);
 
-    Assert.areEqual(Cursor.maxFetchSize + 1, results.size());
+    Assert.areEqual(Cursor.maxRecordsPerFetchCall + 1, results.size());
     Assert.areEqual(2, Cursor.localFetchesMade);
     Set<String> actuallyFetchedNames = new Set<String>();
     for (Account account : (List<Account>) results) {
@@ -65,7 +66,7 @@ private class CursorTest {
 
   @IsTest
   static void itFetchesMultipleTimesPerTransaction() {
-    Cursor.maxFetchSize = 1;
+    Cursor.maxRecordsPerFetchCall = 1;
     insert new List<Account>{ new Account(Name = 'One'), new Account(Name = 'Two') };
 
     Cursor instance = new Cursor('SELECT Id FROM Account', new Map<String, Object>(), System.AccessLevel.SYSTEM_MODE)
