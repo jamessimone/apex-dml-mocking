@@ -1,8 +1,11 @@
-@SuppressWarnings('PMD.EmptyCatchBlock,PMD.EmptyStatementBlock')
 public virtual without sharing class Cursor {
-  private static final Integer MAX_FETCH_SIZE = 2000;
+  @TestVisible
+  private static Integer maxFetchSize = 2000;
   private static final Integer MAX_FETCHES_PER_TRANSACTION = Limits.getLimitFetchCallsOnApexCursor();
+  @TestVisible
+  private static Integer localFetchesMade;
 
+  private Integer cursorNumRecords;
   private Integer fetchesPerTransaction = 1;
   private final Database.Cursor cursor;
 
@@ -45,33 +48,41 @@ public virtual without sharing class Cursor {
       System.debug(System.LoggingLevel.DEBUG, 'Bypassing fetch call, no records to fetch');
       return new List<SObject>();
     }
-    Integer localFetchesMade = 0;
+    localFetchesMade = localFetchesMade ?? 0;
     Integer localStart = start;
     List<SObject> results = new List<SObject>();
-    while (localFetchesMade < this.fetchesPerTransaction) {
-      results.addAll(this.cursor?.fetch(start, this.getAdvanceBy(start, advanceBy)) ?? new List<SObject>());
-      localStart += advanceBy;
+    while (
+      localFetchesMade < this.fetchesPerTransaction &&
+      results.size() < this.getNumRecords() &&
+      localStart < start + advanceBy
+    ) {
+      Integer actualAdvanceBy = this.getAdvanceBy(localStart, advanceBy);
+      results.addAll(this.cursor?.fetch(localStart, actualAdvanceBy) ?? new List<SObject>());
+      localStart += actualAdvanceBy;
       localFetchesMade++;
     }
     return results;
   }
 
   public virtual Integer getNumRecords() {
-    return this.cursor?.getNumRecords() ?? 0;
+    // cache the value for now, as changes made to Apex Cursors currently have calling getNumRecords()
+    // consume a SOQL query each time
+    this.cursorNumRecords = this.cursorNumRecords ?? this.cursor?.getNumRecords() ?? 0;
+    return this.cursorNumRecords;
   }
 
   protected Integer getAdvanceBy(Integer start, Integer advanceBy) {
     Integer possibleFetchSize = Math.min(advanceBy, this.getNumRecords() - start);
-    if (possibleFetchSize > MAX_FETCH_SIZE) {
+    if (possibleFetchSize > maxFetchSize) {
       System.debug(
         System.LoggingLevel.DEBUG,
         'Fetch size: ' +
           possibleFetchSize +
           ' exceeded platform max fetch size of ' +
-          MAX_FETCH_SIZE +
+          maxFetchSize +
           ', defaulting to max fetch size'
       );
-      possibleFetchSize = MAX_FETCH_SIZE;
+      possibleFetchSize = maxFetchSize;
     } else if (possibleFetchSize < 0) {
       possibleFetchSize = 0;
     }
