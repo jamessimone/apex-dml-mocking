@@ -1,14 +1,20 @@
 {
   "packageDirectories": [
     {
+      "versionName": "ver 1.0",
+      "versionNumber": "1.0.0.NEXT",
       "path": "force-app",
-      "default": true
-    },
-    {
-      "path": "example-app"
+      "default": true,
+      "package": "ApexDmlMocking",
+      "versionDescription": ""
     }
   ],
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "64.0"
+  "sourceApiVersion": "64.0",
+  "packageAliases": {
+    "Apex DML Mocking": "0HoOZ00000001Tx0AI",
+    "ApexDmlMocking": "0HoOZ00000001Tx0AI",
+    "Apex DML Mocking@1.0.0-1": "04tOZ0000006pmDYAQ"
+  }
 }
