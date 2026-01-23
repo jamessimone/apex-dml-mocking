@@ -222,13 +222,32 @@ public virtual class Query {
   }
 
   public virtual override String toString() {
+    if (this.predicate instanceof Iterable<Object>) {
+      Iterable<Object> localPredicate = (Iterable<Object>) this.predicate;
+      if (localPredicate.iterator().hasNext() == false) {
+        return '';
+      }
+    }
     String predicateValue = this.getPredicate(this.predicate);
     String printedValue = ' ' + (shouldPerformStrictEquals ? this.predicate : predicateValue);
     if (this.operator == Query.Operator.NOT_LIKE) {
       // who knows why this is the format they wanted
       return String.format(this.getOperator(), new List<String>{ this.field }) + printedValue;
     }
-    return this.field + ' ' + this.getOperator() + printedValue;
+    String op = this.getOperator();
+    
+    if (this.predicate instanceof Iterable<Object>) {
+      switch on this.operator {
+        when EQUALS {
+          op = 'IN';
+        }
+        when NOT_EQUALS {
+          op = 'NOT IN';
+        }
+      }
+    }
+
+    return this.field + ' ' + op + printedValue;
   }
 
   public String toSoslString() {

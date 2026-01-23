@@ -3,3 +3,5 @@
 .vscode/
 yarn.lock
 node_modules/
+hardis-report/
+config/user/
