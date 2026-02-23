@@ -65,6 +65,13 @@ private class DMLTest {
   }
 
   @IsTest
+  static void hardDeleteDoesNotThrowWithEmptyList() {
+    new DML().doHardDelete(new List<SObject>());
+
+    Assert.isTrue(true, 'Made it here');
+  }
+
+  @IsTest
   static void shouldPerformUndelete() {
     Contact contact = [SELECT Id FROM Contact];
 

@@ -1,4 +1,4 @@
-@SuppressWarnings('PMD.FieldNamingConventions')
+@SuppressWarnings('PMD.CognitiveComplexity,PMD.FieldNamingConventions')
 @IsTest
 public class RepoFactoryMock extends RepoFactory {
   @TestVisible

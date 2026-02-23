@@ -1,4 +1,6 @@
-@SuppressWarnings('PMD.AvoidBooleanMethodParameters,PMD.ExcessiveParameterList,PMD.ExcessivePublicCount,PMD.TooManyFields')
+@SuppressWarnings(
+  'PMD.CognitiveComplexity,PMD.CyclomaticComplexity,PMD.AvoidBooleanMethodParameters,PMD.ExcessiveParameterList,PMD.ExcessivePublicCount,PMD.TooManyFields'
+)
 public virtual without sharing class Repository implements IRepository {
   private final Map<Schema.SObjectField, String> childToRelationshipNames;
   private final Map<String, String> relationshipNameToChildQuery = new Map<String, String>();

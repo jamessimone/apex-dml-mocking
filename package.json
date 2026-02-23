@@ -14,7 +14,8 @@
   },
   "scripts": {
     "prettier": "prettier --write \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,yaml,yml}\"",
-    "scan": "sf code-analyzer run -r pmd:1 -r pmd:2 -r pmd:3 --workspace force-app"
+    "scan": "sf code-analyzer run -r pmd:1 -r pmd:2 -r pmd:3 --workspace force-app",
+    "test": "sf apex run test --suite-names ApexDmlMocking -w 15 -c"
   },
   "keywords": [
     "apex",

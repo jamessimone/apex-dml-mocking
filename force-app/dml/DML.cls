@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.CognitiveComplexity')
 public virtual without sharing class DML implements IDML {
   /**
    * To use this class properly, see the Factory class:
@@ -85,6 +86,9 @@ public virtual without sharing class DML implements IDML {
   }
   public virtual List<Database.DeleteResult> doHardDelete(List<SObject> records) {
     List<Database.DeleteResult> results = this.doDelete(records);
+    if (records.isEmpty()) {
+      return results;
+    }
     System.debug(System.LoggingLevel.FINE, 'emptying recycling bin...');
     Database.emptyRecycleBin(records);
     return results;
@@ -120,7 +124,7 @@ public virtual without sharing class DML implements IDML {
   private static void log(OperationLoggingValue loggingValue, Object recordOrRecords) {
     Integer size = (recordOrRecords instanceof List<SObject>) ? ((List<SObject>) recordOrRecords).size() : 1;
     System.debug(
-      System.LoggingLevel.FINE,
+      System.LoggingLevel.FINEST,
       loggingValue.name().toLowerCase() + ' ' + size + ' record' + (size > 1 ? 's' : '') + '...'
     );
   }

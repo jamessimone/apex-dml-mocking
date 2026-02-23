@@ -1,4 +1,14 @@
 public virtual without sharing class Cursor {
+  private static final Integer MAX_FETCHES_PER_TRANSACTION = Limits.getLimitFetchCallsOnApexCursor();
+
+  @TestVisible
+  private static Integer maxRecordsPerFetchCall = 2000;
+
+  private Integer cursorNumRecords;
+  private Integer fetchesPerTransaction = MAX_FETCHES_PER_TRANSACTION;
+  private final Database.Cursor cursor;
+
+  @SuppressWarnings('PMD.PropertyNamingConventions')
   public static final Integer MAX_FETCH_SIZE {
     get {
       MAX_FETCH_SIZE = MAX_FETCH_SIZE ?? maxRecordsPerFetchCall;
@@ -6,18 +16,6 @@ public virtual without sharing class Cursor {
     }
     private set;
   }
-
-  private static final Integer MAX_FETCHES_PER_TRANSACTION = Limits.getLimitFetchCallsOnApexCursor();
-
-  @TestVisible
-  private static Integer maxRecordsPerFetchCall = 2000;
-
-  @TestVisible
-  private static Integer localFetchesMade;
-
-  private Integer cursorNumRecords;
-  private Integer fetchesPerTransaction = MAX_FETCHES_PER_TRANSACTION;
-  private final Database.Cursor cursor;
 
   public Cursor(String finalQuery, Map<String, Object> bindVars, System.AccessLevel accessLevel) {
     try {
@@ -59,18 +57,16 @@ public virtual without sharing class Cursor {
       System.debug(System.LoggingLevel.DEBUG, 'Bypassing fetch call, no records to fetch');
       return new List<SObject>();
     }
-    localFetchesMade = localFetchesMade ?? 0;
     Integer localStart = start;
     List<SObject> results = new List<SObject>();
     while (
-      localFetchesMade < this.fetchesPerTransaction &&
+      Limits.getFetchCallsOnApexCursor() <= this.fetchesPerTransaction &&
       results.size() < this.getNumRecords() &&
       localStart < start + advanceBy
     ) {
       Integer actualAdvanceBy = this.getAdvanceBy(localStart, advanceBy);
       results.addAll(this.cursor?.fetch(localStart, actualAdvanceBy) ?? new List<SObject>());
       localStart += actualAdvanceBy;
-      localFetchesMade++;
     }
     return results;
   }

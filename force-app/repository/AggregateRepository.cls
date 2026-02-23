@@ -1,3 +1,4 @@
+@SuppressWarnings('PMD.CognitiveComplexity')
 public without sharing virtual class AggregateRepository extends Repository implements IAggregateRepository {
   protected final Set<GroupBy> groupedByFieldNames = new Set<GroupBy>();
   private final Set<String> havingFields = new Set<String>();

@@ -35,7 +35,7 @@ private class CursorTest {
     }
 
     Assert.areEqual(null, ex?.getMessage());
-    Assert.areEqual(2, Cursor.localFetchesMade);
+    Assert.areEqual(2, Limits.getFetchCallsOnApexCursor());
     Assert.areEqual(oneMoreThanMaxFetch, results.size());
   }
 
@@ -56,7 +56,7 @@ private class CursorTest {
     List<SObject> results = instance.setFetchesPerTransaction(2).fetch(0, oneMoreThanMaxFetch);
 
     Assert.areEqual(Cursor.maxRecordsPerFetchCall + 1, results.size());
-    Assert.areEqual(2, Cursor.localFetchesMade);
+    Assert.areEqual(2, Limits.getFetchCallsOnApexCursor());
     Set<String> actuallyFetchedNames = new Set<String>();
     for (Account account : (List<Account>) results) {
       actuallyFetchedNames.add(account.Name);
@@ -92,6 +92,6 @@ private class CursorTest {
     List<SObject> results = instance.fetch(0, 2);
 
     Assert.areEqual(2, results.size(), '' + results);
-    Assert.areEqual(1, Cursor.localFetchesMade);
+    Assert.areEqual(1, Limits.getFetchCallsOnApexCursor());
   }
 }
