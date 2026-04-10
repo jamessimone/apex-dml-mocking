@@ -300,6 +300,23 @@ private class RepositoryTest {
   }
 
   @IsTest
+  static void itShouldSetAndLimitAndOffsetCorrectly() {
+    insert new List<Account>{
+      new Account(Name = 'Two', AnnualRevenue = 1),
+      new Account(Name = 'One'),
+      new Account(Name = 'Three')
+    };
+
+    List<Account> accounts = new AccountRepo()
+      .setLimit(1)
+      .setOffset(1)
+      .getAll();
+
+    Assert.areEqual(1, accounts.size());
+    Assert.areEqual('One', accounts.get(0).get(Account.Name));
+  }
+
+  @IsTest
   static void itSortsByParentFields() {
     List<Account> accounts = new List<Account>{
       new Account(Name = 'Should Not Be Returned'),

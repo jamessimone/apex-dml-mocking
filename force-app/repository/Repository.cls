@@ -21,6 +21,7 @@ public virtual without sharing class Repository implements IRepository {
   private Boolean isSosl = false;
   private Boolean shouldAddChildFields = true;
   private Integer limitAmount;
+  private Integer offsetAmount;
   private SearchGroup soslSearchGroup = SearchGroup.ALL_FIELDS;
 
   public Repository(Schema.SObjectType repoType, List<Schema.SObjectField> queryFields, RepoFactory repoFactory) {
@@ -75,6 +76,11 @@ public virtual without sharing class Repository implements IRepository {
 
   public Repository setLimit(Integer limitAmount) {
     this.limitAmount = limitAmount;
+    return this;
+  }
+
+  public Repository setOffset(Integer offsetAmount) {
+    this.offsetAmount = offsetAmount;
     return this;
   }
 
@@ -254,13 +260,15 @@ public virtual without sharing class Repository implements IRepository {
     return this.getSelectAndFrom() +
       this.addWheres(queries) +
       this.getOrderBys(this.fieldToSortOrder) +
-      this.getLimitAmount(this.limitAmount);
+      this.getLimitAmount(this.limitAmount)+
+      this.getOffsetAmount(this.offsetAmount);
   }
 
   protected virtual void clearState() {
     this.clearBindVars();
     this.fieldToSortOrder.clear();
     this.limitAmount = null;
+    this.offsetAmount = null;
   }
 
   private List<String> getFunctionBaseFields(SelectFunction selectFunction, Map<String, String> fieldsToAliases) {
@@ -354,6 +362,10 @@ public virtual without sharing class Repository implements IRepository {
 
   private String getLimitAmount(Integer limitAmount) {
     return (limitAmount != null ? '\nLIMIT ' + limitAmount : '');
+  }
+
+  private String getOffsetAmount(Integer offsetAmount) {
+    return (offsetAmount != null ? '\nOFFSET ' + offsetAmount : '');
   }
 
   // SOSL

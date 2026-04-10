@@ -18,6 +18,7 @@ public interface IRepository extends IDML {
   IRepository clearBindVars();
   IRepository setAccessLevel(System.AccessLevel accessLevel);
   IRepository setLimit(Integer limitAmount);
+  IRepository setOffset(Integer offsetAmount);
 
   IRepository addSortOrder(Schema.SObjectField fieldToken, RepositorySortOrder sortOrder);
   IRepository addSortOrder(List<Schema.SObjectField> fieldChain, RepositorySortOrder sortOrder);
