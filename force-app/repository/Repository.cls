@@ -260,7 +260,7 @@ public virtual without sharing class Repository implements IRepository {
     return this.getSelectAndFrom() +
       this.addWheres(queries) +
       this.getOrderBys(this.fieldToSortOrder) +
-      this.getLimitAmount(this.limitAmount)+
+      this.getLimitAmount(this.limitAmount) +
       this.getOffsetAmount(this.offsetAmount);
   }
 

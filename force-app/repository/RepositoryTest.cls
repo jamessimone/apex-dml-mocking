@@ -307,10 +307,7 @@ private class RepositoryTest {
       new Account(Name = 'Three')
     };
 
-    List<Account> accounts = new AccountRepo()
-      .setLimit(1)
-      .setOffset(1)
-      .getAll();
+    List<Account> accounts = new AccountRepo().setLimit(1).setOffset(1).getAll();
 
     Assert.areEqual(1, accounts.size());
     Assert.areEqual('One', accounts.get(0).get(Account.Name));
