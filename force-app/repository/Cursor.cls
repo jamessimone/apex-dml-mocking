@@ -8,15 +8,6 @@ public virtual without sharing class Cursor {
   private Integer fetchesPerTransaction = MAX_FETCHES_PER_TRANSACTION;
   private final Database.Cursor cursor;
 
-  @SuppressWarnings('PMD.PropertyNamingConventions')
-  public static final Integer MAX_FETCH_SIZE {
-    get {
-      MAX_FETCH_SIZE = MAX_FETCH_SIZE ?? maxRecordsPerFetchCall;
-      return MAX_FETCH_SIZE;
-    }
-    private set;
-  }
-
   public Cursor(String finalQuery, Map<String, Object> bindVars, System.AccessLevel accessLevel) {
     try {
       this.cursor = Database.getCursorWithBinds(finalQuery, bindVars, accessLevel);
@@ -60,7 +51,7 @@ public virtual without sharing class Cursor {
     Integer localStart = start;
     List<SObject> results = new List<SObject>();
     while (
-      Limits.getFetchCallsOnApexCursor() <= this.fetchesPerTransaction &&
+      Limits.getFetchCallsOnApexCursor() < this.fetchesPerTransaction &&
       results.size() < this.getNumRecords() &&
       localStart < start + advanceBy
     ) {

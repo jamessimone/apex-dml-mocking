@@ -1,4 +1,4 @@
-@SuppressWarnings('PMD.FieldNamingConventions,PMD.PropertyNamingConventions')
+@SuppressWarnings('PMD.CognitiveComplexity,PMD.FieldNamingConventions,PMD.PropertyNamingConventions')
 @IsTest
 public class DMLMock extends DML {
   public static List<SObject> InsertedRecords = new List<SObject>();

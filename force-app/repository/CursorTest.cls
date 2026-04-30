@@ -94,4 +94,27 @@ private class CursorTest {
     Assert.areEqual(2, results.size(), '' + results);
     Assert.areEqual(1, Limits.getFetchCallsOnApexCursor());
   }
+
+  @IsTest
+  static void doesNotExceedPlatformMaxFetch() {
+    List<Account> accounts = new List<Account>();
+    for (Integer i = 0; i < 101; i++) {
+      accounts.add(new Account(Name = 'Fetch ' + i));
+    }
+    insert accounts;
+
+    Test.startTest();
+    Cursor instance = new Cursor('SELECT Id FROM Account', new Map<String, Object>(), System.AccessLevel.SYSTEM_MODE)
+      .setFetchesPerTransaction(100);
+    Integer counter = 0;
+    List<SObject> results;
+    while (counter <= 100) {
+      results = instance.fetch(counter, counter + 1);
+      counter++;
+    }
+    Test.stopTest();
+
+    Assert.areEqual(101, counter);
+    Assert.areEqual(0, results.size());
+  }
 }
