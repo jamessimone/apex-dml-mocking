@@ -20,9 +20,18 @@ public class DMLMock extends DML {
   }
 
   public override List<Database.UpsertResult> doUpsert(List<SObject> records) {
+    Set<Id> alreadyCreatedRecords = new Set<Id>();
+    for (SObject record : records) {
+      alreadyCreatedRecords.add(record.Id);
+    }
+    alreadyCreatedRecords.remove(null);
     TestingUtils.generateIds(records);
     UpsertedRecords.addAll(records);
-    return (List<Database.UpsertResult>) createDatabaseResults(Database.UpsertResult.class, records);
+    return (List<Database.UpsertResult>) createDatabaseResults(
+      Database.UpsertResult.class,
+      records,
+      alreadyCreatedRecords
+    );
   }
   public override List<Database.UpsertResult> doUpsert(List<SObject> records, Schema.SObjectField field) {
     return this.doUpsert(records);
@@ -46,7 +55,7 @@ public class DMLMock extends DML {
 
   public override Database.SaveResult publish(SObject event) {
     PublishedRecords.add(event);
-    return (Database.SaveResult) createDatabaseResult(Database.SaveResult.class, event);
+    return (Database.SaveResult) createDatabaseResult(Database.SaveResult.class, event, null);
   }
   public override List<Database.SaveResult> publish(List<SObject> events) {
     PublishedRecords.addAll(events);
@@ -186,14 +195,22 @@ public class DMLMock extends DML {
   }
 
   private static List<Object> createDatabaseResults(Type clazz, List<SObject> records) {
+    return createDatabaseResults(clazz, records, null);
+  }
+
+  private static List<Object> createDatabaseResults(Type clazz, List<SObject> records, Set<Id> alreadyCreatedRecords) {
     List<Object> results = (List<Object>) Type.forName('List<' + clazz.getName() + '>').newInstance();
     for (SObject record : records) {
-      results.add(createDatabaseResult(clazz, record));
+      results.add(createDatabaseResult(clazz, record, alreadyCreatedRecords));
     }
     return results;
   }
 
-  private static Object createDatabaseResult(Type clazz, SObject record) {
-    return JSON.deserialize('{"success": true, "id": "' + record.Id + '"}', clazz);
+  private static Object createDatabaseResult(Type clazz, SObject record, Set<Id> alreadyCreatedRecords) {
+    String stringifiedResult = '{"success": true, "id": "' + record.Id + '"';
+    if (alreadyCreatedRecords != null) {
+      stringifiedResult += ', "created": ' + (alreadyCreatedRecords.contains(record.Id) == false);
+    }
+    return JSON.deserialize(stringifiedResult + '}', clazz);
   }
 }

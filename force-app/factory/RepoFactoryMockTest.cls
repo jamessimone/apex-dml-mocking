@@ -36,4 +36,22 @@ private class RepoFactoryMockTest {
     // verify we don't overindex past the actual cursor end
     Assert.areEqual(secondAccount.Id, cursor.fetch(1, 3)[0].Id);
   }
+
+  @IsTest
+  static void properlyTracksDatabaseUpsertResults() {
+    IDML dml = new RepoFactoryMock().setFacade(new RepoFactoryMock.FacadeMock()).getDML();
+
+    List<SObject> fakeAccounts = new List<Account>{
+      new Account(Id = TestingUtils.generateId(Schema.Account.SObjectType)),
+      new Account()
+    };
+    List<Database.UpsertResult> results = dml.doUpsert(fakeAccounts);
+    for (Database.UpsertResult result : results) {
+      if (result.getId() == fakeAccounts[0].Id) {
+        Assert.areEqual(false, result.isCreated());
+      } else {
+        Assert.areEqual(true, result.isCreated());
+      }
+    }
+  }
 }

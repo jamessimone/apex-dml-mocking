@@ -82,7 +82,7 @@ private class RepositoryTest {
   static void itShouldRespectNotLikeSyntaxForMultipleValues() {
     ContactPointAddress cpa = new ContactPointAddress(Name = 'Test Or', PreferenceRank = 1);
     ContactPointAddress secondCpa = new ContactPointAddress(Name = 'Something different', PreferenceRank = 2);
-    insert new List<ContactPointAddress>{ cpa, secondCpa };
+    insert as system new List<ContactPointAddress>{ cpa, secondCpa };
 
     IRepository repo = new ContactPointAddressRepo();
 
