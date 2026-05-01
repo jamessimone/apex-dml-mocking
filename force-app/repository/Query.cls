@@ -1,5 +1,5 @@
 @SuppressWarnings(
-  'PMD.EmptyStatementBlock,PMD.ExcessivePublicCount,PMD.ExcessiveParameterList,PMD.FieldNamingConventions'
+  'PMD.CognitiveComplexity,PMD.CyclomaticComplexity,PMD.EmptyStatementBlock,PMD.ExcessivePublicCount,PMD.ExcessiveParameterList,PMD.FieldNamingConventions'
 )
 public virtual class Query {
   private Boolean hasBeenCompared = false;

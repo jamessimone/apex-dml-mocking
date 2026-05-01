@@ -40,14 +40,36 @@ private class RepoFactoryMockTest {
   @IsTest
   static void properlyTracksDatabaseUpsertResults() {
     IDML dml = new RepoFactoryMock().setFacade(new RepoFactoryMock.FacadeMock()).getDML();
-
     List<SObject> fakeAccounts = new List<Account>{
       new Account(Id = TestingUtils.generateId(Schema.Account.SObjectType)),
       new Account()
     };
+
     List<Database.UpsertResult> results = dml.doUpsert(fakeAccounts);
+
     for (Database.UpsertResult result : results) {
       if (result.getId() == fakeAccounts[0].Id) {
+        Assert.areEqual(false, result.isCreated());
+      } else {
+        Assert.areEqual(true, result.isCreated());
+      }
+    }
+  }
+
+  @IsTest
+  static void allowsForPreviouslyInsertedRecordsToBeUpsertedProperly() {
+    String externalId = 'externalId';
+    DMLMock.FieldToExistingExternalIds.put(Schema.Account.AccountNumber, new Set<String>{ externalId });
+    IDML dml = new RepoFactoryMock().setFacade(new RepoFactoryMock.FacadeMock()).getDML();
+    Account existingAccount = new Account(AccountNumber = externalId);
+
+    List<Database.UpsertResult> results = dml.doUpsert(
+      new List<SObject>{ existingAccount, new Account() },
+      Schema.Account.AccountNumber
+    );
+
+    for (Database.UpsertResult result : results) {
+      if (result.getId() == existingAccount.Id) {
         Assert.areEqual(false, result.isCreated());
       } else {
         Assert.areEqual(true, result.isCreated());

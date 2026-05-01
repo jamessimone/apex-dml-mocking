@@ -7,6 +7,7 @@ public class DMLMock extends DML {
   public static List<SObject> DeletedRecords = new List<SObject>();
   public static List<SObject> UndeletedRecords = new List<SObject>();
   public static List<SObject> PublishedRecords = new List<SObject>();
+  public static Map<Schema.SObjectField, Set<String>> FieldToExistingExternalIds = new Map<Schema.SObjectField, Set<String>>();
 
   public override List<Database.SaveResult> doInsert(List<SObject> records) {
     TestingUtils.generateIds(records);
@@ -34,6 +35,13 @@ public class DMLMock extends DML {
     );
   }
   public override List<Database.UpsertResult> doUpsert(List<SObject> records, Schema.SObjectField field) {
+    for (SObject record : records) {
+      String externalId = String.valueOf(record.get(field));
+      Boolean wasPreviouslyInserted = FieldToExistingExternalIds.get(field)?.contains(externalId) == true;
+      if (wasPreviouslyInserted) {
+        record.Id = record.Id ?? TestingUtils.generateId(record.getSObjectType());
+      }
+    }
     return this.doUpsert(records);
   }
 
