@@ -226,7 +226,7 @@ public virtual class Query {
     String printedValue = ' ' + (shouldPerformStrictEquals ? this.predicate : predicateValue);
     if (this.operator == Query.Operator.NOT_LIKE) {
       // who knows why this is the format they wanted
-      return String.format(this.getOperator(), new List<String>{ this.field }) + printedValue;
+      return '(' + String.format(this.getOperator(), new List<String>{ this.field }) + printedValue + ')';
     }
     return this.field + ' ' + this.getOperator() + printedValue;
   }

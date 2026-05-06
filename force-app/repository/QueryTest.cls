@@ -140,7 +140,7 @@ private class QueryTest {
     Query notLike = Query.notLike(Account.Name, expectedName);
     Query.shouldPerformStrictEquals = true;
 
-    Assert.areEqual('NOT Name LIKE ' + expectedName, notLike.toString());
+    Assert.areEqual('(NOT Name LIKE ' + expectedName + ')', notLike.toString());
     Assert.areEqual(expectedName, notLike.getBindVars().get('bindVar0'));
   }
 
@@ -153,7 +153,7 @@ private class QueryTest {
     Query notLike = Query.notLike(Account.Name, values);
     Query.shouldPerformStrictEquals = true;
 
-    Assert.areEqual('NOT Name LIKE ' + values, notLike.toString());
+    Assert.areEqual('(NOT Name LIKE ' + values + ')', notLike.toString());
     Assert.areEqual(values, notLike.getBindVars().get('bindVar0'));
   }
 
