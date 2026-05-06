@@ -4,7 +4,7 @@ private class ExampleSObjectTest {
   static void setup() {
     Account acc = new Account(Name = ExampleSObjectTest.class.getName());
     insert acc;
-    insert new ExampleSObject__c(Account__c = acc.Id, SecondAccountLookup__c = acc.Id, Name = 'Child');
+    insert as system new ExampleSObject__c(Account__c = acc.Id, SecondAccountLookup__c = acc.Id, Name = 'Child');
   }
 
   @IsTest
@@ -25,7 +25,11 @@ private class ExampleSObjectTest {
 
     List<ExampleSObject__c> children = repo.getAll();
 
-    ExampleSObject__c expected = [SELECT Id, Account__r.Name, SecondAccountLookup__r.Name FROM ExampleSObject__c];
+    ExampleSObject__c expected = [
+      SELECT Id, Account__r.Name, SecondAccountLookup__r.Name
+      FROM ExampleSObject__c
+      WITH SYSTEM_MODE
+    ];
     Assert.areEqual(1, children.size());
     Assert.areEqual(expected.Account__r.Name, children.get(0).Account__r.Name);
     Assert.areEqual(expected.SecondAccountLookup__r.Name, children.get(0).SecondAccountLookup__r.Name);
@@ -47,6 +51,7 @@ private class ExampleSObjectTest {
     Account expected = [
       SELECT (SELECT Name FROM Example_SObjects__r), (SELECT Name FROM Example_SObjects1__r)
       FROM Account
+      WITH SYSTEM_MODE
     ];
     Account actual = (Account) repo.getAll().get(0);
     Assert.areEqual(1, actual.Example_SObjects__r.size());

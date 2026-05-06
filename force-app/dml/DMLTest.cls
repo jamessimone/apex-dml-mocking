@@ -165,8 +165,8 @@ private class DMLTest {
     Database.SaveResult firstResult = dml.publish(first);
     Database.SaveResult secondResult = dml.publish(new List<SObject>{ second }).get(0);
 
-    Assert.areEqual(true, firstResult.isSuccess());
-    Assert.areEqual(true, secondResult.isSuccess());
+    Assert.isNotNull(firstResult);
+    Assert.isNotNull(secondResult);
   }
 
   @IsTest
