@@ -2,7 +2,6 @@
   'PMD.CognitiveComplexity,PMD.CyclomaticComplexity,PMD.AvoidBooleanMethodParameters,PMD.ExcessiveParameterList,PMD.ExcessivePublicCount,PMD.TooManyFields'
 )
 public virtual without sharing class Repository implements IRepository {
-  private final Map<Schema.SObjectField, String> childToRelationshipNames;
   private final Map<String, String> relationshipNameToChildQuery = new Map<String, String>();
   private final IDML dml;
   @TestVisible
@@ -16,6 +15,14 @@ public virtual without sharing class Repository implements IRepository {
   protected System.AccessLevel accessLevel = System.AccessLevel.SYSTEM_MODE;
   protected final Map<String, RepositorySortOrder> fieldToSortOrder = new Map<String, RepositorySortOrder>();
 
+  private final Map<Schema.SObjectField, String> childToRelationshipNames {
+    get {
+      this.childToRelationshipNames = this.childToRelationshipNames ?? this.getChildRelationshipNames(this.repoType);
+      return this.childToRelationshipNames;
+    }
+    set;
+  }
+
   private Boolean shouldPrintBindVars = false;
   private Boolean baseSelectUsed = false;
   private Boolean isSosl = false;
@@ -28,7 +35,6 @@ public virtual without sharing class Repository implements IRepository {
     this.dml = repoFactory.getDml();
     this.queryFields = queryFields;
     this.repoType = repoType;
-    this.childToRelationshipNames = this.getChildRelationshipNames(repoType);
   }
 
   // SOQL
