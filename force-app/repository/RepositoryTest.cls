@@ -62,7 +62,7 @@ private class RepositoryTest {
   static void itShouldRespectOrStatementsInQueries() {
     ContactPointAddress cpa = new ContactPointAddress(Name = 'Test Or', PreferenceRank = 1);
     ContactPointAddress secondCpa = new ContactPointAddress(Name = 'Test Or Two', PreferenceRank = 2);
-    insert new List<ContactPointAddress>{ cpa, secondCpa };
+    insert as system new List<ContactPointAddress>{ cpa, secondCpa };
 
     IRepository repo = new ContactPointAddressRepo();
 
@@ -387,7 +387,7 @@ private class RepositoryTest {
   @IsTest
   static void itPerformsSoslQueries() {
     ContactPointAddress cpa = new ContactPointAddress(Name = 'hello world', PreferenceRank = 1);
-    insert cpa;
+    insert as system cpa;
     Test.setFixedSearchResults(new List<Id>{ cpa.Id });
 
     List<List<SObject>> results = new ContactPointAddressRepo()
@@ -400,7 +400,7 @@ private class RepositoryTest {
   @IsTest
   static void itSearchesForAdditionalObjects() {
     ContactPointPhone record = new ContactPointPhone(TelephoneNumber = 'hello universe');
-    insert record;
+    insert as system record;
 
     Test.setFixedSearchResults(new List<Id>{ record.Id });
 
@@ -480,7 +480,7 @@ private class RepositoryTest {
       PreferenceRank = 1,
       ActiveFromDate = activeFromDate
     );
-    insert cpa;
+    insert as system cpa;
 
     IRepository repo = new ContactPointAddressRepo();
     repo.addBaseFields(new List<Schema.SObjectField>{ ContactPointAddress.ActiveFromDate });
@@ -510,7 +510,7 @@ private class RepositoryTest {
       PreferenceRank = 1,
       ActiveFromDate = activeFromDate
     );
-    insert cpa;
+    insert as system cpa;
 
     IRepository repo = new ContactPointAddressRepo();
     repo.addBaseFields(new List<Schema.SObjectField>{ ContactPointAddress.ActiveFromDate });
