@@ -474,7 +474,7 @@ private class RepositoryTest {
 
   @IsTest
   static void itAddsBaseFieldAndFunctionFieldWithAutomaticAlias() {
-    Date activeFromDate = Date.newInstance(2001, 1, 1);
+    Date activeFromDate = Date.valueOf('2001-01-01');
     ContactPointAddress cpa = new ContactPointAddress(
       Name = 'hello world',
       PreferenceRank = 1,
@@ -504,7 +504,7 @@ private class RepositoryTest {
 
   @IsTest
   static void itAddsBaseFieldAndFunctionFieldWithManualAlias() {
-    Date activeFromDate = Date.newInstance(2001, 1, 1);
+    Date activeFromDate = Date.valueOf('2001-01-01');
     ContactPointAddress cpa = new ContactPointAddress(
       Name = 'hello world',
       PreferenceRank = 1,
