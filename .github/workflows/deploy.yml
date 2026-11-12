@@ -31,8 +31,6 @@ jobs:
       # Checkout the code
       - name: 'Checkout source code'
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
 
       - name: 'Setup node'
         uses: actions/setup-node@v4
@@ -48,6 +46,9 @@ jobs:
 
       # Authenticate using JWT flow
       - name: 'Auth to dev hub'
+        if: >
+          github.event_name == 'push' ||
+          github.event.pull_request.head.repo.full_name == github.repository
         shell: bash
         run: |
           echo "${{ env.DEVHUB_SERVER_KEY }}" > ./jwt-server.key
@@ -59,5 +60,8 @@ jobs:
           DEVHUB_SERVER_KEY: ${{ secrets.DEVHUB_SERVER_KEY }}
 
       - name: 'Deploy & Test'
+        if: >
+          github.event_name == 'push' ||
+          github.event.pull_request.head.repo.full_name == github.repository
         shell: pwsh
         run: '. ./scripts/test.ps1'
